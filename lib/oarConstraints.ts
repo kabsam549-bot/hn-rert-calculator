@@ -72,7 +72,8 @@ export interface OARResult {
   
   /** Detailed breakdown of prior and planned doses */
   doseBreakdown: {
-    priorEQD2: number;
+    priorEQD2s: number[];
+    totalPriorEQD2: number;
     plannedEQD2: number;
     cumulativeEQD2: number;
   };
@@ -247,8 +248,7 @@ export function determineWarningLevel(percentOfLimit: number): WarningLevel {
  * established constraint for the organ at risk.
  * 
  * @param oar - The organ-at-risk constraint to check
- * @param priorDose - Total dose from prior radiation in Gy
- * @param priorFractions - Number of fractions in prior treatment
+ * @param priorCourses - Array of prior courses (dose in Gy, fractions)
  * @param plannedDose - Total dose for planned re-irradiation in Gy
  * @param plannedFractions - Number of fractions for planned treatment
  * @param intervalMonths - Time interval between treatments (for documentation)
@@ -256,16 +256,13 @@ export function determineWarningLevel(percentOfLimit: number): WarningLevel {
  */
 export function checkOARConstraint(
   oar: OARConstraint,
-  priorDose: number,
-  priorFractions: number,
+  priorCourses: { dose: number; fractions: number }[],
   plannedDose: number,
   plannedFractions: number,
   intervalMonths: number
 ): OARResult {
   // Input validation
-  if (priorDose < 0) {
-    throw new Error('Prior dose cannot be negative');
-  }
+  // priorCourses validation happens in calculateCumulativeDose
   if (plannedDose < 0) {
     throw new Error('Planned dose cannot be negative');
   }
@@ -275,8 +272,7 @@ export function checkOARConstraint(
 
   // Calculate cumulative doses using the OAR-specific alpha/beta ratio
   const doses = calculateCumulativeDose(
-    priorDose,
-    priorFractions,
+    priorCourses,
     plannedDose,
     plannedFractions,
     oar.alphaBeta
@@ -312,7 +308,8 @@ export function checkOARConstraint(
     warningLevel,
     message,
     doseBreakdown: {
-      priorEQD2: doses.priorEQD2,
+      priorEQD2s: doses.priorEQD2s,
+      totalPriorEQD2: doses.totalPriorEQD2,
       plannedEQD2: doses.plannedEQD2,
       cumulativeEQD2: doses.cumulativeEQD2,
     },
@@ -322,22 +319,20 @@ export function checkOARConstraint(
 /**
  * Check all OAR constraints for a given treatment scenario
  * 
- * @param priorDose - Total dose from prior radiation in Gy
- * @param priorFractions - Number of fractions in prior treatment
+ * @param priorCourses - Array of prior courses (dose in Gy, fractions)
  * @param plannedDose - Total dose for planned re-irradiation in Gy
  * @param plannedFractions - Number of fractions for planned treatment
  * @param intervalMonths - Time interval between treatments
  * @returns Array of results for all OARs, sorted by tier and warning level
  */
 export function checkAllOARConstraints(
-  priorDose: number,
-  priorFractions: number,
+  priorCourses: { dose: number; fractions: number }[],
   plannedDose: number,
   plannedFractions: number,
   intervalMonths: number
 ): OARResult[] {
   const results = OAR_CONSTRAINTS.map(oar =>
-    checkOARConstraint(oar, priorDose, priorFractions, plannedDose, plannedFractions, intervalMonths)
+    checkOARConstraint(oar, priorCourses, plannedDose, plannedFractions, intervalMonths)
   );
 
   // Sort by tier first, then by warning level (exceeds > caution > safe)

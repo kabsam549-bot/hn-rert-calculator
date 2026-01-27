@@ -173,12 +173,22 @@ export default function ResultsSection({ results }: ResultsSectionProps) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {sortedOARs.map((result) => (
-                <tr key={result.oar.name} className="hover:bg-teal-50/50 transition-colors zebra-stripe">
+                <tr key={result.oar.name} className="hover:bg-teal-50/50 transition-colors zebra-stripe group">
                   <td className="px-6 py-3 font-medium text-gray-900">
                     {result.oar.name}
                     <span className="block text-[10px] text-gray-400 font-normal mt-0.5">{result.oar.complication}</span>
+                    
+                    {/* Dose Breakdown Detail */}
+                    <div className="mt-1 text-[10px] text-gray-500 font-mono hidden group-hover:block transition-all">
+                      <div className="flex flex-col gap-0.5">
+                        {result.doseBreakdown.priorEQD2s.map((dose, idx) => (
+                           <span key={idx}>Prior {idx + 1}: {dose.toFixed(1)} Gy</span>
+                        ))}
+                        <span>Planned: {result.doseBreakdown.plannedEQD2.toFixed(1)} Gy</span>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-3 text-center">
+                  <td className="px-6 py-3 text-center align-top">
                     <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shadow-sm ${
                       result.oar.tier === 1 ? 'bg-red-50 text-red-700 border border-red-100' : 
                       result.oar.tier === 2 ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-teal-50 text-teal-700 border border-teal-100'
@@ -186,7 +196,7 @@ export default function ResultsSection({ results }: ResultsSectionProps) {
                       {result.oar.tier}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-right font-mono font-medium text-gray-700">
+                  <td className="px-6 py-3 text-right font-mono font-medium text-gray-700 align-top">
                     {result.doseBreakdown.cumulativeEQD2.toFixed(1)} <span className="text-xs text-gray-400">Gy</span>
                   </td>
                   <td className="px-6 py-3 text-right font-mono text-gray-500">

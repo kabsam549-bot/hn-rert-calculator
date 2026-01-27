@@ -1,6 +1,6 @@
 'use client';
 
-import type { PatientData } from '@/lib/types';
+import type { PatientData, RTCourse } from '@/lib/types';
 import { OAR_CONSTRAINTS } from '@/lib/oarConstraints';
 import Tooltip from './Tooltip';
 import ExpandableSection from './ExpandableSection';
@@ -16,7 +16,7 @@ export default function InputSection({
   setPatientData,
   onReset,
 }: InputSectionProps) {
-  const handleInputChange = (field: keyof PatientData, value: string | number | boolean | string[]) => {
+  const handleInputChange = (field: keyof PatientData, value: string | number | boolean | string[] | RTCourse[]) => {
     setPatientData({
       ...patientData,
       [field]: value,
@@ -52,6 +52,32 @@ export default function InputSection({
     return tierOars.length > 0 && tierOars.every(name => current.includes(name));
   };
 
+  // --- Multi-course Logic ---
+
+  const addPriorCourse = () => {
+    const currentCourses = patientData.priorCourses || [];
+    if (currentCourses.length >= 5) return;
+    // Add new empty course
+    const newCourses = [...currentCourses, { dose: undefined, fractions: undefined }];
+    handleInputChange('priorCourses', newCourses);
+  };
+
+  const removePriorCourse = (index: number) => {
+    const currentCourses = patientData.priorCourses || [];
+    if (index === 0) return; // Cannot remove first course
+    const newCourses = currentCourses.filter((_, i) => i !== index);
+    handleInputChange('priorCourses', newCourses);
+  };
+
+  const updatePriorCourse = (index: number, field: keyof RTCourse, value: number) => {
+    const currentCourses = [...(patientData.priorCourses || [])];
+    if (!currentCourses[index]) return;
+    
+    // Create a new object for the course to ensure immutability
+    currentCourses[index] = { ...currentCourses[index], [field]: value };
+    handleInputChange('priorCourses', currentCourses);
+  };
+
   const renderSectionHeader = (step: number, title: string, description: string) => (
     <div className="mb-4 pb-2 border-b border-teal-100">
       <div className="flex items-center gap-2">
@@ -64,14 +90,15 @@ export default function InputSection({
     </div>
   );
 
-  const renderInput = (
+  const renderSimpleInput = (
     label: string,
-    field: keyof PatientData,
+    value: number | undefined,
+    onChange: (val: number) => void,
     placeholder: string,
     unit?: string,
     tooltip?: React.ReactNode
   ) => {
-    const hasValue = patientData[field] !== undefined && patientData[field] !== '';
+    const hasValue = value !== undefined && value !== null && value.toString() !== '';
     return (
       <div className="mb-4 group">
         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 flex items-center">
@@ -88,8 +115,8 @@ export default function InputSection({
         <div className="relative">
           <input
             type="number"
-            value={patientData[field] as number ?? ''}
-            onChange={(e) => handleInputChange(field, Number(e.target.value))}
+            value={value ?? ''}
+            onChange={(e) => onChange(Number(e.target.value))}
             className="w-full pl-3 pr-8 py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-900 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all outline-none"
             placeholder={placeholder}
             min="0"
@@ -105,23 +132,88 @@ export default function InputSection({
     );
   };
 
+  const renderPriorCourseCard = (course: RTCourse, index: number) => (
+    <div key={index} className="relative bg-gray-50 rounded-md p-4 mb-4 border border-gray-200">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="text-xs font-bold text-teal-800 uppercase tracking-wide">
+          Prior Course {index + 1}
+        </h4>
+        {index > 0 && (
+          <button
+            onClick={() => removePriorCourse(index)}
+            className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50"
+          >
+            <span>Remove</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {renderSimpleInput(
+          "Dose",
+          course.dose,
+          (val) => updatePriorCourse(index, 'dose', val),
+          "e.g. 70",
+          "Gy"
+        )}
+        {renderSimpleInput(
+          "Fractions",
+          course.fractions,
+          (val) => updatePriorCourse(index, 'fractions', val),
+          "e.g. 35",
+          "fx"
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Prior Radiation Section */}
       <div className="bg-white p-5 rounded-lg border border-teal-100 border-l-4 border-l-teal-600 shadow-sm transition-shadow hover:shadow-md">
-        {renderSectionHeader(1, "Prior Radiation", "Enter details from the previous treatment course")}
-        <div className="grid grid-cols-2 gap-4">
-          {renderInput("Prior Total Dose", "priorDose", "e.g. 70", "Gy", "Total physical dose delivered in previous course")}
-          {renderInput("Prior Fractions", "priorFractions", "e.g. 35", "fx", "Number of fractions in previous course")}
+        {renderSectionHeader(1, "Prior Radiation History", "Enter details for all previous treatment courses")}
+        
+        {/* List of Prior Courses */}
+        <div>
+          {patientData.priorCourses?.map((course, index) => renderPriorCourseCard(course, index))}
         </div>
+
+        {/* Add Course Button */}
+        {(patientData.priorCourses?.length || 0) < 5 && (
+          <button
+            onClick={addPriorCourse}
+            className="w-full py-2 border-2 border-dashed border-teal-200 text-teal-600 rounded-md text-sm font-bold hover:bg-teal-50 hover:border-teal-400 transition-all flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Prior Course
+          </button>
+        )}
       </div>
 
       {/* Planned Radiation Section */}
       <div className="bg-white p-5 rounded-lg border border-teal-100 border-l-4 border-l-teal-600 shadow-sm transition-shadow hover:shadow-md">
         {renderSectionHeader(2, "Planned Re-Irradiation", "Enter proposed dose for the new course")}
         <div className="grid grid-cols-2 gap-4">
-          {renderInput("Planned Dose", "plannedDose", "e.g. 60", "Gy", "Total physical dose for new plan")}
-          {renderInput("Planned Fractions", "plannedFractions", "e.g. 30", "fx", "Number of fractions for new plan")}
+          {renderSimpleInput(
+            "Planned Dose", 
+            patientData.plannedDose,
+            (val) => handleInputChange('plannedDose', val),
+            "e.g. 60", 
+            "Gy", 
+            "Total physical dose for new plan"
+          )}
+          {renderSimpleInput(
+            "Planned Fractions", 
+            patientData.plannedFractions,
+            (val) => handleInputChange('plannedFractions', val),
+            "e.g. 30", 
+            "fx", 
+            "Number of fractions for new plan"
+          )}
         </div>
       </div>
 
@@ -129,7 +221,14 @@ export default function InputSection({
       <div className="bg-white p-5 rounded-lg border border-teal-100 border-l-4 border-l-teal-600 shadow-sm transition-shadow hover:shadow-md">
         {renderSectionHeader(3, "Clinical Factors", "Time interval and patient factors")}
         <div className="mb-4">
-          {renderInput("Interval Since Prior RT", "timeSinceRT", "e.g. 24", "mo", "Months between end of prior RT and start of re-RT")}
+          {renderSimpleInput(
+            "Time since most recent prior RT", 
+            patientData.timeSinceRT,
+            (val) => handleInputChange('timeSinceRT', val),
+            "e.g. 24", 
+            "mo", 
+            "Months between end of most recent prior RT and start of re-RT"
+          )}
         </div>
 
         <div className="space-y-3 pt-2">

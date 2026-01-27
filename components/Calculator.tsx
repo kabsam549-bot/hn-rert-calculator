@@ -13,8 +13,7 @@ export default function Calculator() {
     age: undefined,
     tumorLocation: '',
     performance: undefined,
-    priorDose: undefined,
-    priorFractions: undefined,
+    priorCourses: [{ dose: undefined, fractions: undefined }],
     plannedDose: undefined,
     plannedFractions: undefined,
     timeSinceRT: undefined,
@@ -45,8 +44,7 @@ export default function Calculator() {
       age: 60, // Arbitrary, not used in calc but good for completeness
       tumorLocation: 'Oropharynx',
       performance: 0,
-      priorDose: 70,
-      priorFractions: 35,
+      priorCourses: [{ dose: 70, fractions: 35 }],
       plannedDose: 60,
       plannedFractions: 30,
       timeSinceRT: 36,
@@ -66,9 +64,15 @@ export default function Calculator() {
   }, [patientData]);
 
   const isValidForCalculation = (data: PatientData) => {
+    const isPriorValid = data.priorCourses && 
+      data.priorCourses.length > 0 && 
+      data.priorCourses.every(c => 
+        c.dose !== undefined && c.dose > 0 && 
+        c.fractions !== undefined && c.fractions > 0
+      );
+
     return (
-      data.priorDose !== undefined &&
-      data.priorFractions !== undefined &&
+      isPriorValid &&
       data.plannedDose !== undefined &&
       data.plannedFractions !== undefined &&
       data.timeSinceRT !== undefined &&
@@ -88,14 +92,19 @@ export default function Calculator() {
       // Calculate OAR constraints
       const oarResults: OARResult[] = [];
       
+      // Clean up prior courses for calculation (ensure no undefineds)
+      const cleanPriorCourses = data.priorCourses.map(c => ({
+        dose: c.dose!,
+        fractions: c.fractions!
+      }));
+
       for (const oarName of data.selectedOARs) {
         const oarConstraint = getOARConstraint(oarName);
         if (!oarConstraint) continue;
 
         const oarResult = checkOARConstraint(
           oarConstraint,
-          data.priorDose!,
-          data.priorFractions!,
+          cleanPriorCourses,
           data.plannedDose!,
           data.plannedFractions!,
           data.timeSinceRT!
@@ -169,8 +178,7 @@ export default function Calculator() {
       age: undefined,
       tumorLocation: '',
       performance: undefined,
-      priorDose: undefined,
-      priorFractions: undefined,
+      priorCourses: [{ dose: undefined, fractions: undefined }],
       plannedDose: undefined,
       plannedFractions: undefined,
       timeSinceRT: undefined,

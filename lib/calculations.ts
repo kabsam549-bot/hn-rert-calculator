@@ -48,11 +48,13 @@ export function calculateRiskScore(data: PatientData): LegacyCalculationResult {
   }
 
   // Prior dose factor (higher dose = higher risk)
-  if (data.priorDose !== undefined) {
-    if (data.priorDose > 70) {
+  const totalPriorDose = data.priorCourses?.reduce((sum, c) => sum + (c.dose || 0), 0) || 0;
+  
+  if (totalPriorDose > 0) {
+    if (totalPriorDose > 70) {
       score += 25;
       factors.push('High prior radiation dose (>70 Gy) significantly increases risk');
-    } else if (data.priorDose > 60) {
+    } else if (totalPriorDose > 60) {
       score += 15;
       factors.push('Moderate prior radiation dose (60-70 Gy) increases risk');
     } else {
@@ -159,8 +161,11 @@ export function validatePatientData(data: PatientData): { valid: boolean; errors
     errors.push('Age must be between 0 and 120 years');
   }
 
-  if (data.priorDose !== undefined && (data.priorDose < 0 || data.priorDose > 150)) {
-    errors.push('Prior dose must be between 0 and 150 Gy');
+  if (data.priorCourses && data.priorCourses.length > 0) {
+    const totalDose = data.priorCourses.reduce((sum, c) => sum + (c.dose || 0), 0);
+    if (totalDose < 0 || totalDose > 200) {
+      errors.push('Total prior dose must be between 0 and 200 Gy');
+    }
   }
 
   if (data.timeSinceRT !== undefined && data.timeSinceRT < 0) {

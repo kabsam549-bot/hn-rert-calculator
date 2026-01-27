@@ -1,6 +1,11 @@
 import type { RPAResult } from './rpaClassification';
 import type { OARResult } from './oarConstraints';
 
+export interface RTCourse {
+  dose: number | undefined;
+  fractions: number | undefined;
+}
+
 export interface PatientData {
   // Demographics
   age: number | undefined;
@@ -8,15 +13,14 @@ export interface PatientData {
   performance: number | undefined;
   
   // Prior radiation data
-  priorDose: number | undefined;
-  priorFractions: number | undefined;
+  priorCourses: RTCourse[];
   
   // Planned radiation data
   plannedDose: number | undefined;
   plannedFractions: number | undefined;
   
   // Time interval
-  timeSinceRT: number | undefined; // in months
+  timeSinceRT: number | undefined; // in months from most recent course
   
   // RPA factors
   hadSalvageSurgery: boolean;

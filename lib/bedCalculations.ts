@@ -111,37 +111,31 @@ export function calculateBEDAndEQD2(
  * - Volume of overlap between prior and planned fields
  * - Tissue type and repair capacity
  * 
- * @param priorDose - Total dose from prior radiation in Gy
- * @param priorFractions - Number of fractions in prior treatment
+ * @param priorCourses - Array of prior courses (dose in Gy, fractions)
  * @param plannedDose - Total dose for planned re-irradiation in Gy
  * @param plannedFractions - Number of fractions for planned treatment
  * @param alphaBeta - Alpha/beta ratio in Gy (should match tissue type)
- * @returns Cumulative BED and EQD2 values
+ * @returns Cumulative BED and EQD2 values, including breakdown
  * @throws Error if inputs are invalid
  */
 export function calculateCumulativeDose(
-  priorDose: number,
-  priorFractions: number,
+  priorCourses: { dose: number; fractions: number }[],
   plannedDose: number,
   plannedFractions: number,
   alphaBeta: number
 ): {
-  priorBED: number;
-  priorEQD2: number;
+  priorBEDs: number[];
+  priorEQD2s: number[];
+  totalPriorBED: number;
+  totalPriorEQD2: number;
   plannedBED: number;
   plannedEQD2: number;
   cumulativeBED: number;
   cumulativeEQD2: number;
 } {
-  // Validate all inputs
-  if (priorDose <= 0) {
-    throw new Error('Prior dose must be positive');
-  }
+  // Validate planned inputs
   if (plannedDose <= 0) {
     throw new Error('Planned dose must be positive');
-  }
-  if (priorFractions < 1 || !Number.isInteger(priorFractions)) {
-    throw new Error('Prior fractions must be a positive integer');
   }
   if (plannedFractions < 1 || !Number.isInteger(plannedFractions)) {
     throw new Error('Planned fractions must be a positive integer');
@@ -150,21 +144,42 @@ export function calculateCumulativeDose(
     throw new Error('Alpha/beta ratio must be positive');
   }
 
-  // Calculate BED for prior treatment
-  const priorBED = calculateBED(priorDose, priorFractions, alphaBeta);
-  const priorEQD2 = calculateEQD2(priorBED, alphaBeta);
+  const priorBEDs: number[] = [];
+  const priorEQD2s: number[] = [];
+  let totalPriorBED = 0;
+  let totalPriorEQD2 = 0;
+
+  // Process each prior course
+  priorCourses.forEach((course, index) => {
+    if (course.dose <= 0) {
+      throw new Error(`Prior course ${index + 1} dose must be positive`);
+    }
+    if (course.fractions < 1 || !Number.isInteger(course.fractions)) {
+      throw new Error(`Prior course ${index + 1} fractions must be a positive integer`);
+    }
+
+    const bed = calculateBED(course.dose, course.fractions, alphaBeta);
+    const eqd2 = calculateEQD2(bed, alphaBeta);
+
+    priorBEDs.push(bed);
+    priorEQD2s.push(eqd2);
+    totalPriorBED += bed;
+    totalPriorEQD2 += eqd2;
+  });
 
   // Calculate BED for planned treatment
   const plannedBED = calculateBED(plannedDose, plannedFractions, alphaBeta);
   const plannedEQD2 = calculateEQD2(plannedBED, alphaBeta);
 
   // Cumulative doses (simple addition - assumes no repair)
-  const cumulativeBED = priorBED + plannedBED;
-  const cumulativeEQD2 = priorEQD2 + plannedEQD2;
+  const cumulativeBED = totalPriorBED + plannedBED;
+  const cumulativeEQD2 = totalPriorEQD2 + plannedEQD2;
 
   return {
-    priorBED,
-    priorEQD2,
+    priorBEDs,
+    priorEQD2s,
+    totalPriorBED,
+    totalPriorEQD2,
     plannedBED,
     plannedEQD2,
     cumulativeBED,
