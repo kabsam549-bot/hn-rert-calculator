@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import type { CalculationResult } from '@/lib/types';
-import type { OARResult } from '@/lib/oarConstraints';
-import ExpandableSection from './ExpandableSection';
 import ReferencesSection from './ReferencesSection';
 
 interface ResultsSectionProps {
@@ -11,376 +9,237 @@ interface ResultsSectionProps {
 }
 
 export default function ResultsSection({ results }: ResultsSectionProps) {
-  const [showCalculations, setShowCalculations] = useState(false);
+  const [sortField, setSortField] = useState<'tier' | 'name' | 'status'>('tier');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const getWarningColor = (warningLevel: 'safe' | 'caution' | 'exceeds') => {
-    switch (warningLevel) {
-      case 'safe':
-        return {
-          bg: 'bg-white',
-          border: 'border-l-4 border-l-[#2d5f3f]',
-          text: 'text-gray-700',
-          label: 'ACCEPTABLE',
-          labelColor: 'text-[#2d5f3f] bg-green-50',
-          barColor: 'bg-[#2d5f3f]'
-        };
-      case 'caution':
-        return {
-          bg: 'bg-white',
-          border: 'border-l-4 border-l-[#9b6b23]',
-          text: 'text-gray-700',
-          label: 'CAUTION',
-          labelColor: 'text-[#9b6b23] bg-amber-50',
-          barColor: 'bg-[#9b6b23]'
-        };
+  // Summary Bar Colors
+  const getRiskColor = (risk: 'Low' | 'Moderate' | 'High') => {
+    switch (risk) {
+      case 'High': return 'bg-status-critical';
+      case 'Moderate': return 'bg-status-warning';
+      case 'Low': return 'bg-status-safe';
+    }
+  };
+
+  const getRiskLabel = (risk: 'Low' | 'Moderate' | 'High') => {
+    switch (risk) {
+      case 'High': return 'HIGH RISK PROFILE';
+      case 'Moderate': return 'MODERATE RISK PROFILE';
+      case 'Low': return 'FAVORABLE RISK PROFILE';
+    }
+  };
+
+  // Status Dot & Label Helper
+  const getStatusDisplay = (level: 'safe' | 'caution' | 'exceeds') => {
+    switch (level) {
       case 'exceeds':
-        return {
-          bg: 'bg-white',
-          border: 'border-l-4 border-l-[#8b2635]',
-          text: 'text-gray-700',
-          label: 'EXCEEDS',
-          labelColor: 'text-[#8b2635] bg-red-50',
-          barColor: 'bg-[#8b2635]'
-        };
+        return (
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-status-critical block shadow-sm"></span>
+            <span className="text-status-critical font-bold text-xs uppercase">Exceeds</span>
+          </div>
+        );
+      case 'caution':
+        return (
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-status-warning block shadow-sm"></span>
+            <span className="text-status-warning font-bold text-xs uppercase">Caution</span>
+          </div>
+        );
+      case 'safe':
+        return (
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-status-safe block shadow-sm"></span>
+            <span className="text-status-safe font-bold text-xs uppercase">Acceptable</span>
+          </div>
+        );
     }
   };
 
-  const getRPAClassColor = (rpaClass: 'I' | 'II' | 'III') => {
-    switch (rpaClass) {
-      case 'I':
-        return 'bg-white border-l-4 border-l-[#2d5f3f] border border-gray-300';
-      case 'II':
-        return 'bg-white border-l-4 border-l-[#9b6b23] border border-gray-300';
-      case 'III':
-        return 'bg-white border-l-4 border-l-[#8b2635] border border-gray-300';
-    }
-  };
-
-  // Group OARs by tier
-  const tier1OARs = results.oarResults.filter(r => r.oar.tier === 1);
-  const tier2OARs = results.oarResults.filter(r => r.oar.tier === 2);
-  const tier3OARs = results.oarResults.filter(r => r.oar.tier === 3);
-
-  // Sort each tier by warning level (exceeds > caution > safe)
-  const sortByWarning = (a: OARResult, b: OARResult) => {
-    const order = { exceeds: 0, caution: 1, safe: 2 };
-    return order[a.warningLevel] - order[b.warningLevel];
-  };
-
-  tier1OARs.sort(sortByWarning);
-  tier2OARs.sort(sortByWarning);
-  tier3OARs.sort(sortByWarning);
-
-  const renderOARCard = (oarResult: OARResult) => {
-    const colors = getWarningColor(oarResult.warningLevel);
+  // Sorting Logic
+  const sortedOARs = [...results.oarResults].sort((a, b) => {
+    let valA: number | string = 0;
+    let valB: number | string = 0;
     
-    return (
-      <div
-        key={oarResult.oar.name}
-        className={`p-4 rounded-md ${colors.border} ${colors.bg} border border-gray-300 shadow-sm`}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-gray-900">{oarResult.oar.name}</h4>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${colors.labelColor}`}>
-                {colors.label}
-              </span>
-            </div>
-          </div>
-          <div className="text-right ml-4">
-            <div className="text-sm font-semibold text-gray-900">
-              {oarResult.cumulativeEQD2.toFixed(1)} Gy
-            </div>
-            <div className="text-xs text-gray-600">
-              {oarResult.percentOfLimit.toFixed(0)}% of limit
-            </div>
-          </div>
-        </div>
+    if (sortField === 'tier') {
+      valA = a.oar.tier;
+      valB = b.oar.tier;
+    } else if (sortField === 'name') {
+      valA = a.oar.name;
+      valB = b.oar.name;
+    } else if (sortField === 'status') {
+      const order = { exceeds: 0, caution: 1, safe: 2 };
+      valA = order[a.warningLevel];
+      valB = order[b.warningLevel];
+    }
 
-        <div className="text-sm text-gray-700 mb-2">
-          <strong>Complication:</strong> {oarResult.oar.complication}
-        </div>
+    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
-        <div className="text-xs text-gray-600 space-y-1">
-          <div className="flex justify-between">
-            <span>Prior EQD2:</span>
-            <span className="font-medium">{oarResult.doseBreakdown.priorEQD2.toFixed(1)} Gy</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Planned EQD2:</span>
-            <span className="font-medium">{oarResult.doseBreakdown.plannedEQD2.toFixed(1)} Gy</span>
-          </div>
-          <div className="flex justify-between border-t pt-1">
-            <span>Cumulative EQD2:</span>
-            <span className="font-semibold">{oarResult.doseBreakdown.cumulativeEQD2.toFixed(1)} Gy</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Constraint:</span>
-            <span className="font-medium">{oarResult.oar.limitEQD2} Gy (α/β={oarResult.oar.alphaBeta})</span>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mt-3">
-          <div className="w-full bg-gray-200 rounded-sm h-1.5">
-            <div
-              className={`h-1.5 rounded-sm transition-all ${colors.barColor}`}
-              style={{ width: `${Math.min(oarResult.percentOfLimit, 100)}%` }}
-            ></div>
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-600 mt-2 italic">
-          {oarResult.oar.description}
-        </p>
-
-        {/* Calculation Details (if enabled) */}
-        {showCalculations && (
-          <div className="mt-4 pt-3 border-t border-gray-300">
-            <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Calculation Details:</h5>
-            <div className="bg-white p-3 rounded border border-gray-200 space-y-2">
-              {/* Prior RT Calculation */}
-              <div>
-                <p className="text-xs font-semibold text-gray-700">Prior RT:</p>
-                <p className="font-mono text-xs text-gray-600 ml-2">
-                  BED = n × d × [1 + d/(α/β)]
-                </p>
-                <p className="font-mono text-xs text-gray-600 ml-2">
-                  EQD2 = BED / [1 + 2/(α/β)]
-                </p>
-                <p className="text-xs text-gray-600 ml-2 mt-1">
-                  Result: <strong>{oarResult.doseBreakdown.priorEQD2.toFixed(1)} Gy</strong>
-                </p>
-              </div>
-
-              {/* Planned RT Calculation */}
-              <div>
-                <p className="text-xs font-semibold text-gray-700">Planned RT:</p>
-                <p className="font-mono text-xs text-gray-600 ml-2">
-                  BED = n × d × [1 + d/(α/β)]
-                </p>
-                <p className="font-mono text-xs text-gray-600 ml-2">
-                  EQD2 = BED / [1 + 2/(α/β)]
-                </p>
-                <p className="text-xs text-gray-600 ml-2 mt-1">
-                  Result: <strong>{oarResult.doseBreakdown.plannedEQD2.toFixed(1)} Gy</strong>
-                </p>
-              </div>
-
-              {/* Cumulative */}
-              <div className="pt-2 border-t border-gray-300">
-                <p className="text-xs font-semibold text-gray-700">Cumulative EQD2:</p>
-                <p className="font-mono text-xs text-gray-600 ml-2">
-                  {oarResult.doseBreakdown.priorEQD2.toFixed(1)} + {oarResult.doseBreakdown.plannedEQD2.toFixed(1)} 
-                  = {oarResult.doseBreakdown.cumulativeEQD2.toFixed(1)} Gy
-                </p>
-                <p className="text-xs text-gray-600 ml-2 mt-1">
-                  Constraint: {oarResult.oar.limitEQD2} Gy (α/β = {oarResult.oar.alphaBeta})
-                </p>
-                <p className="text-xs text-gray-600 ml-2">
-                  Percentage: <strong>{oarResult.percentOfLimit.toFixed(1)}%</strong> of limit
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+  const handleSort = (field: 'tier' | 'name' | 'status') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
   };
 
   return (
-    <div className="mt-8 pt-8 border-t border-gray-300">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold" style={{ color: 'var(--navy-primary)' }}>Assessment Results</h2>
-        
-        {/* Calculation Details Toggle */}
-        <button
-          onClick={() => setShowCalculations(!showCalculations)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-400 rounded-md hover:bg-gray-50 transition-colors"
-          style={{ color: 'var(--gray-dark)' }}
-        >
-          <span className="text-xs">{showCalculations ? '▼' : '▶'}</span>
-          <span>{showCalculations ? 'Hide' : 'Show'} Calculation Details</span>
-        </button>
-      </div>
-      
-      {showCalculations && (
-        <div className="mb-6">
-          <ExpandableSection
-            title="How to Read These Calculations"
-            defaultExpanded={true}
-            bgColor="bg-gray-50"
-            borderColor="border-gray-400"
-            textColor="text-gray-800"
-          >
-            <div className="space-y-3">
-              <p className="text-sm">
-                Each organ-at-risk (OAR) result shows both the <strong>raw dose data</strong> and the 
-                <strong> calculated biological dose</strong> using the Linear-Quadratic (LQ) model.
-              </p>
-              
-              <div className="bg-white p-3 rounded border border-gray-300">
-                <h4 className="font-semibold text-sm mb-2">Step 1: Calculate BED (Biologically Effective Dose)</h4>
-                <p className="font-mono text-xs mb-1">BED = n × d × [1 + d/(α/β)]</p>
-                <p className="text-xs">
-                  This accounts for the biological effect of different fraction sizes. 
-                  Each tissue has its own α/β ratio reflecting its sensitivity to fraction size.
-                </p>
-              </div>
-
-              <div className="bg-white p-3 rounded border border-gray-300">
-                <h4 className="font-semibold text-sm mb-2">Step 2: Convert to EQD2</h4>
-                <p className="font-mono text-xs mb-1">EQD2 = BED / [1 + 2/(α/β)]</p>
-                <p className="text-xs">
-                  This normalizes everything to "equivalent 2 Gy per fraction" doses, 
-                  allowing direct comparison to published constraints.
-                </p>
-              </div>
-
-              <div className="bg-white p-3 rounded border border-gray-300">
-                <h4 className="font-semibold text-sm mb-2">Step 3: Sum Cumulative EQD2</h4>
-                <p className="font-mono text-xs mb-1">Cumulative EQD2 = Prior EQD2 + Planned EQD2</p>
-                <p className="text-xs">
-                  The cumulative dose is compared against published tolerance thresholds 
-                  (from HyTEC, QUANTEC, and institutional data).
-                </p>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-md border border-gray-300 mt-3">
-                <p className="text-xs">
-                  <strong>NOTE:</strong> A constraint of "100 Gy" means 100 Gy delivered 
-                  at 2 Gy per fraction. If using different fractionation, the calculator converts 
-                  your dose to this standard before comparing.
-                </p>
-              </div>
-            </div>
-          </ExpandableSection>
-        </div>
-      )}
-      
-      <div className="space-y-8">
-        {/* RPA Classification */}
+    <div className="space-y-6">
+      {/* 1. Summary Bar */}
+      <div className={`${getRiskColor(results.overallRisk)} text-white px-6 py-4 rounded-lg shadow-md flex items-center justify-between`}>
         <div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            MIRI RPA Prognostic Classification
-          </h3>
-          <div className={`p-6 rounded-lg border-l-4 ${getRPAClassColor(results.rpa.class)}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h4 className="text-2xl font-bold">Class {results.rpa.class}</h4>
-                <p className="text-sm font-medium">{results.rpa.description}</p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold">{results.rpa.survivalEstimate2Year.toFixed(1)}%</div>
-                <div className="text-xs">2-year survival</div>
-                <div className="text-sm mt-1">Median: {results.rpa.medianSurvivalMonths} months</div>
-              </div>
-            </div>
+          <h2 className="text-sm font-bold opacity-90 tracking-wider">ASSESSMENT</h2>
+          <p className="text-2xl font-bold tracking-tight">{getRiskLabel(results.overallRisk)}</p>
+        </div>
+        <div className="text-right hidden sm:block">
+          <p className="text-xs font-medium opacity-80">RPA CLASS</p>
+          <p className="text-3xl font-serif font-bold leading-none">{results.rpa.class}</p>
+        </div>
+      </div>
 
-            <div className="mt-4 p-4 bg-white bg-opacity-50 rounded">
-              <p className="text-sm leading-relaxed">
-                {results.rpa.interpretation}
-              </p>
+      {/* 2. Prognostic Classification (RPA) */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+          <h3 className="text-sm font-bold text-header uppercase tracking-wide">MIRI Prognostic Classification</h3>
+        </div>
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row gap-6">
+            <div className="flex-shrink-0 flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded w-full sm:w-32">
+              <span className="text-xs font-bold text-secondary uppercase mb-1">Class</span>
+              <span className="text-5xl font-serif font-bold text-header">{results.rpa.class}</span>
             </div>
-
-            <div className="mt-4">
-              <h5 className="text-sm font-semibold mb-2">Classification Factors:</h5>
-              <ul className="space-y-1">
-                {results.rpa.classificationFactors.map((factor, idx) => (
-                  <li key={idx} className="text-sm flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>{factor}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex-grow">
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2 text-secondary font-medium">Estimated 2-Year Survival</td>
+                    <td className="py-2 text-right font-bold text-primary">{results.rpa.survivalEstimate2Year}%</td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2 text-secondary font-medium">Median Survival</td>
+                    <td className="py-2 text-right font-bold text-primary">{results.rpa.medianSurvivalMonths} months</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-secondary font-medium align-top pt-3">Interpretation</td>
+                    <td className="py-2 text-right text-gray-700 leading-snug pt-3 max-w-xs ml-auto">
+                      {results.rpa.interpretation}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* OAR Constraint Results */}
-        <div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            Organ-at-Risk Dose Constraints
-          </h3>
-
-          {/* Tier 1: Life-Threatening */}
-          {tier1OARs.length > 0 && (
-            <div className="mb-6">
-              <div className="mb-3 pb-2 border-b-2 border-[#8b2635]">
-                <h4 className="text-base font-semibold uppercase tracking-wide" style={{ color: '#8b2635' }}>
-                  Tier 1 | Life-Threatening Toxicities
-                </h4>
-              </div>
-              <div className="space-y-3">
-                {tier1OARs.map(renderOARCard)}
-              </div>
-            </div>
-          )}
-
-          {/* Tier 2: Critical */}
-          {tier2OARs.length > 0 && (
-            <div className="mb-6">
-              <div className="mb-3 pb-2 border-b-2 border-[#9b6b23]">
-                <h4 className="text-base font-semibold uppercase tracking-wide" style={{ color: '#9b6b23' }}>
-                  Tier 2 | Critical Toxicities
-                </h4>
-              </div>
-              <div className="space-y-3">
-                {tier2OARs.map(renderOARCard)}
-              </div>
-            </div>
-          )}
-
-          {/* Tier 3: Quality of Life */}
-          {tier3OARs.length > 0 && (
-            <div className="mb-6">
-              <div className="mb-3 pb-2 border-b-2 border-[#2c7873]">
-                <h4 className="text-base font-semibold uppercase tracking-wide" style={{ color: '#2c7873' }}>
-                  Tier 3 | Quality of Life Toxicities
-                </h4>
-              </div>
-              <div className="space-y-3">
-                {tier3OARs.map(renderOARCard)}
-              </div>
-            </div>
-          )}
+      {/* 3. Dosimetric Assessment Table */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-header px-6 py-3 border-b border-gray-200 flex justify-between items-center">
+          <h3 className="text-sm font-bold text-white uppercase tracking-wide">Organ Dose Assessment (EQD2)</h3>
+          <span className="text-xs text-gray-400 font-mono">Sorted by: {sortField.toUpperCase()}</span>
         </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-secondary uppercase tracking-wider">
+                <th 
+                  className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('name')}
+                >
+                  Organ Structure
+                </th>
+                <th 
+                  className="px-6 py-3 cursor-pointer hover:bg-gray-100 text-center"
+                  onClick={() => handleSort('tier')}
+                >
+                  Tier
+                </th>
+                <th className="px-6 py-3 text-right">Cumulative Dose</th>
+                <th className="px-6 py-3 text-right">Limit</th>
+                <th 
+                  className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('status')}
+                >
+                  Status
+                </th>
+                <th className="px-6 py-3 text-right">% of Limit</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {sortedOARs.map((result) => (
+                <tr key={result.oar.name} className="hover:bg-blue-50 transition-colors zebra-stripe">
+                  <td className="px-6 py-3 font-medium text-primary">
+                    {result.oar.name}
+                    <span className="block text-[10px] text-gray-400 font-normal">{result.oar.complication}</span>
+                  </td>
+                  <td className="px-6 py-3 text-center">
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                      result.oar.tier === 1 ? 'bg-red-100 text-red-800' : 
+                      result.oar.tier === 2 ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {result.oar.tier}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3 text-right font-mono font-medium text-gray-700">
+                    {result.doseBreakdown.cumulativeEQD2.toFixed(1)} <span className="text-xs text-gray-400">Gy</span>
+                  </td>
+                  <td className="px-6 py-3 text-right font-mono text-gray-500">
+                    {result.oar.limitEQD2} <span className="text-xs">Gy</span>
+                  </td>
+                  <td className="px-6 py-3">
+                    {getStatusDisplay(result.warningLevel)}
+                  </td>
+                  <td className="px-6 py-3 text-right font-mono">
+                    <span className={`font-bold ${
+                      result.percentOfLimit > 100 ? 'text-status-critical' : 'text-primary'
+                    }`}>
+                      {result.percentOfLimit.toFixed(0)}%
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-        {/* Clinical Recommendations */}
-        <div className="bg-white border border-gray-300 border-l-4 border-l-[#2c7873] rounded-md p-6 shadow-sm">
-          <h3 className="text-base font-semibold uppercase tracking-wide mb-4" style={{ color: 'var(--accent-teal)' }}>
+      {/* 4. Recommendations & Notes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          <h4 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
             Clinical Recommendations
-          </h3>
+          </h4>
           <ul className="space-y-2">
-            {results.recommendations.map((rec, index) => (
-              <li key={index} className="flex items-start">
-                <span className="mr-2 mt-1 font-bold" style={{ color: 'var(--accent-teal)' }}>•</span>
-                <span className="text-gray-700 text-sm leading-relaxed">{rec}</span>
+            {results.recommendations.map((rec, i) => (
+              <li key={i} className="flex items-start text-sm text-gray-700">
+                <span className="text-accent mr-2">•</span>
+                {rec}
               </li>
             ))}
           </ul>
         </div>
-
-        {/* Medical Disclaimer */}
-        <div className="bg-white border-2 border-gray-400 rounded-md p-6 shadow-sm">
-          <h4 className="font-semibold text-sm uppercase tracking-wide mb-3" style={{ color: 'var(--gray-dark)' }}>
-            Important Medical Disclaimer
+        
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+           <h4 className="text-xs font-bold text-secondary uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
+            Calculation Breakdown
           </h4>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            This calculator provides educational estimates based on published literature (MIRI study, 
-            HyTEC guidelines) and should not replace clinical judgment. Treatment decisions must be 
-            made by qualified radiation oncologists considering the complete clinical picture, 
-            individual patient factors, detailed treatment planning, and institutional protocols. 
-            The dose constraints shown represent general thresholds and may need to be adjusted based 
-            on specific clinical circumstances. Always consult with a multidisciplinary tumor board 
-            for complex re-irradiation cases.
-          </p>
+          <div className="text-xs text-gray-600 space-y-2">
+             <p>All doses calculated as EQD2 (Equivalent Dose in 2Gy fractions) using the Linear-Quadratic Model.</p>
+             <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                <p><strong>Formula:</strong> EQD2 = D × [(d + α/β) / (2 + α/β)]</p>
+             </div>
+             <p>Tissue-specific α/β ratios applied for each organ structure.</p>
+          </div>
         </div>
-
-        {/* References Section */}
-        <ReferencesSection />
       </div>
+
+      {/* References Footer Component */}
+      <ReferencesSection />
     </div>
   );
 }

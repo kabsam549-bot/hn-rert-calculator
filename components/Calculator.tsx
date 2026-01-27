@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InputSection from './InputSection';
 import ResultsSection from './ResultsSection';
 import { checkOARConstraint, getOARConstraint } from '@/lib/oarConstraints';
@@ -24,65 +24,68 @@ export default function Calculator() {
   });
 
   const [results, setResults] = useState<CalculationResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  const handleCalculate = () => {
-    setError(null);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
+  // Effect to auto-calculate when valid data is present
+  useEffect(() => {
+    if (isValidForCalculation(patientData)) {
+      calculateResults(patientData);
+    } else {
+      setResults(null);
+    }
+  }, [patientData]);
+
+  const isValidForCalculation = (data: PatientData) => {
+    return (
+      data.priorDose !== undefined &&
+      data.priorFractions !== undefined &&
+      data.plannedDose !== undefined &&
+      data.plannedFractions !== undefined &&
+      data.timeSinceRT !== undefined &&
+      (data.selectedOARs?.length ?? 0) > 0
+    );
+  };
+
+  const calculateResults = (data: PatientData) => {
     try {
-      // Validate required fields
-      if (
-        !patientData.priorDose ||
-        !patientData.priorFractions ||
-        !patientData.plannedDose ||
-        !patientData.plannedFractions ||
-        patientData.timeSinceRT === undefined ||
-        !patientData.selectedOARs ||
-        patientData.selectedOARs.length === 0
-      ) {
-        setError('Please fill in all required fields');
-        return;
-      }
-
       // Calculate RPA classification
       const rpaResult = classifyRPA({
-        reirradiationIntervalYears: monthsToYears(patientData.timeSinceRT),
-        hadSalvageSurgery: patientData.hadSalvageSurgery,
-        hasOrganDysfunction: patientData.hasOrganDysfunction,
+        reirradiationIntervalYears: monthsToYears(data.timeSinceRT!),
+        hadSalvageSurgery: data.hadSalvageSurgery,
+        hasOrganDysfunction: data.hasOrganDysfunction,
       });
 
-      // Calculate OAR constraints for selected organs
+      // Calculate OAR constraints
       const oarResults: OARResult[] = [];
       
-      for (const oarName of patientData.selectedOARs) {
+      for (const oarName of data.selectedOARs) {
         const oarConstraint = getOARConstraint(oarName);
-        if (!oarConstraint) {
-          console.warn(`OAR constraint not found for: ${oarName}`);
-          continue;
-        }
+        if (!oarConstraint) continue;
 
         const oarResult = checkOARConstraint(
           oarConstraint,
-          patientData.priorDose,
-          patientData.priorFractions,
-          patientData.plannedDose,
-          patientData.plannedFractions,
-          patientData.timeSinceRT
+          data.priorDose!,
+          data.priorFractions!,
+          data.plannedDose!,
+          data.plannedFractions!,
+          data.timeSinceRT!
         );
 
         oarResults.push(oarResult);
       }
 
-      // Sort OAR results by tier and warning level
+      // Sort OAR results
       oarResults.sort((a, b) => {
-        if (a.oar.tier !== b.oar.tier) {
-          return a.oar.tier - b.oar.tier;
-        }
+        if (a.oar.tier !== b.oar.tier) return a.oar.tier - b.oar.tier;
         const warningOrder = { exceeds: 0, caution: 1, safe: 2 };
         return warningOrder[a.warningLevel] - warningOrder[b.warningLevel];
       });
 
-      // Determine overall risk based on RPA class and OAR violations
+      // Determine overall risk
       let overallRisk: 'Low' | 'Moderate' | 'High';
       const hasExceeds = oarResults.some(r => r.warningLevel === 'exceeds');
       const hasTier1Caution = oarResults.some(r => r.oar.tier === 1 && r.warningLevel === 'caution');
@@ -95,57 +98,43 @@ export default function Calculator() {
         overallRisk = 'Low';
       }
 
-      // Generate clinical interpretation
+      // Interpretation
       let interpretation = '';
       if (overallRisk === 'High') {
-        interpretation = 'This case presents HIGH RISK for re-irradiation. ';
+        interpretation = 'HIGH RISK CASE. ';
         if (hasExceeds) {
           const exceedCount = oarResults.filter(r => r.warningLevel === 'exceeds').length;
           interpretation += `${exceedCount} organ(s) exceed dose constraints. `;
         }
-        interpretation += 'Careful multidisciplinary review required before proceeding.';
+        interpretation += 'Multidisciplinary review mandatory.';
       } else if (overallRisk === 'Moderate') {
-        interpretation = 'This case presents MODERATE RISK for re-irradiation. ';
-        interpretation += 'Re-irradiation may be feasible with careful planning and modern techniques.';
+        interpretation = 'MODERATE RISK CASE. ';
+        interpretation += 'Feasible with careful planning.';
       } else {
-        interpretation = 'This case presents FAVORABLE characteristics for re-irradiation. ';
-        interpretation += 'Proceed with appropriate patient selection and dose constraints.';
+        interpretation = 'FAVORABLE RISK PROFILE. ';
+        interpretation += 'Proceed with standard protocols.';
       }
 
-      // Get RPA-based recommendations
+      // Recommendations
       const recommendations = getRecommendationsByClass(rpaResult.class);
-
-      // Add OAR-specific recommendations
       if (hasExceeds) {
         const tier1Exceeds = oarResults.filter(r => r.oar.tier === 1 && r.warningLevel === 'exceeds');
         if (tier1Exceeds.length > 0) {
           recommendations.unshift(
-            `CRITICAL WARNING: ${tier1Exceeds.length} Tier 1 organ(s) exceed dose limits - strongly reconsider treatment or modify plan`
+            `CRITICAL: ${tier1Exceeds.length} Tier 1 organ(s) exceed absolute limits.`
           );
         }
       }
 
-      if (hasTier1Caution && !hasExceeds) {
-        recommendations.push(
-          'Tier 1 organs approaching limits - consider dose reduction or alternative fractionation'
-        );
-      }
-
-      // Create calculation result
-      const calculationResult: CalculationResult = {
+      setResults({
         rpa: rpaResult,
         oarResults,
         overallRisk,
         interpretation,
         recommendations,
-      };
-
-      setResults(calculationResult);
+      });
     } catch (err) {
-      console.error('Calculation error:', err);
-      setError(
-        err instanceof Error ? err.message : 'An error occurred during calculation'
-      );
+      console.error(err);
     }
   };
 
@@ -164,28 +153,38 @@ export default function Calculator() {
       selectedOARs: [],
     });
     setResults(null);
-    setError(null);
   };
 
+  if (!isClient) return null;
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="bg-white rounded-md shadow-md border border-gray-300 p-6 md:p-8">
-        <InputSection
-          patientData={patientData}
-          setPatientData={setPatientData}
-          onCalculate={handleCalculate}
-          onReset={handleReset}
-        />
+    <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
+      <div className="flex flex-col lg:flex-row gap-8">
         
-        {error && (
-          <div className="mt-6 p-4 bg-white border-2 border-[#8b2635] rounded-md">
-            <p className="text-sm font-medium" style={{ color: '#8b2635' }}>ERROR: {error}</p>
+        {/* Left Column: Inputs (40%) */}
+        <div className="w-full lg:w-[40%] flex-shrink-0">
+          <InputSection
+            patientData={patientData}
+            setPatientData={setPatientData}
+            onReset={handleReset}
+          />
+        </div>
+
+        {/* Right Column: Results (60%) */}
+        <div className="w-full lg:w-[60%]">
+          <div className="lg:sticky lg:top-8 transition-all duration-300">
+            {results ? (
+              <ResultsSection results={results} />
+            ) : (
+              <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-white/50 text-gray-400">
+                <div className="text-center">
+                  <p className="text-lg font-medium">Awaiting Clinical Data</p>
+                  <p className="text-sm">Complete the input form to generate assessment</p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        
-        {results && !error && (
-          <ResultsSection results={results} />
-        )}
+        </div>
       </div>
     </div>
   );
