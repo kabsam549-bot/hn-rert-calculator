@@ -1,10 +1,34 @@
-import type { PatientData, CalculationResult } from './types';
+/**
+ * Legacy risk score calculation
+ * 
+ * This file contains the original simple risk score calculation.
+ * It has been superseded by the comprehensive OAR constraint system
+ * and RPA classification in oarConstraints.ts and rpaClassification.ts.
+ * 
+ * Kept for reference only.
+ */
+
+import type { PatientData } from './types';
+
+/**
+ * Legacy interface for the old risk calculation
+ */
+export interface LegacyCalculationResult {
+  score: number;
+  riskLevel: 'Low' | 'Moderate' | 'High';
+  interpretation: string;
+  factors: string[];
+  recommendations: string[];
+}
 
 /**
  * Calculate re-irradiation risk score based on patient factors
  * This is a simplified educational model and should not be used for actual clinical decisions
+ * 
+ * @deprecated Use the comprehensive OAR constraint system (oarConstraints.ts) and 
+ * RPA classification (rpaClassification.ts) instead
  */
-export function calculateRiskScore(data: PatientData): CalculationResult {
+export function calculateRiskScore(data: PatientData): LegacyCalculationResult {
   let score = 0;
   const factors: string[] = [];
   const recommendations: string[] = [];
@@ -131,23 +155,19 @@ export function calculateRiskScore(data: PatientData): CalculationResult {
 export function validatePatientData(data: PatientData): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  if (data.age === undefined || data.age < 0 || data.age > 120) {
+  if (data.age !== undefined && (data.age < 0 || data.age > 120)) {
     errors.push('Age must be between 0 and 120 years');
   }
 
-  if (data.priorDose === undefined || data.priorDose < 0 || data.priorDose > 150) {
+  if (data.priorDose !== undefined && (data.priorDose < 0 || data.priorDose > 150)) {
     errors.push('Prior dose must be between 0 and 150 Gy');
   }
 
-  if (data.timeSinceRT === undefined || data.timeSinceRT < 0) {
+  if (data.timeSinceRT !== undefined && data.timeSinceRT < 0) {
     errors.push('Time since prior RT must be a positive number');
   }
 
-  if (!data.tumorLocation) {
-    errors.push('Tumor location must be selected');
-  }
-
-  if (data.performance === undefined || data.performance < 0 || data.performance > 4) {
+  if (data.performance !== undefined && (data.performance < 0 || data.performance > 4)) {
     errors.push('Performance status must be between 0 and 4');
   }
 
