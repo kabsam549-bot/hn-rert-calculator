@@ -7,10 +7,9 @@ export default function ReferencesSection() {
     <div className="mt-8">
       <ExpandableSection
         title="Clinical Evidence & References"
-        icon="📚"
-        bgColor="bg-purple-50"
-        borderColor="border-purple-200"
-        textColor="text-purple-900"
+        bgColor="bg-gray-50"
+        borderColor="border-gray-400"
+        textColor="text-gray-800"
       >
         <div className="space-y-4">
           {/* MIRI Study */}

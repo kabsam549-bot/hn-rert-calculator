@@ -4,7 +4,6 @@ import { useState } from 'react';
 
 interface ExpandableSectionProps {
   title: string;
-  icon?: string;
   children: React.ReactNode;
   defaultExpanded?: boolean;
   bgColor?: string;
@@ -14,27 +13,23 @@ interface ExpandableSectionProps {
 
 export default function ExpandableSection({
   title,
-  icon = '📖',
   children,
   defaultExpanded = false,
-  bgColor = 'bg-blue-50',
-  borderColor = 'border-blue-200',
-  textColor = 'text-blue-900',
+  bgColor = 'bg-gray-50',
+  borderColor = 'border-gray-400',
+  textColor = 'text-gray-800',
 }: ExpandableSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className={`border ${borderColor} rounded-lg overflow-hidden ${bgColor}`}>
+    <div className={`border ${borderColor} rounded-md overflow-hidden ${bgColor}`}>
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`w-full px-4 py-3 flex items-center justify-between ${textColor} font-semibold text-left hover:opacity-80 transition-opacity`}
+        className={`w-full px-4 py-3 flex items-center justify-between ${textColor} font-medium text-left hover:bg-opacity-80 transition-all`}
       >
-        <div className="flex items-center gap-2">
-          <span>{icon}</span>
-          <span>{title}</span>
-        </div>
-        <span className="text-lg transform transition-transform" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+        <span className="text-sm uppercase tracking-wide">{title}</span>
+        <span className="text-sm transform transition-transform" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
           ▼
         </span>
       </button>

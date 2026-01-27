@@ -47,19 +47,22 @@ export default function InputSection({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-800 mb-2">H&N Re-Irradiation Calculator</h2>
-        <p className="text-sm text-gray-600">Based on MIRI study (Phan et al., 2010) and HyTEC guidelines</p>
+      <div className="border-b-2 pb-4 mb-6" style={{ borderColor: 'var(--navy-primary)' }}>
+        <h1 className="text-3xl font-semibold mb-2" style={{ color: 'var(--navy-primary)', letterSpacing: '-0.02em' }}>
+          HEAD & NECK RE-IRRADIATION CALCULATOR
+        </h1>
+        <p className="text-sm" style={{ color: 'var(--gray-medium)' }}>
+          Dosimetric Decision Support Tool | Based on MIRI Study (Phan et al., 2010) and HyTEC Guidelines
+        </p>
       </div>
 
       {/* Educational Sections */}
       <div className="space-y-4">
         <ExpandableSection
           title="Understanding BED & EQD2 Calculations"
-          icon="🧮"
-          bgColor="bg-indigo-50"
-          borderColor="border-indigo-200"
-          textColor="text-indigo-900"
+          bgColor="bg-gray-50"
+          borderColor="border-gray-400"
+          textColor="text-gray-800"
         >
           <div>
             <h4 className="font-semibold mb-2">What is BED (Biologically Effective Dose)?</h4>
@@ -109,10 +112,9 @@ export default function InputSection({
 
         <ExpandableSection
           title="Understanding α/β Ratios"
-          icon="⚛️"
-          bgColor="bg-green-50"
-          borderColor="border-green-200"
-          textColor="text-green-900"
+          bgColor="bg-gray-50"
+          borderColor="border-gray-400"
+          textColor="text-gray-800"
         >
           <div>
             <p className="mb-3">
@@ -154,10 +156,9 @@ export default function InputSection({
 
         <ExpandableSection
           title="About the MIRI RPA Study"
-          icon="📊"
-          bgColor="bg-yellow-50"
-          borderColor="border-yellow-200"
-          textColor="text-yellow-900"
+          bgColor="bg-gray-50"
+          borderColor="border-gray-400"
+          textColor="text-gray-800"
         >
           <div>
             <p className="mb-3">
@@ -168,30 +169,30 @@ export default function InputSection({
 
             <h4 className="font-semibold mb-2">RPA Classification:</h4>
             <div className="space-y-2">
-              <div className="bg-white p-3 rounded border border-green-400 border-l-4">
-                <p className="font-semibold text-sm text-green-800">Class I (Best Prognosis)</p>
-                <p className="text-xs mb-1">
-                  ✓ Prior salvage surgery AND no organ dysfunction<br/>
-                  ✓ 2-year survival: ~62%<br/>
-                  ✓ Median survival: ~24 months
+              <div className="bg-white p-3 rounded-md border border-gray-300 border-l-4 border-l-[#2d5f3f]">
+                <p className="font-semibold text-sm" style={{ color: '#2d5f3f' }}>Class I (Best Prognosis)</p>
+                <p className="text-xs mb-1 text-gray-700">
+                  • Prior salvage surgery AND no organ dysfunction<br/>
+                  • 2-year survival: ~62%<br/>
+                  • Median survival: ~24 months
                 </p>
               </div>
               
-              <div className="bg-white p-3 rounded border border-yellow-400 border-l-4">
-                <p className="font-semibold text-sm text-yellow-800">Class II (Intermediate)</p>
-                <p className="text-xs mb-1">
+              <div className="bg-white p-3 rounded-md border border-gray-300 border-l-4 border-l-[#9b6b23]">
+                <p className="font-semibold text-sm" style={{ color: '#9b6b23' }}>Class II (Intermediate)</p>
+                <p className="text-xs mb-1 text-gray-700">
                   • Interval ≥18 months OR no organ dysfunction (but not both Class I criteria)<br/>
                   • 2-year survival: ~41%<br/>
                   • Median survival: ~13 months
                 </p>
               </div>
               
-              <div className="bg-white p-3 rounded border border-red-400 border-l-4">
-                <p className="font-semibold text-sm text-red-800">Class III (Poor Prognosis)</p>
-                <p className="text-xs mb-1">
-                  ✗ Interval &lt;18 months AND organ dysfunction<br/>
-                  ✗ 2-year survival: ~18%<br/>
-                  ✗ Median survival: ~6 months
+              <div className="bg-white p-3 rounded-md border border-gray-300 border-l-4 border-l-[#8b2635]">
+                <p className="font-semibold text-sm" style={{ color: '#8b2635' }}>Class III (Poor Prognosis)</p>
+                <p className="text-xs mb-1 text-gray-700">
+                  • Interval &lt;18 months AND organ dysfunction<br/>
+                  • 2-year survival: ~18%<br/>
+                  • Median survival: ~6 months
                 </p>
               </div>
             </div>
@@ -205,10 +206,9 @@ export default function InputSection({
 
         <ExpandableSection
           title="Why Organ-at-Risk Tiers?"
-          icon="🎯"
-          bgColor="bg-rose-50"
-          borderColor="border-rose-200"
-          textColor="text-rose-900"
+          bgColor="bg-gray-50"
+          borderColor="border-gray-400"
+          textColor="text-gray-800"
         >
           <div>
             <p className="mb-3">
@@ -432,15 +432,15 @@ export default function InputSection({
         
         {/* Inline callout about interval significance */}
         {patientData.timeSinceRT !== undefined && (
-          <div className={`mt-3 p-3 rounded-lg border-l-4 ${
+          <div className={`mt-3 p-3 rounded-md border-l-4 bg-white border ${
             patientData.timeSinceRT >= 18 
-              ? 'bg-green-50 border-green-400 text-green-800' 
-              : 'bg-yellow-50 border-yellow-400 text-yellow-800'
+              ? 'border-l-[#2d5f3f] border-gray-300' 
+              : 'border-l-[#9b6b23] border-gray-300'
           }`}>
-            <p className="text-sm">
+            <p className="text-sm text-gray-700">
               {patientData.timeSinceRT >= 18 
-                ? '✓ Interval ≥18 months is associated with better outcomes (MIRI RPA favorable factor)'
-                : '⚠️ Interval <18 months is associated with poorer prognosis (MIRI RPA risk factor)'}
+                ? 'Interval ≥18 months is associated with better outcomes (MIRI RPA favorable factor)'
+                : 'CAUTION: Interval <18 months is associated with poorer prognosis (MIRI RPA risk factor)'}
             </p>
           </div>
         )}
@@ -573,9 +573,8 @@ export default function InputSection({
         
         {/* Tier 1: Life-threatening */}
         <div className="mb-6">
-          <h4 className="text-sm font-semibold text-red-700 mb-3 flex items-center">
-            <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded mr-2">TIER 1</span>
-            Life-Threatening Toxicities
+          <h4 className="text-sm font-semibold mb-3 pb-2 border-b-2 uppercase tracking-wide" style={{ color: '#8b2635', borderColor: '#8b2635' }}>
+            Tier 1 | Life-Threatening Toxicities
             <Tooltip content={
               <div>
                 <p className="font-semibold mb-1">Why Tier 1?</p>
@@ -598,13 +597,13 @@ export default function InputSection({
             {OAR_CONSTRAINTS.filter(oar => oar.tier === 1).map(oar => (
               <label
                 key={oar.name}
-                className="flex items-start p-3 border border-red-200 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
+                className="flex items-start p-3 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={patientData.selectedOARs?.includes(oar.name) || false}
                   onChange={() => handleOARToggle(oar.name)}
-                  className="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                  className="mt-1 h-4 w-4 border-gray-400 rounded focus:ring-gray-400"
                 />
                 <div className="ml-3 flex-1">
                   <span className="block text-sm font-medium text-gray-900">{oar.name}</span>
@@ -617,9 +616,8 @@ export default function InputSection({
 
         {/* Tier 2: Critical */}
         <div className="mb-6">
-          <h4 className="text-sm font-semibold text-orange-700 mb-3 flex items-center">
-            <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded mr-2">TIER 2</span>
-            Critical Toxicities
+          <h4 className="text-sm font-semibold mb-3 pb-2 border-b-2 uppercase tracking-wide" style={{ color: '#9b6b23', borderColor: '#9b6b23' }}>
+            Tier 2 | Critical Toxicities
             <Tooltip content={
               <div>
                 <p className="font-semibold mb-1">Why Tier 2?</p>
@@ -643,13 +641,13 @@ export default function InputSection({
             {OAR_CONSTRAINTS.filter(oar => oar.tier === 2).map(oar => (
               <label
                 key={oar.name}
-                className="flex items-start p-3 border border-orange-200 rounded-lg hover:bg-orange-50 cursor-pointer transition-colors"
+                className="flex items-start p-3 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={patientData.selectedOARs?.includes(oar.name) || false}
                   onChange={() => handleOARToggle(oar.name)}
-                  className="mt-1 h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                  className="mt-1 h-4 w-4 border-gray-400 rounded focus:ring-gray-400"
                 />
                 <div className="ml-3 flex-1">
                   <span className="block text-sm font-medium text-gray-900">{oar.name}</span>
@@ -662,9 +660,8 @@ export default function InputSection({
 
         {/* Tier 3: Quality of Life */}
         <div className="mb-6">
-          <h4 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
-            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">TIER 3</span>
-            Quality of Life Toxicities
+          <h4 className="text-sm font-semibold mb-3 pb-2 border-b-2 uppercase tracking-wide" style={{ color: '#2c7873', borderColor: '#2c7873' }}>
+            Tier 3 | Quality of Life Toxicities
             <Tooltip content={
               <div>
                 <p className="font-semibold mb-1">Why Tier 3?</p>
@@ -688,13 +685,13 @@ export default function InputSection({
             {OAR_CONSTRAINTS.filter(oar => oar.tier === 3).map(oar => (
               <label
                 key={oar.name}
-                className="flex items-start p-3 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
+                className="flex items-start p-3 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={patientData.selectedOARs?.includes(oar.name) || false}
                   onChange={() => handleOARToggle(oar.name)}
-                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="mt-1 h-4 w-4 border-gray-400 rounded focus:ring-gray-400"
                 />
                 <div className="ml-3 flex-1">
                   <span className="block text-sm font-medium text-gray-900">{oar.name}</span>
@@ -711,13 +708,15 @@ export default function InputSection({
         <button
           onClick={onCalculate}
           disabled={!isFormValid()}
-          className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 text-white py-3 px-6 rounded-md font-medium hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+          style={{ backgroundColor: isFormValid() ? 'var(--navy-primary)' : undefined }}
         >
           Calculate Assessment
         </button>
         <button
           onClick={onReset}
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+          className="px-6 py-3 border-2 border-gray-400 rounded-md font-medium hover:bg-gray-50 transition-colors"
+          style={{ color: 'var(--gray-dark)' }}
         >
           Reset
         </button>

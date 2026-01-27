@@ -120,7 +120,7 @@ export default function Calculator() {
         const tier1Exceeds = oarResults.filter(r => r.oar.tier === 1 && r.warningLevel === 'exceeds');
         if (tier1Exceeds.length > 0) {
           recommendations.unshift(
-            `⚠️ CRITICAL: ${tier1Exceeds.length} Tier 1 organ(s) exceed dose limits - strongly reconsider treatment or modify plan`
+            `CRITICAL WARNING: ${tier1Exceeds.length} Tier 1 organ(s) exceed dose limits - strongly reconsider treatment or modify plan`
           );
         }
       }
@@ -169,7 +169,7 @@ export default function Calculator() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
+      <div className="bg-white rounded-md shadow-md border border-gray-300 p-6 md:p-8">
         <InputSection
           patientData={patientData}
           setPatientData={setPatientData}
@@ -178,8 +178,8 @@ export default function Calculator() {
         />
         
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 text-sm font-medium">Error: {error}</p>
+          <div className="mt-6 p-4 bg-white border-2 border-[#8b2635] rounded-md">
+            <p className="text-sm font-medium" style={{ color: '#8b2635' }}>ERROR: {error}</p>
           </div>
         )}
         
