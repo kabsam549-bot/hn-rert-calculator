@@ -3,7 +3,35 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #1a202c;
+  /* Teal/Green Professional Palette */
+  --teal-primary: #0d9488;      /* Main teal - buttons, accents, active states */
+  --teal-dark: #0f766e;         /* Darker teal - header, hover states */
+  --teal-light: #ccfbf1;        /* Light teal - backgrounds, highlights */
+  --teal-50: #f0fdfa;           /* Very light teal - subtle backgrounds */
+
+  /* Header */
+  --header-bg: #0f766e;         /* Dark teal header */
+  --header-text: #ffffff;
+
+  /* Cards and sections */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --section-bg: #f0fdfa;        /* Light teal tint for sections */
+
+  /* Status colors */
+  --status-exceeds: #dc2626;    /* Red for exceeds */
+  --status-caution: #d97706;    /* Amber for caution */
+  --status-safe: #059669;       /* Green/teal for safe */
+
+  /* Text */
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+
+  /* Accent */
+  --accent: #0d9488;            /* Teal accent */
+
+  --foreground: var(--text-primary);
   --background: #f5f6f8;
 }
 
@@ -18,11 +46,11 @@ body {
 /* Form Elements Professional Styling */
 input[type="number"],
 input[type="text"] {
-  @apply transition-all duration-200;
+  @apply transition-all duration-200 outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500;
 }
 
 input[type="checkbox"] {
-  @apply rounded border-gray-300 text-accent focus:ring-accent;
+  @apply rounded border-gray-300 text-teal-600 focus:ring-teal-500;
 }
 
 /* Custom Scrollbar */
@@ -46,7 +74,7 @@ input[type="checkbox"] {
 
 /* Utility for zebra striping that works well with borders */
 .zebra-stripe:nth-child(even) {
-  background-color: #f8fafc;
+  background-color: var(--teal-50);
 }
 
 /* Sticky header shadow */
