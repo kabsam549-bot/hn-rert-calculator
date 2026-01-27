@@ -1,13 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import type { CalculationResult } from '@/lib/types';
 import type { OARResult } from '@/lib/oarConstraints';
+import ExpandableSection from './ExpandableSection';
+import ReferencesSection from './ReferencesSection';
 
 interface ResultsSectionProps {
   results: CalculationResult;
 }
 
 export default function ResultsSection({ results }: ResultsSectionProps) {
+  const [showCalculations, setShowCalculations] = useState(false);
+
   const getWarningColor = (warningLevel: 'safe' | 'caution' | 'exceeds') => {
     switch (warningLevel) {
       case 'safe':
@@ -128,13 +133,130 @@ export default function ResultsSection({ results }: ResultsSectionProps) {
         <p className="text-xs text-gray-600 mt-2 italic">
           {oarResult.oar.description}
         </p>
+
+        {/* Calculation Details (if enabled) */}
+        {showCalculations && (
+          <div className="mt-4 pt-3 border-t border-gray-300">
+            <h5 className="text-xs font-semibold text-gray-700 mb-2">📐 Calculation Details:</h5>
+            <div className="bg-white p-3 rounded border border-gray-200 space-y-2">
+              {/* Prior RT Calculation */}
+              <div>
+                <p className="text-xs font-semibold text-gray-700">Prior RT:</p>
+                <p className="font-mono text-xs text-gray-600 ml-2">
+                  BED = n × d × [1 + d/(α/β)]
+                </p>
+                <p className="font-mono text-xs text-gray-600 ml-2">
+                  EQD2 = BED / [1 + 2/(α/β)]
+                </p>
+                <p className="text-xs text-gray-600 ml-2 mt-1">
+                  Result: <strong>{oarResult.doseBreakdown.priorEQD2.toFixed(1)} Gy</strong>
+                </p>
+              </div>
+
+              {/* Planned RT Calculation */}
+              <div>
+                <p className="text-xs font-semibold text-gray-700">Planned RT:</p>
+                <p className="font-mono text-xs text-gray-600 ml-2">
+                  BED = n × d × [1 + d/(α/β)]
+                </p>
+                <p className="font-mono text-xs text-gray-600 ml-2">
+                  EQD2 = BED / [1 + 2/(α/β)]
+                </p>
+                <p className="text-xs text-gray-600 ml-2 mt-1">
+                  Result: <strong>{oarResult.doseBreakdown.plannedEQD2.toFixed(1)} Gy</strong>
+                </p>
+              </div>
+
+              {/* Cumulative */}
+              <div className="pt-2 border-t border-gray-300">
+                <p className="text-xs font-semibold text-gray-700">Cumulative EQD2:</p>
+                <p className="font-mono text-xs text-gray-600 ml-2">
+                  {oarResult.doseBreakdown.priorEQD2.toFixed(1)} + {oarResult.doseBreakdown.plannedEQD2.toFixed(1)} 
+                  = {oarResult.doseBreakdown.cumulativeEQD2.toFixed(1)} Gy
+                </p>
+                <p className="text-xs text-gray-600 ml-2 mt-1">
+                  Constraint: {oarResult.oar.limitEQD2} Gy (α/β = {oarResult.oar.alphaBeta})
+                </p>
+                <p className="text-xs text-gray-600 ml-2">
+                  Percentage: <strong>{oarResult.percentOfLimit.toFixed(1)}%</strong> of limit
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <div className="mt-8 pt-8 border-t-2 border-gray-200">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Assessment Results</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Assessment Results</h2>
+        
+        {/* Calculation Details Toggle */}
+        <button
+          onClick={() => setShowCalculations(!showCalculations)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors"
+        >
+          <span>{showCalculations ? '🔽' : '▶️'}</span>
+          <span>{showCalculations ? 'Hide' : 'Show'} Calculation Details</span>
+        </button>
+      </div>
+      
+      {showCalculations && (
+        <div className="mb-6">
+          <ExpandableSection
+            title="How to Read These Calculations"
+            icon="📖"
+            defaultExpanded={true}
+            bgColor="bg-gray-50"
+            borderColor="border-gray-300"
+            textColor="text-gray-800"
+          >
+            <div className="space-y-3">
+              <p className="text-sm">
+                Each organ-at-risk (OAR) result shows both the <strong>raw dose data</strong> and the 
+                <strong> calculated biological dose</strong> using the Linear-Quadratic (LQ) model.
+              </p>
+              
+              <div className="bg-white p-3 rounded border border-gray-300">
+                <h4 className="font-semibold text-sm mb-2">Step 1: Calculate BED (Biologically Effective Dose)</h4>
+                <p className="font-mono text-xs mb-1">BED = n × d × [1 + d/(α/β)]</p>
+                <p className="text-xs">
+                  This accounts for the biological effect of different fraction sizes. 
+                  Each tissue has its own α/β ratio reflecting its sensitivity to fraction size.
+                </p>
+              </div>
+
+              <div className="bg-white p-3 rounded border border-gray-300">
+                <h4 className="font-semibold text-sm mb-2">Step 2: Convert to EQD2</h4>
+                <p className="font-mono text-xs mb-1">EQD2 = BED / [1 + 2/(α/β)]</p>
+                <p className="text-xs">
+                  This normalizes everything to "equivalent 2 Gy per fraction" doses, 
+                  allowing direct comparison to published constraints.
+                </p>
+              </div>
+
+              <div className="bg-white p-3 rounded border border-gray-300">
+                <h4 className="font-semibold text-sm mb-2">Step 3: Sum Cumulative EQD2</h4>
+                <p className="font-mono text-xs mb-1">Cumulative EQD2 = Prior EQD2 + Planned EQD2</p>
+                <p className="text-xs">
+                  The cumulative dose is compared against published tolerance thresholds 
+                  (from HyTEC, QUANTEC, and institutional data).
+                </p>
+              </div>
+
+              <div className="bg-blue-50 p-3 rounded border border-blue-300 mt-3">
+                <p className="text-xs">
+                  <strong>💡 Key concept:</strong> A constraint of "100 Gy" means 100 Gy delivered 
+                  at 2 Gy per fraction. If using different fractionation, the calculator converts 
+                  your dose to this standard before comparing.
+                </p>
+              </div>
+            </div>
+          </ExpandableSection>
+        </div>
+      )}
       
       <div className="space-y-8">
         {/* RPA Classification */}
@@ -265,6 +387,9 @@ export default function ResultsSection({ results }: ResultsSectionProps) {
             for complex re-irradiation cases.
           </p>
         </div>
+
+        {/* References Section */}
+        <ReferencesSection />
       </div>
     </div>
   );
