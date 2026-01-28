@@ -7,10 +7,11 @@ export default function ReferencesSection() {
       
       <div className="space-y-4 text-xs text-gray-600">
         <div>
-          <p className="font-medium text-primary mb-1">MIRI Prognostic Score</p>
+          <p className="font-medium text-primary mb-1">MIRI Protocol & RPA Classification</p>
           <p>
-            Phan J, et al. Matched cohort analysis of patients with recurrent head and neck cancer treated with re-irradiation with or without concurrent chemotherapy. 
-            <em className="text-secondary"> Int J Radiat Oncol Biol Phys.</em> 2010;78(3):S101-S102.
+            Phan J, Spiotto MT, Goodman CD, et al. Reirradiation for Locally Recurrent Head and Neck Cancer: State-of-the-Art and Future Directions. 
+            <em className="text-secondary"> Semin Radiat Oncol.</em> 2025.
+            <a href="https://doi.org/10.1016/j.semradonc.2025.01.001" target="_blank" rel="noopener noreferrer" className="ml-1 text-teal-600 hover:underline">[DOI]</a>
           </p>
         </div>
 

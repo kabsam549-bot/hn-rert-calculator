@@ -115,7 +115,7 @@ Built a comprehensive, evidence-based H&N re-irradiation decision support calcul
 ## 🔬 Clinical Evidence Base
 
 **Primary Guidelines:**
-1. **MIRI Study** (Phan et al., 2010) - RPA prognostic model
+1. **MIRI Study** (Phan et al., 2025) - RPA prognostic model
 2. **HyTEC** - Re-irradiation organ constraints
 3. **QUANTEC** - Normal tissue complication data
 4. **Linear-Quadratic Model** (Fowler, 1989) - BED/EQD2 theory

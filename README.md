@@ -35,7 +35,7 @@ All treatment decisions must be made by qualified radiation oncologists and mult
 
 This calculator implements guidelines from:
 
-1. **MIRI Study** (Phan et al., 2010)
+1. **MIRI Study** (Phan et al., 2025)
    - Recursive partitioning analysis for prognostication
    - Multi-institutional retrospective data
    - Identifies 3 prognostic classes with distinct survival outcomes

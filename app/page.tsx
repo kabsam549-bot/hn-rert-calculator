@@ -16,7 +16,7 @@ export default function Home() {
               </p>
             </div>
             <div className="text-xs text-teal-100/80 font-mono tracking-wide md:text-right hidden md:block">
-              <p>MIRI PROTOCOL (PHAN ET AL.)</p>
+              <p>PHAN ET AL. 2025 (MIRI)</p>
               <p>HYTEC GUIDELINES</p>
             </div>
           </div>

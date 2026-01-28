@@ -1,7 +1,7 @@
 /**
  * Organ-at-Risk (OAR) Constraint System for Head & Neck Re-Irradiation
  * 
- * Based on MIRI study (Phan et al., 2010) and established dose constraints
+ * Based on MIRI study (Phan et al., 2025) and established dose constraints
  * for re-irradiation scenarios. Constraints are organized by toxicity tier.
  * 
  * References:
