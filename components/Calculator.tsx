@@ -57,6 +57,8 @@ export default function Calculator() {
   const handleCalculate = () => {
     if (isValidForCalculation(patientData)) {
       calculateResults(patientData);
+      // Scroll to top after calculation
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

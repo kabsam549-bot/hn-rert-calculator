@@ -149,9 +149,12 @@ export default function InputSection({
     onChange: (val: number | undefined) => void,
     placeholder: string,
     unit?: string,
-    tooltip?: React.ReactNode
+    tooltip?: React.ReactNode,
+    maxValue?: number
   ) => {
     const hasValue = value !== undefined && value !== null && value.toString() !== '';
+    // Determine max based on unit type (Gy and fx limited to 99)
+    const effectiveMax = maxValue ?? (unit === 'Gy' || unit === 'fx' ? 99 : undefined);
     return (
       <div className="mb-4 group">
         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 flex items-center">
@@ -171,11 +174,22 @@ export default function InputSection({
             value={value ?? ''}
             onChange={(e) => {
               const inputVal = e.target.value;
-              onChange(inputVal === '' ? undefined : Number(inputVal));
+              if (inputVal === '') {
+                onChange(undefined);
+              } else {
+                const numVal = Number(inputVal);
+                // Enforce max value for Gy and fx
+                if (effectiveMax !== undefined && numVal > effectiveMax) {
+                  onChange(effectiveMax);
+                } else {
+                  onChange(numVal);
+                }
+              }
             }}
             className={`w-full pl-3 ${unit ? 'pr-12' : 'pr-3'} py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-900 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all outline-none`}
             placeholder={placeholder}
             min="0"
+            max={effectiveMax}
             step="0.1"
           />
           {unit && (
@@ -367,7 +381,15 @@ export default function InputSection({
                                     type="number"
                                     placeholder="Gy"
                                     value={oarDose?.priorDose ?? ''}
-                                    onChange={(e) => handleOARDoseChange(oar.name, 'priorDose', e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val !== '' && Number(val) > 99) {
+                                        handleOARDoseChange(oar.name, 'priorDose', '99');
+                                      } else {
+                                        handleOARDoseChange(oar.name, 'priorDose', val);
+                                      }
+                                    }}
+                                    max={99}
                                     className="w-16 px-1 py-0.5 border border-gray-300 rounded text-xs"
                                   />
                                   <span className="text-gray-400">/</span>
@@ -375,7 +397,15 @@ export default function InputSection({
                                     type="number"
                                     placeholder="fx"
                                     value={oarDose?.priorFractions ?? ''}
-                                    onChange={(e) => handleOARDoseChange(oar.name, 'priorFractions', e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val !== '' && Number(val) > 99) {
+                                        handleOARDoseChange(oar.name, 'priorFractions', '99');
+                                      } else {
+                                        handleOARDoseChange(oar.name, 'priorFractions', val);
+                                      }
+                                    }}
+                                    max={99}
                                     className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs"
                                   />
                                 </div>
@@ -387,7 +417,15 @@ export default function InputSection({
                                     type="number"
                                     placeholder="Gy"
                                     value={oarDose?.plannedDose ?? ''}
-                                    onChange={(e) => handleOARDoseChange(oar.name, 'plannedDose', e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val !== '' && Number(val) > 99) {
+                                        handleOARDoseChange(oar.name, 'plannedDose', '99');
+                                      } else {
+                                        handleOARDoseChange(oar.name, 'plannedDose', val);
+                                      }
+                                    }}
+                                    max={99}
                                     className="w-16 px-1 py-0.5 border border-gray-300 rounded text-xs"
                                   />
                                   <span className="text-gray-400">/</span>
@@ -395,7 +433,15 @@ export default function InputSection({
                                     type="number"
                                     placeholder="fx"
                                     value={oarDose?.plannedFractions ?? ''}
-                                    onChange={(e) => handleOARDoseChange(oar.name, 'plannedFractions', e.target.value)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val !== '' && Number(val) > 99) {
+                                        handleOARDoseChange(oar.name, 'plannedFractions', '99');
+                                      } else {
+                                        handleOARDoseChange(oar.name, 'plannedFractions', val);
+                                      }
+                                    }}
+                                    max={99}
                                     className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs"
                                   />
                                 </div>
