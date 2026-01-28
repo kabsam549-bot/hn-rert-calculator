@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "mermaid": "^11.12.2",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18"
