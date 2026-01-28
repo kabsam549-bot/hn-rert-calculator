@@ -23,6 +23,7 @@ export default function Calculator() {
   });
 
   const [results, setResults] = useState<CalculationResult | null>(null);
+  const [calcError, setCalcError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
 
@@ -90,11 +91,14 @@ export default function Calculator() {
       // Calculate OAR constraints
       const oarResults: OARResult[] = [];
       
-      // Clean up prior courses for calculation (ensure no undefineds)
+      // Clean up prior courses for calculation (ensure no undefineds, round fractions to integers)
       const cleanPriorCourses = data.priorCourses.map(c => ({
         dose: c.dose!,
-        fractions: c.fractions!
+        fractions: Math.round(c.fractions!)
       }));
+      
+      // Round planned fractions to integer
+      const plannedFractionsInt = Math.round(data.plannedFractions!);
 
       for (const oarName of data.selectedOARs) {
         const oarConstraint = getOARConstraint(oarName);
@@ -104,7 +108,7 @@ export default function Calculator() {
           oarConstraint,
           cleanPriorCourses,
           data.plannedDose!,
-          data.plannedFractions!,
+          plannedFractionsInt,
           data.timeSinceRT!
         );
 
@@ -159,6 +163,7 @@ export default function Calculator() {
         }
       }
 
+      setCalcError(null);
       setResults({
         rpa: rpaResult,
         oarResults,
@@ -167,7 +172,9 @@ export default function Calculator() {
         recommendations,
       });
     } catch (err) {
-      console.error(err);
+      console.error('Calculation error:', err);
+      setCalcError(err instanceof Error ? err.message : 'An error occurred during calculation');
+      setResults(null);
     }
   };
 
@@ -185,6 +192,7 @@ export default function Calculator() {
       selectedOARs: [],
     });
     setResults(null);
+    setCalcError(null);
   };
 
   if (!isClient) return null;
@@ -263,7 +271,17 @@ export default function Calculator() {
           {/* Right Column: Results (60%) */}
           <div className="w-full lg:w-[60%]">
             <div className="lg:sticky lg:top-8 transition-all duration-300">
-              {results ? (
+              {calcError ? (
+                <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-red-300 rounded-lg bg-red-50 text-red-800">
+                  <div className="text-center p-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p className="text-lg font-bold mb-2">Calculation Error</p>
+                    <p className="text-sm">{calcError}</p>
+                  </div>
+                </div>
+              ) : results ? (
                 <ResultsSection results={results} />
               ) : (
                 <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-teal-50/50 text-teal-800/60">
@@ -271,8 +289,8 @@ export default function Calculator() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <p className="text-lg font-medium">Awaiting Data</p>
-                    <p className="text-sm">Complete the steps on the left to generate assessment</p>
+                    <p className="text-lg font-medium">Awaiting Calculation</p>
+                    <p className="text-sm">Complete all fields and click Calculate</p>
                   </div>
                 </div>
               )}
