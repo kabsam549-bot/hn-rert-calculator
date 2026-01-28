@@ -32,15 +32,15 @@ export default function GuidelinesTab() {
 
   const decisionTreeCode = `
 flowchart TD
-    A[🏥 <b>Patient with Recurrent H&N Cancer</b><br/>Previously Irradiated] --> B{Re-irradiation<br/>Interval ≥ 2 years?}
+    A[<b>Patient with Recurrent H&N Cancer</b><br/>Previously Irradiated] --> B{Re-irradiation<br/>Interval ≥ 2 years?}
     
     B -->|Yes| C{Prior Salvage<br/>Surgery?}
     B -->|No| D{Organ<br/>Dysfunction?}
     
-    C -->|Yes| E[✅ <b>RPA Class I</b><br/>Favorable Prognosis<br/>2-yr OS: 61.9%<br/>Median: 28 months]
-    C -->|No| F[⚠️ <b>RPA Class II</b><br/>Intermediate Prognosis<br/>2-yr OS: 40%<br/>Median: 16 months]
+    C -->|Yes| E[<b>RPA Class I</b><br/>Favorable Prognosis<br/>2-yr OS: 61.9%<br/>Median: 28 months]
+    C -->|No| F[<b>RPA Class II</b><br/>Intermediate Prognosis<br/>2-yr OS: 40%<br/>Median: 16 months]
     
-    D -->|Yes| G[❌ <b>RPA Class III</b><br/>Poor Prognosis<br/>2-yr OS: 16.8%<br/>Median: 9 months]
+    D -->|Yes| G[<b>RPA Class III</b><br/>Poor Prognosis<br/>2-yr OS: 16.8%<br/>Median: 9 months]
     D -->|No| F
     
     E --> H[Consider Full-Dose Re-RT<br/>with Modern Techniques]
@@ -87,7 +87,9 @@ flowchart TD
         <div className="grid md:grid-cols-3 gap-4">
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">⏱️</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                <span className="text-teal-700 font-bold text-sm">1</span>
+              </div>
               <h4 className="font-semibold text-gray-800">Re-RT Interval</h4>
             </div>
             <p className="text-sm text-gray-600">
@@ -97,7 +99,9 @@ flowchart TD
           </div>
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🔪</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                <span className="text-teal-700 font-bold text-sm">2</span>
+              </div>
               <h4 className="font-semibold text-gray-800">Salvage Surgery</h4>
             </div>
             <p className="text-sm text-gray-600">
@@ -106,7 +110,9 @@ flowchart TD
           </div>
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🫁</span>
+              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                <span className="text-teal-700 font-bold text-sm">3</span>
+              </div>
               <h4 className="font-semibold text-gray-800">Organ Dysfunction</h4>
             </div>
             <p className="text-sm text-gray-600">
