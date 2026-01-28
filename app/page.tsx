@@ -86,8 +86,15 @@ export default function Home() {
               <strong>DISCLAIMER:</strong> For educational and research purposes only. Not validated for clinical use. 
               This tool aids in risk assessment but does not replace multidisciplinary review.
             </p>
-            <div className="text-xs text-gray-400">
-              v2.2.0 (Educational Release)
+            <div className="text-xs text-gray-400 flex items-center gap-3">
+              <span>v2.2.0 (Educational Release)</span>
+              <a 
+                href="/admin" 
+                className="text-gray-300 hover:text-teal-600 transition-colors"
+                title="Admin Panel"
+              >
+                Admin
+              </a>
             </div>
           </div>
         </div>
