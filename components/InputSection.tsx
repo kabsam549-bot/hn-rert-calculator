@@ -360,7 +360,10 @@ export default function InputSection({
               </svg>
               RESULTS CALCULATED
             </div>
-            <p className="text-xs text-green-600 mt-1">See results panel on the right →</p>
+            <p className="text-xs text-green-600 mt-1">
+              <span className="hidden lg:inline">See results panel on the right →</span>
+              <span className="lg:hidden">Scroll down to see results ↓</span>
+            </p>
           </div>
         ) : (
           <div className="w-full py-4 text-center bg-amber-50 border-2 border-amber-400 rounded-lg">
