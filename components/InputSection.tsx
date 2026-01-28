@@ -9,25 +9,9 @@ interface InputSectionProps {
   patientData: PatientData;
   setPatientData: (data: PatientData) => void;
   onReset: () => void;
+  onCalculate: () => void;
+  isReadyToCalculate: boolean;
 }
-
-// Helper to check if calculation is ready
-const isValidForCalculation = (data: PatientData): boolean => {
-  const isPriorValid = data.priorCourses && 
-    data.priorCourses.length > 0 && 
-    data.priorCourses.every(c => 
-      c.dose !== undefined && c.dose > 0 && 
-      c.fractions !== undefined && c.fractions > 0
-    );
-
-  return (
-    isPriorValid &&
-    data.plannedDose !== undefined &&
-    data.plannedFractions !== undefined &&
-    data.timeSinceRT !== undefined &&
-    (data.selectedOARs?.length ?? 0) > 0
-  );
-};
 
 // Helper to get list of missing fields
 const getMissingFieldsList = (data: PatientData): string[] => {
@@ -53,9 +37,10 @@ export default function InputSection({
   patientData,
   setPatientData,
   onReset,
+  onCalculate,
+  isReadyToCalculate,
 }: InputSectionProps) {
   // Computed values for UI feedback
-  const isReadyToCalculate = isValidForCalculation(patientData);
   const getMissingFields = () => {
     const missing = getMissingFieldsList(patientData);
     if (missing.length === 0) return '';
@@ -355,31 +340,31 @@ export default function InputSection({
 
       {/* Calculate Button Section */}
       <div className="pt-4 space-y-3">
-        {isReadyToCalculate ? (
-          <div className="w-full py-4 text-center bg-green-50 border-2 border-green-500 rounded-lg">
-            <div className="flex items-center justify-center gap-2 text-green-700 font-bold">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        <button
+          onClick={onCalculate}
+          disabled={!isReadyToCalculate}
+          className={`w-full py-4 text-lg font-bold uppercase tracking-wider rounded-lg transition-all shadow-lg ${
+            isReadyToCalculate 
+              ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/30 cursor-pointer' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
+          }`}
+        >
+          {isReadyToCalculate ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              RESULTS CALCULATED
-            </div>
-            <p className="text-xs text-green-600 mt-1">
-              <span className="hidden lg:inline">See results panel on the right →</span>
-              <span className="lg:hidden">Scroll down to see results ↓</span>
-            </p>
-          </div>
-        ) : (
-          <div className="w-full py-4 text-center bg-amber-50 border-2 border-amber-400 rounded-lg">
-            <div className="flex items-center justify-center gap-2 text-amber-700 font-bold">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              COMPLETE ALL FIELDS
-            </div>
-            <p className="text-xs text-amber-600 mt-1">
-              {getMissingFields()}
-            </p>
-          </div>
+              CALCULATE
+            </span>
+          ) : (
+            <span>COMPLETE ALL FIELDS TO CALCULATE</span>
+          )}
+        </button>
+        
+        {!isReadyToCalculate && (
+          <p className="text-xs text-amber-600 text-center">
+            {getMissingFields()}
+          </p>
         )}
         
         <button

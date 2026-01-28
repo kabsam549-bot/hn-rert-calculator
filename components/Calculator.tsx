@@ -54,14 +54,12 @@ export default function Calculator() {
     });
   };
 
-  // Effect to auto-calculate when valid data is present
-  useEffect(() => {
+  // Manual calculate function - called when user clicks Calculate button
+  const handleCalculate = () => {
     if (isValidForCalculation(patientData)) {
       calculateResults(patientData);
-    } else {
-      setResults(null);
     }
-  }, [patientData]);
+  };
 
   const isValidForCalculation = (data: PatientData) => {
     const isPriorValid = data.priorCourses && 
@@ -257,6 +255,8 @@ export default function Calculator() {
               patientData={patientData}
               setPatientData={setPatientData}
               onReset={handleReset}
+              onCalculate={handleCalculate}
+              isReadyToCalculate={isValidForCalculation(patientData)}
             />
           </div>
 
