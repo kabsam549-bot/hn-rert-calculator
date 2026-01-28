@@ -194,9 +194,18 @@ export default function InputSection({
         )}
       </div>
 
-      {/* Planned Radiation Section */}
-      <div className="bg-white p-5 rounded-lg border border-teal-100 border-l-4 border-l-teal-600 shadow-sm transition-shadow hover:shadow-md">
-        {renderSectionHeader(2, "Planned Re-Irradiation", "Enter proposed dose for the new course")}
+      {/* Planned Radiation Section - Distinct color to stand out as NEW course */}
+      <div className="bg-teal-50 p-5 rounded-lg border-2 border-teal-300 border-l-4 border-l-teal-700 shadow-sm transition-shadow hover:shadow-md">
+        <div className="mb-4 pb-2 border-b border-teal-200">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-teal-600 text-white text-xs font-bold">
+              2
+            </span>
+            <h3 className="text-sm font-bold text-teal-900 uppercase tracking-wider">Planned Re-Irradiation</h3>
+            <span className="ml-auto text-xs font-semibold bg-teal-200 text-teal-800 px-2 py-0.5 rounded">NEW COURSE</span>
+          </div>
+          <p className="text-xs text-teal-700 mt-1 ml-8">Enter proposed dose for the new treatment course</p>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           {renderSimpleInput(
             "Planned Dose", 
