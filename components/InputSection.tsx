@@ -63,7 +63,7 @@ export default function InputSection({
     return `Missing: ${missing.slice(0, 2).join(', ')} + ${missing.length - 2} more`;
   };
 
-  const handleInputChange = (field: keyof PatientData, value: string | number | boolean | string[] | RTCourse[]) => {
+  const handleInputChange = (field: keyof PatientData, value: string | number | boolean | string[] | RTCourse[] | undefined) => {
     setPatientData({
       ...patientData,
       [field]: value,
@@ -116,7 +116,7 @@ export default function InputSection({
     handleInputChange('priorCourses', newCourses);
   };
 
-  const updatePriorCourse = (index: number, field: keyof RTCourse, value: number) => {
+  const updatePriorCourse = (index: number, field: keyof RTCourse, value: number | undefined) => {
     const currentCourses = [...(patientData.priorCourses || [])];
     if (!currentCourses[index]) return;
     
@@ -140,7 +140,7 @@ export default function InputSection({
   const renderSimpleInput = (
     label: string,
     value: number | undefined,
-    onChange: (val: number) => void,
+    onChange: (val: number | undefined) => void,
     placeholder: string,
     unit?: string,
     tooltip?: React.ReactNode
@@ -163,7 +163,10 @@ export default function InputSection({
           <input
             type="number"
             value={value ?? ''}
-            onChange={(e) => onChange(Number(e.target.value))}
+            onChange={(e) => {
+              const inputVal = e.target.value;
+              onChange(inputVal === '' ? undefined : Number(inputVal));
+            }}
             className={`w-full pl-3 ${unit ? 'pr-12' : 'pr-3'} py-2.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-900 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all outline-none`}
             placeholder={placeholder}
             min="0"
