@@ -28,6 +28,18 @@ export interface PatientData {
   
   // Selected OARs to evaluate
   selectedOARs: string[]; // organ names
+  
+  // Optional OAR-specific doses (if user has actual dose data)
+  // Key is OAR name, value is { priorDose, plannedDose } in Gy
+  // If not provided for an OAR, assumes prescription dose
+  oarDoses?: {
+    [oarName: string]: {
+      priorDose?: number;      // Actual prior dose to this OAR (Gy)
+      priorFractions?: number; // Fractions for prior OAR dose
+      plannedDose?: number;    // Actual planned dose to this OAR (Gy)
+      plannedFractions?: number; // Fractions for planned OAR dose
+    };
+  };
 }
 
 export interface CalculationResult {

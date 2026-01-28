@@ -20,6 +20,7 @@ export default function Calculator() {
     hadSalvageSurgery: false,
     hasOrganDysfunction: false,
     selectedOARs: [],
+    oarDoses: {},
   });
 
   const [results, setResults] = useState<CalculationResult | null>(null);
@@ -101,11 +102,37 @@ export default function Calculator() {
         const oarConstraint = getOARConstraint(oarName);
         if (!oarConstraint) continue;
 
+        // Check if user provided OAR-specific doses
+        const oarSpecificDose = data.oarDoses?.[oarName];
+        
+        // Use OAR-specific doses if provided, otherwise use prescription doses
+        let priorCoursesForOAR = cleanPriorCourses;
+        let plannedDoseForOAR = data.plannedDose!;
+        let plannedFractionsForOAR = plannedFractionsInt;
+        
+        if (oarSpecificDose) {
+          // If OAR-specific prior dose is provided, use it
+          if (oarSpecificDose.priorDose !== undefined && oarSpecificDose.priorFractions !== undefined) {
+            priorCoursesForOAR = [{
+              dose: oarSpecificDose.priorDose,
+              fractions: Math.round(oarSpecificDose.priorFractions)
+            }];
+          }
+          
+          // If OAR-specific planned dose is provided, use it
+          if (oarSpecificDose.plannedDose !== undefined) {
+            plannedDoseForOAR = oarSpecificDose.plannedDose;
+          }
+          if (oarSpecificDose.plannedFractions !== undefined) {
+            plannedFractionsForOAR = Math.round(oarSpecificDose.plannedFractions);
+          }
+        }
+
         const oarResult = checkOARConstraint(
           oarConstraint,
-          cleanPriorCourses,
-          data.plannedDose!,
-          plannedFractionsInt,
+          priorCoursesForOAR,
+          plannedDoseForOAR,
+          plannedFractionsForOAR,
           data.timeSinceRT!
         );
 
@@ -187,6 +214,7 @@ export default function Calculator() {
       hadSalvageSurgery: false,
       hasOrganDysfunction: false,
       selectedOARs: [],
+      oarDoses: {},
     });
     setResults(null);
     setCalcError(null);

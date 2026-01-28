@@ -48,7 +48,7 @@ export default function InputSection({
     return `Missing: ${missing.slice(0, 2).join(', ')} + ${missing.length - 2} more`;
   };
 
-  const handleInputChange = (field: keyof PatientData, value: string | number | boolean | string[] | RTCourse[] | undefined) => {
+  const handleInputChange = (field: keyof PatientData, value: PatientData[keyof PatientData]) => {
     setPatientData({
       ...patientData,
       [field]: value,
@@ -62,6 +62,27 @@ export default function InputSection({
       : [...currentOARs, oarName];
     
     handleInputChange('selectedOARs', newOARs);
+  };
+
+  const handleOARDoseChange = (
+    oarName: string, 
+    field: 'priorDose' | 'priorFractions' | 'plannedDose' | 'plannedFractions',
+    value: string
+  ) => {
+    const currentOARDoses = patientData.oarDoses || {};
+    const currentOARData = currentOARDoses[oarName] || {};
+    
+    const numValue = value === '' ? undefined : Number(value);
+    
+    const newOARDoses = {
+      ...currentOARDoses,
+      [oarName]: {
+        ...currentOARData,
+        [field]: numValue
+      }
+    };
+    
+    handleInputChange('oarDoses', newOARDoses);
   };
 
   const toggleTier = (tier: number) => {
@@ -320,17 +341,71 @@ export default function InputSection({
                   </button>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  {OAR_CONSTRAINTS.filter(oar => oar.tier === tier).map(oar => (
-                    <label key={oar.name} className="flex items-center group cursor-pointer py-1.5">
-                      <input
-                        type="checkbox"
-                        checked={patientData.selectedOARs?.includes(oar.name) || false}
-                        onChange={() => handleOARToggle(oar.name)}
-                        className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 transition-all"
-                      />
-                      <span className="ml-2 text-xs md:text-sm text-gray-700 group-hover:text-teal-900 transition-colors font-medium">{oar.name}</span>
-                    </label>
-                  ))}
+                  {OAR_CONSTRAINTS.filter(oar => oar.tier === tier).map(oar => {
+                    const isSelected = patientData.selectedOARs?.includes(oar.name) || false;
+                    const oarDose = patientData.oarDoses?.[oar.name];
+                    return (
+                      <div key={oar.name} className="border border-gray-100 rounded p-2 hover:bg-gray-50 transition-colors">
+                        <label className="flex items-center group cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleOARToggle(oar.name)}
+                            className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 transition-all"
+                          />
+                          <span className="ml-2 text-xs md:text-sm text-gray-700 group-hover:text-teal-900 transition-colors font-medium">{oar.name}</span>
+                        </label>
+                        {/* OAR-specific dose input (optional) */}
+                        {isSelected && (
+                          <div className="mt-2 ml-6 p-2 bg-gray-50 rounded text-xs">
+                            <p className="text-gray-500 mb-1 italic">Optional: Enter actual OAR dose (defaults to Rx dose)</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-gray-600 mb-0.5">Prior OAR Dose</label>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    placeholder="Gy"
+                                    value={oarDose?.priorDose ?? ''}
+                                    onChange={(e) => handleOARDoseChange(oar.name, 'priorDose', e.target.value)}
+                                    className="w-16 px-1 py-0.5 border border-gray-300 rounded text-xs"
+                                  />
+                                  <span className="text-gray-400">/</span>
+                                  <input
+                                    type="number"
+                                    placeholder="fx"
+                                    value={oarDose?.priorFractions ?? ''}
+                                    onChange={(e) => handleOARDoseChange(oar.name, 'priorFractions', e.target.value)}
+                                    className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-gray-600 mb-0.5">Planned OAR Dose</label>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    placeholder="Gy"
+                                    value={oarDose?.plannedDose ?? ''}
+                                    onChange={(e) => handleOARDoseChange(oar.name, 'plannedDose', e.target.value)}
+                                    className="w-16 px-1 py-0.5 border border-gray-300 rounded text-xs"
+                                  />
+                                  <span className="text-gray-400">/</span>
+                                  <input
+                                    type="number"
+                                    placeholder="fx"
+                                    value={oarDose?.plannedFractions ?? ''}
+                                    onChange={(e) => handleOARDoseChange(oar.name, 'plannedFractions', e.target.value)}
+                                    className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
