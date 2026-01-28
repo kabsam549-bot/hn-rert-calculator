@@ -29,14 +29,11 @@ export default function Calculator() {
 
   useEffect(() => {
     setIsClient(true);
-    const accepted = localStorage.getItem('disclaimerAccepted');
-    if (accepted === 'true') {
-      setDisclaimerAccepted(true);
-    }
+    // Disclaimer must be accepted every visit - no persistence
   }, []);
 
   const handleAcceptDisclaimer = () => {
-    localStorage.setItem('disclaimerAccepted', 'true');
+    // Only set for current session - no localStorage persistence
     setDisclaimerAccepted(true);
   };
 
