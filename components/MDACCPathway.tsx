@@ -72,6 +72,19 @@ const VOLUME_DATA = {
   ],
 };
 
+// SVG Icons
+const CheckIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const CheckIconSmall = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+  </svg>
+);
+
 export default function MDACCPathway() {
   const [currentStep, setCurrentStep] = useState(1);
   const [evaluation, setEvaluation] = useState<PatientEvaluation>(initialEvaluation);
@@ -122,7 +135,7 @@ export default function MDACCPathway() {
         concerns.push('Reirradiation interval 6-12 months requires careful consideration');
         score -= 10;
       } else if (evaluation.reirradiationInterval >= 24) {
-        recommendations.push('Reirradiation interval ≥24 months is favorable (MIRI Class I eligible)');
+        recommendations.push('Reirradiation interval >=24 months is favorable (MIRI Class I eligible)');
         score += 20;
       } else {
         recommendations.push('Reirradiation interval 12-24 months is acceptable');
@@ -169,7 +182,7 @@ export default function MDACCPathway() {
 
     // Carotid
     if (evaluation.carotidInvolvement === 'encased') {
-      concerns.push('Carotid encasement >180° increases CBS/BE risk significantly');
+      concerns.push('Carotid encasement >180 deg increases CBS/BE risk significantly');
       score -= 15;
     } else if (evaluation.carotidInvolvement === 'adjacent') {
       recommendations.push('Carotid adjacent to target: Apply MDACC constraints (Dmax <30Gy, V27 <0.5cc)');
@@ -184,7 +197,7 @@ export default function MDACCPathway() {
     // Performance Status
     if (evaluation.performanceStatus !== undefined) {
       if (evaluation.performanceStatus >= 2) {
-        concerns.push('ECOG PS ≥2 associated with poorer outcomes');
+        concerns.push('ECOG PS >=2 associated with poorer outcomes');
         score -= 10;
       }
     }
@@ -200,41 +213,56 @@ export default function MDACCPathway() {
   const renderStepIndicator = () => (
     <div className="bg-white border-b">
       <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {[
-            { num: 1, label: 'Tumor Control', sublabel: 'TCP Assessment' },
-            { num: 2, label: 'Normal Tissue', sublabel: 'NTCP Assessment' },
-            { num: 3, label: 'Technical', sublabel: 'Feasibility' },
-            { num: 4, label: 'Clinical', sublabel: 'Judgment' },
-          ].map((step, idx) => (
-            <div key={step.num} className="flex items-center">
+        {/* Progress bar background */}
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">MDACC 4-Step Evaluation</span>
+            <span className="text-xs text-gray-400">Step {currentStep} of 4</span>
+          </div>
+          {/* Track */}
+          <div className="relative h-1 bg-gray-200 rounded-full mb-4">
+            <div 
+              className="absolute h-1 bg-teal-500 rounded-full transition-all duration-300" 
+              style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+            />
+          </div>
+          {/* Step buttons */}
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { num: 1, label: 'TCP', fullLabel: 'Tumor Control' },
+              { num: 2, label: 'NTCP', fullLabel: 'Normal Tissue' },
+              { num: 3, label: 'Technical', fullLabel: 'Feasibility' },
+              { num: 4, label: 'Clinical', fullLabel: 'Judgment' },
+            ].map((step) => (
               <button
+                key={step.num}
                 onClick={() => setCurrentStep(step.num)}
-                className={`flex flex-col items-center transition-all ${
-                  currentStep === step.num ? 'opacity-100' : 'opacity-60 hover:opacity-80'
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all ${
+                  currentStep === step.num
+                    ? 'bg-teal-50 border-2 border-teal-500'
+                    : currentStep > step.num
+                    ? 'bg-teal-50/50 border border-teal-200'
+                    : 'bg-gray-50 border border-gray-200 opacity-60 hover:opacity-80'
                 }`}
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all ${
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                   currentStep === step.num
-                    ? 'bg-teal-600 text-white shadow-lg scale-110'
+                    ? 'bg-teal-600 text-white'
                     : currentStep > step.num
-                    ? 'bg-teal-100 text-teal-700 border-2 border-teal-300'
-                    : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
+                    ? 'bg-teal-200 text-teal-700'
+                    : 'bg-gray-200 text-gray-400'
                 }`}>
-                  {currentStep > step.num ? '✓' : step.num}
+                  {currentStep > step.num ? <CheckIcon /> : step.num}
                 </div>
-                <span className={`text-xs font-semibold hidden sm:block ${
-                  currentStep === step.num ? 'text-teal-700' : 'text-gray-500'
-                }`}>{step.label}</span>
-                <span className="text-[10px] text-gray-400 hidden md:block">{step.sublabel}</span>
+                <div className="min-w-0">
+                  <span className={`text-xs font-bold block truncate ${
+                    currentStep === step.num ? 'text-teal-700' : 'text-gray-500'
+                  }`}>{step.label}</span>
+                  <span className="text-[10px] text-gray-400 hidden md:block truncate">{step.fullLabel}</span>
+                </div>
               </button>
-              {idx < 3 && (
-                <div className={`w-12 md:w-20 h-0.5 mx-2 transition-colors ${
-                  currentStep > step.num ? 'bg-teal-400' : 'bg-gray-200'
-                }`} />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -251,7 +279,7 @@ export default function MDACCPathway() {
       {/* Histology */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Tumor Histology</label>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { value: 'scc', label: 'Squamous Cell Carcinoma', note: 'HR 4.2 for mortality vs non-SCC' },
             { value: 'non-scc', label: 'Non-Squamous', note: 'ACC, SNUC, NPC, Adenocarcinoma' },
@@ -275,7 +303,7 @@ export default function MDACCPathway() {
       {/* Surgical Status */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Disease Status</label>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { value: 'intact', label: 'Gross Disease', note: 'Intact, unresected tumor' },
             { value: 'postop', label: 'Postoperative', note: 'Prior salvage surgery' },
@@ -303,7 +331,7 @@ export default function MDACCPathway() {
           {[
             { value: 'skull-base', label: 'Skull Base', cat: 'skull', catColor: 'emerald' },
             { value: 'pns', label: 'Paranasal Sinus', cat: 'skull', catColor: 'emerald' },
-            { value: 'neck-small', label: 'Neck ≤3cm', cat: 'nodal', catColor: 'blue' },
+            { value: 'neck-small', label: 'Neck <=3cm', cat: 'nodal', catColor: 'blue' },
             { value: 'neck-large', label: 'Neck >3cm', cat: 'nodal', catColor: 'blue' },
             { value: 'mucosal-op', label: 'Oropharynx', cat: 'mucosal', catColor: 'amber' },
             { value: 'mucosal-np', label: 'Nasopharynx', cat: 'mucosal', catColor: 'amber' },
@@ -450,31 +478,31 @@ export default function MDACCPathway() {
             type="number"
             value={evaluation.reirradiationInterval ?? ''}
             onChange={(e) => updateEvaluation('reirradiationInterval', e.target.value ? Number(e.target.value) : undefined)}
-            placeholder="Enter months"
+            placeholder="Months"
             className="flex-1 p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
           />
-          <span className="text-gray-500 font-medium">months</span>
+          <span className="text-gray-500 font-medium shrink-0">months</span>
         </div>
-        <div className="flex gap-2 mt-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
           {[
-            { min: 0, max: 6, label: '<6 mo', color: 'red', note: 'Not recommended' },
-            { min: 6, max: 12, label: '6-12 mo', color: 'amber', note: 'Caution' },
-            { min: 12, max: 24, label: '12-24 mo', color: 'yellow', note: 'Acceptable' },
-            { min: 24, max: Infinity, label: '≥24 mo', color: 'green', note: 'Favorable' },
+            { min: 0, max: 6, label: '<6m', color: 'red', note: 'Not rec.' },
+            { min: 6, max: 12, label: '6-12m', color: 'amber', note: 'Caution' },
+            { min: 12, max: 24, label: '12-24m', color: 'yellow', note: 'OK' },
+            { min: 24, max: Infinity, label: '>=24m', color: 'green', note: 'Favorable' },
           ].map((range) => {
             const ri = evaluation.reirradiationInterval;
             const isActive = ri !== undefined && ri >= range.min && ri < range.max;
             return (
-              <div key={range.label} className={`flex-1 p-2 rounded text-center text-xs ${
+              <div key={range.label} className={`p-2 rounded text-center ${
                 isActive
                   ? range.color === 'red' ? 'bg-red-100 border-2 border-red-400' :
                     range.color === 'amber' ? 'bg-amber-100 border-2 border-amber-400' :
                     range.color === 'yellow' ? 'bg-yellow-100 border-2 border-yellow-400' :
                     'bg-green-100 border-2 border-green-400'
-                  : 'bg-gray-100'
+                  : 'bg-gray-100 border border-gray-200'
               }`}>
-                <div className="font-semibold">{range.label}</div>
-                <div className="text-gray-500">{range.note}</div>
+                <div className="font-semibold text-xs sm:text-sm">{range.label}</div>
+                <div className="text-gray-500 text-[10px] sm:text-xs">{range.note}</div>
               </div>
             );
           })}
@@ -513,11 +541,11 @@ export default function MDACCPathway() {
       {/* Carotid Involvement */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Carotid Artery Involvement</label>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { value: 'none', label: 'No Involvement', note: 'CBS/BE risk: ~1.5%' },
             { value: 'adjacent', label: 'Adjacent (<1cm)', note: 'Apply constraints' },
-            { value: 'encased', label: 'Encased >180°', note: 'Elevated CBS risk' },
+            { value: 'encased', label: 'Encased >180 deg', note: 'Elevated CBS risk' },
           ].map((opt) => (
             <button
               key={opt.value}
@@ -528,7 +556,7 @@ export default function MDACCPathway() {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="font-semibold text-gray-900">{opt.label}</div>
+              <div className="font-semibold text-gray-900 text-sm">{opt.label}</div>
               <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
             </button>
           ))}
@@ -571,10 +599,10 @@ export default function MDACCPathway() {
             </button>
           ))}
         </div>
-        <div className="flex gap-4 mt-3 text-xs">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-100 rounded"></span> Tier 1: Go/No-Go</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-amber-100 rounded"></span> Tier 2: Critical</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-100 rounded"></span> Tier 3: QOL</span>
+        <div className="flex flex-wrap gap-4 mt-3 text-xs">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-100 rounded border border-red-300"></span> Tier 1: Go/No-Go</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-amber-100 rounded border border-amber-300"></span> Tier 2: Critical</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-100 rounded border border-blue-300"></span> Tier 3: QOL</span>
         </div>
       </div>
     </div>
@@ -590,11 +618,11 @@ export default function MDACCPathway() {
       {/* Modality Selection */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Planned Treatment Modality</label>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {[
-            { value: 'sbrt', label: 'SBRT', note: 'Best for GTV <25cc', icon: '◎' },
-            { value: 'imrt', label: 'IMRT', note: 'Larger volumes, postop', icon: '≋' },
-            { value: 'pbt', label: 'Proton', note: 'Skull base, complex', icon: '→' },
+            { value: 'sbrt', label: 'SBRT', note: 'GTV <25cc', icon: 'S' },
+            { value: 'imrt', label: 'IMRT', note: 'Larger vols', icon: 'I' },
+            { value: 'pbt', label: 'Proton', note: 'Skull base', icon: 'P' },
           ].map((opt) => {
             const isRecommended = 
               (opt.value === 'sbrt' && evaluation.gtvVolume && evaluation.gtvVolume <= 25) ||
@@ -603,7 +631,7 @@ export default function MDACCPathway() {
               <button
                 key={opt.value}
                 onClick={() => updateEvaluation('plannedModality', opt.value)}
-                className={`p-5 rounded-xl border-2 text-center transition-all relative ${
+                className={`p-4 sm:p-5 rounded-xl border-2 text-center transition-all relative ${
                   evaluation.plannedModality === opt.value
                     ? 'border-teal-500 bg-teal-50 shadow-md'
                     : 'border-gray-200 hover:border-gray-300'
@@ -611,12 +639,12 @@ export default function MDACCPathway() {
               >
                 {isRecommended && (
                   <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
-                    Suggested
+                    Rec
                   </span>
                 )}
-                <div className="text-2xl mb-2">{opt.icon}</div>
-                <div className="font-bold text-gray-900">{opt.label}</div>
-                <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2 text-lg font-bold text-gray-600">{opt.icon}</div>
+                <div className="font-bold text-gray-900 text-sm sm:text-base">{opt.label}</div>
+                <div className="text-xs text-gray-500 mt-1 hidden sm:block">{opt.note}</div>
               </button>
             );
           })}
@@ -654,7 +682,7 @@ export default function MDACCPathway() {
 
       {/* SBRT Dose Guide */}
       {evaluation.plannedModality === 'sbrt' && (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl">
           <h4 className="font-bold text-gray-800 mb-4">MDACC SBRT Dose Selection Guide</h4>
           <div className="space-y-2">
             {[
@@ -671,17 +699,17 @@ export default function MDACCPathway() {
                 (row.dose === '36 Gy / 4 fx' && evaluation.plannedDose === 36 && evaluation.plannedFractions === 4) ||
                 (row.dose === '27 Gy / 3 fx' && evaluation.plannedDose === 27 && evaluation.plannedFractions === 3);
               return (
-                <div key={row.dose} className={`p-3 rounded-lg flex items-center justify-between ${
+                <div key={row.dose} className={`p-3 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${
                   isSelected ? 'bg-teal-100 border-2 border-teal-400' : 'bg-white border border-gray-200'
                 }`}>
                   <div>
                     <span className="font-bold text-gray-900">{row.dose}</span>
-                    <span className="text-gray-400 mx-2">→</span>
+                    <span className="text-gray-400 mx-2">-</span>
                     <span className="text-gray-600">EQD2: {row.eqd2} Gy</span>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-teal-700">{row.lc} LC</div>
-                    <div className="text-xs text-gray-500">{row.context}</div>
+                  <div className="sm:text-right">
+                    <span className="text-sm font-medium text-teal-700">{row.lc} LC</span>
+                    <span className="text-xs text-gray-500 ml-2">{row.context}</span>
                   </div>
                 </div>
               );
@@ -694,10 +722,10 @@ export default function MDACCPathway() {
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <h4 className="font-semibold text-blue-800 mb-2">Technical Considerations</h4>
         <ul className="text-sm text-blue-700 space-y-1">
-          <li>• LINAC/VMAT achieves ~8% dose reduction per mm from target</li>
-          <li>• GK/CK: Best conformity for tumors &lt;15cc (superior gradient)</li>
-          <li>• PTV expansion: Typically 2mm (skull base), 3mm (mucosal), 3.5mm (neck)</li>
-          <li>• SBRT QOD fractionation reduces CBS/BE risk vs daily treatment</li>
+          <li>- LINAC/VMAT achieves ~8% dose reduction per mm from target</li>
+          <li>- GK/CK: Best conformity for tumors &lt;15cc (superior gradient)</li>
+          <li>- PTV expansion: Typically 2mm (skull base), 3mm (mucosal), 3.5mm (neck)</li>
+          <li>- SBRT QOD fractionation reduces CBS/BE risk vs daily treatment</li>
         </ul>
       </div>
     </div>
@@ -713,10 +741,10 @@ export default function MDACCPathway() {
       {/* Treatment Goal */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Treatment Intent</label>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { value: 'curative', label: 'Curative', note: 'Goal: Long-term local control and survival', icon: '🎯' },
-            { value: 'palliative', label: 'Palliative', note: 'Goal: Symptom control, quality of life', icon: '🤝' },
+            { value: 'curative', label: 'Curative', note: 'Goal: Long-term local control and survival', icon: 'C' },
+            { value: 'palliative', label: 'Palliative', note: 'Goal: Symptom control, quality of life', icon: 'P' },
           ].map((opt) => (
             <button
               key={opt.value}
@@ -727,7 +755,7 @@ export default function MDACCPathway() {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="text-2xl mb-2">{opt.icon}</div>
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2 text-xl font-bold text-gray-600">{opt.icon}</div>
               <div className="font-bold text-gray-900">{opt.label}</div>
               <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
             </button>
@@ -738,24 +766,24 @@ export default function MDACCPathway() {
       {/* Performance Status */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">ECOG Performance Status</label>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
           {[
             { value: 0, label: 'PS 0', note: 'Fully active' },
             { value: 1, label: 'PS 1', note: 'Light work' },
             { value: 2, label: 'PS 2', note: 'Ambulatory' },
-            { value: 3, label: 'PS 3', note: 'Limited care' },
+            { value: 3, label: 'PS 3', note: 'Limited' },
           ].map((opt) => (
             <button
               key={opt.value}
               onClick={() => updateEvaluation('performanceStatus', opt.value as 0 | 1 | 2 | 3)}
-              className={`p-4 rounded-xl border-2 text-center transition-all ${
+              className={`p-3 sm:p-4 rounded-xl border-2 text-center transition-all ${
                 evaluation.performanceStatus === opt.value
                   ? opt.value <= 1 ? 'border-green-500 bg-green-50' : 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="font-bold text-lg text-gray-900">{opt.value}</div>
-              <div className="text-xs text-gray-500">{opt.note}</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{opt.note}</div>
             </button>
           ))}
         </div>
@@ -766,19 +794,19 @@ export default function MDACCPathway() {
         <h4 className="font-semibold text-purple-800 mb-3">Key Clinical Questions</h4>
         <ul className="space-y-2 text-sm text-purple-700">
           <li className="flex items-start gap-2">
-            <span className="text-purple-400">→</span>
+            <span className="text-purple-400">-</span>
             Is meaningful dose achievable while respecting OAR constraints?
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-purple-400">→</span>
+            <span className="text-purple-400">-</span>
             Is the associated toxicity risk acceptable to the patient?
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-purple-400">→</span>
+            <span className="text-purple-400">-</span>
             Have alternatives been discussed in MDT (surgery, systemic, observation)?
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-purple-400">→</span>
+            <span className="text-purple-400">-</span>
             Does patient have realistic expectations about outcomes?
           </li>
         </ul>
@@ -801,62 +829,62 @@ export default function MDACCPathway() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium opacity-90 mb-1">Re-Irradiation Assessment</div>
-              <h2 className="text-3xl font-bold">
+              <h2 className="text-2xl sm:text-3xl font-bold">
                 {results.viability === 'favorable' ? 'FAVORABLE' :
                  results.viability === 'conditional' ? 'CONDITIONAL' : 'UNFAVORABLE'}
               </h2>
               <p className="text-sm opacity-90 mt-2">Based on MDACC 4-Step Evaluation</p>
             </div>
-            <div className="text-6xl opacity-30">
-              {results.viability === 'favorable' ? '✓' :
-               results.viability === 'conditional' ? '?' : '!'}
+            <div className="text-5xl sm:text-6xl opacity-30 font-bold">
+              {results.viability === 'favorable' ? '+' :
+               results.viability === 'conditional' ? '~' : '-'}
             </div>
           </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl shadow-sm border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
             <div className="text-xs text-gray-500 mb-1">Site</div>
-            <div className="font-bold text-gray-900">{outcomes?.label || 'Not specified'}</div>
+            <div className="font-bold text-gray-900 text-sm sm:text-base">{outcomes?.label || 'Not specified'}</div>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border">
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
             <div className="text-xs text-gray-500 mb-1">Volume</div>
-            <div className="font-bold text-gray-900">
+            <div className="font-bold text-gray-900 text-sm sm:text-base">
               {evaluation.gtvVolume ? `GTV ${evaluation.gtvVolume}cc` : evaluation.ctvVolume ? `CTV ${evaluation.ctvVolume}cc` : 'Not specified'}
             </div>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border">
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
             <div className="text-xs text-gray-500 mb-1">Interval</div>
-            <div className="font-bold text-gray-900">
-              {evaluation.reirradiationInterval ? `${evaluation.reirradiationInterval} months` : 'Not specified'}
+            <div className="font-bold text-gray-900 text-sm sm:text-base">
+              {evaluation.reirradiationInterval ? `${evaluation.reirradiationInterval} mo` : 'Not specified'}
             </div>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border">
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
             <div className="text-xs text-gray-500 mb-1">Modality</div>
-            <div className="font-bold text-gray-900 uppercase">{evaluation.plannedModality || 'Not specified'}</div>
+            <div className="font-bold text-gray-900 text-sm sm:text-base uppercase">{evaluation.plannedModality || 'Not specified'}</div>
           </div>
         </div>
 
         {/* Expected Outcomes */}
         {outcomes && (
-          <div className="bg-white p-6 rounded-xl shadow-sm border">
+          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border">
             <h3 className="font-bold text-gray-900 mb-4">Expected 2-Year Outcomes (MDACC Data)</h3>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
               {[
                 { label: 'Local Control', value: outcomes.lc, good: true },
-                { label: 'Regional Recurrence', value: outcomes.rr, good: false },
+                { label: 'Regional Rec', value: outcomes.rr, good: false },
                 { label: 'Distant Mets', value: outcomes.dm, good: false },
-                { label: 'Overall Survival', value: outcomes.os, good: true },
-                { label: 'Progression-Free', value: outcomes.pfs, good: true },
-                { label: 'G3+ Toxicity', value: outcomes.g3Tox, good: false },
+                { label: 'OS', value: outcomes.os, good: true },
+                { label: 'PFS', value: outcomes.pfs, good: true },
+                { label: 'G3+ Tox', value: outcomes.g3Tox, good: false },
               ].map((m) => (
                 <div key={m.label} className="text-center">
-                  <div className={`text-3xl font-bold ${
+                  <div className={`text-xl sm:text-3xl font-bold ${
                     m.good ? (m.value >= 70 ? 'text-green-600' : m.value >= 50 ? 'text-amber-600' : 'text-red-500') :
                             (m.value <= 15 ? 'text-green-600' : m.value <= 30 ? 'text-amber-600' : 'text-red-500')
                   }`}>{m.value}%</div>
-                  <div className="text-xs text-gray-500 mt-1">{m.label}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 mt-1">{m.label}</div>
                 </div>
               ))}
             </div>
@@ -865,15 +893,15 @@ export default function MDACCPathway() {
 
         {/* Recommendations */}
         {results.recommendations.length > 0 && (
-          <div className="bg-green-50 p-5 rounded-xl border border-green-200">
+          <div className="bg-green-50 p-4 sm:p-5 rounded-xl border border-green-200">
             <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
-              <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm">✓</span>
+              <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm"><CheckIconSmall /></span>
               Favorable Factors
             </h4>
             <ul className="space-y-2">
               {results.recommendations.map((rec, i) => (
                 <li key={i} className="text-green-700 text-sm flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5">•</span>
+                  <span className="text-green-400 mt-0.5">-</span>
                   {rec}
                 </li>
               ))}
@@ -883,15 +911,15 @@ export default function MDACCPathway() {
 
         {/* Concerns */}
         {results.concerns.length > 0 && (
-          <div className="bg-amber-50 p-5 rounded-xl border border-amber-200">
+          <div className="bg-amber-50 p-4 sm:p-5 rounded-xl border border-amber-200">
             <h4 className="font-bold text-amber-800 mb-3 flex items-center gap-2">
-              <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm">!</span>
+              <span className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-bold">!</span>
               Considerations
             </h4>
             <ul className="space-y-2">
               {results.concerns.map((c, i) => (
                 <li key={i} className="text-amber-700 text-sm flex items-start gap-2">
-                  <span className="text-amber-400 mt-0.5">•</span>
+                  <span className="text-amber-400 mt-0.5">-</span>
                   {c}
                 </li>
               ))}
@@ -901,7 +929,7 @@ export default function MDACCPathway() {
 
         {/* MDACC Constraints */}
         {evaluation.plannedModality === 'sbrt' && (
-          <div className="bg-blue-50 p-5 rounded-xl border border-blue-200">
+          <div className="bg-blue-50 p-4 sm:p-5 rounded-xl border border-blue-200">
             <h4 className="font-bold text-blue-800 mb-3">MDACC SBRT Dose Constraints</h4>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
@@ -936,13 +964,13 @@ export default function MDACCPathway() {
         <div className="flex gap-4 pt-4">
           <button
             onClick={() => { setShowResults(false); setCurrentStep(1); setEvaluation(initialEvaluation); }}
-            className="flex-1 py-4 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+            className="flex-1 py-3 sm:py-4 px-4 sm:px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors text-sm sm:text-base"
           >
             New Evaluation
           </button>
           <button
             onClick={() => window.print()}
-            className="flex-1 py-4 px-6 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
+            className="flex-1 py-3 sm:py-4 px-4 sm:px-6 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors shadow-lg text-sm sm:text-base"
           >
             Print Summary
           </button>
@@ -964,7 +992,7 @@ export default function MDACCPathway() {
       {renderStepIndicator()}
       
       <div className="max-w-4xl mx-auto p-4 md:p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 mb-6">
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
@@ -976,13 +1004,13 @@ export default function MDACCPathway() {
           <button
             onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
             disabled={currentStep === 1}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+            className={`px-4 sm:px-6 py-3 rounded-xl font-semibold transition-all text-sm sm:text-base ${
               currentStep === 1
                 ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
                 : 'bg-white border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
             }`}
           >
-            ← Previous
+            Previous
           </button>
           
           <div className="text-sm text-gray-400">
@@ -992,14 +1020,14 @@ export default function MDACCPathway() {
           {currentStep < 4 ? (
             <button
               onClick={() => setCurrentStep(currentStep + 1)}
-              className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
+              className="px-4 sm:px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors shadow-lg text-sm sm:text-base"
             >
-              Next →
+              Next
             </button>
           ) : (
             <button
               onClick={() => setShowResults(true)}
-              className="px-8 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg"
+              className="px-4 sm:px-8 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg text-sm sm:text-base"
             >
               Generate Report
             </button>
