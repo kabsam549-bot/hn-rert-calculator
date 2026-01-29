@@ -325,6 +325,110 @@ Patient Assessment
 
 ---
 
+---
+
+## 4-STEP EVALUATION STRATEGY (MDACC)
+
+### Step 1: Estimate TCP
+- **Histology:** SCC vs non-SCC
+- **Surgical status:** Intact vs Postoperative
+- **Recurrence pattern:** Marginal vs in-field
+- **CTV needed?** Perineural risk, mucosal margin consideration
+- Example: Recurrent ONB → 35 Gy/5fx needed for 80% LC
+
+### Step 2: Assess NTCP
+- Identify adjacent critical structures
+- Apply tiered approach (see below)
+- Calculate cumulative doses to OARs
+
+### Step 3: Evaluate Technical Feasibility
+- **Dose gradient achievable:** ~8% dose reduction per mm with LINAC/VMAT
+- **Setup uncertainty:** PTV typically 2mm
+- **Distance to critical OARs:** Can constraint be met?
+- Example: Tumor 1.5mm from optic nerve, Rx 35 Gy → expect 32.6 Gy to ON → RION risk 5-10%
+
+### Step 4: Clinical Judgment
+- Is meaningful dose achievable?
+- Is associated toxicity acceptable?
+- What is treatment goal? (Cure vs palliation)
+- Other options? (Surgery, IMPT, systemic therapy)
+
+---
+
+## MDACC RSS TIERED CONSTRAINT SYSTEM (SBRT)
+
+### TIER 1 - Critical Structures (Go/No-Go Decision)
+
+| Structure | Dose Constraint | PRV/Notes |
+|-----------|-----------------|-----------|
+| **Brainstem** | Dmax <13 Gy | 2mm PRV expansion |
+| **Medulla/Spinal cord** | Dmax <12 Gy | 1mm PRV expansion |
+| **Optic chiasm/apparatus** | Dmax <12 Gy | |
+
+### TIER 2 - Critical Structures (Less Established Constraints)
+
+| Structure | Dose Constraint | Notes |
+|-----------|-----------------|-------|
+| **Carotid + Lingual arteries** | Dmax <30 Gy; V27 <0.5cc if within 1cm | 2mm PRV; no hotspots if overlapping |
+| **Cochlea** | Dmax <18 Gy | |
+| **Larynx** | Dmax <13 Gy (non-laryngeal); Dmean <10 Gy (laryngeal) | Contour 1cm from target |
+| **Mandible + Hyoid** | V25 <1cc | Contour 1cm from target; avoid hotspots |
+
+### TIER 3 - Quality of Life Structures
+
+| Structure | Dose Constraint | Notes |
+|-----------|-----------------|-------|
+| **Pharyngeal constrictors** | Dmean <10 Gy if within 1cm | Contour 1cm from target |
+| **Temporal lobe** | Dmax <27 Gy; V20 <0.5cc | Contour 3mm from target |
+| **Cranial nerve avoidance** | Dmax <24 Gy | Avoid hotspots if overlapping |
+| **Mastoid/EAC** | ALARA | |
+| **Mucosal avoidance** | Dmax <15 Gy | NPX, OPX, oral cavity; 1cm from target |
+| **Parotid gland** | Dmax <23 Gy; V15 <1cc | |
+
+---
+
+## OPTIC PATHWAY CONSTRAINTS
+
+| Fractionation | Max Dose | RION Risk |
+|---------------|----------|-----------|
+| **5 fractions** | 22 Gy | TD 5/5 <1% |
+| **3 fractions** | 17 Gy | TD 5/5 <1% |
+| **Retreatment** | 12 Gy | |
+| **General** | <25 Gy to 0.2cc | 5% probability/5yr |
+
+---
+
+## SBRT PLANNING CONSIDERATIONS
+
+### Machine Selection by Volume
+
+| Platform | Best For | Notes |
+|----------|----------|-------|
+| **GK/CK** | Tumors <15cc | Best conformity, gradient, low dose bath |
+| **VMAT** | Most uniform | Efficient; comparable to GK except <10cc |
+| **IMPT** | Complex cases | 1cm spot size inadequate for <15cc |
+
+**Key Metrics:**
+- GK: 2X hot spots vs VMAT (higher heterogeneity with larger targets)
+- CK: 4.5X hot spots vs VMAT
+- LINAC/VMAT: ~8% dose reduction per mm achievable
+
+### Organ Motion Consideration
+- Optic apparatus motion increases D0.03cc by **22%** and Dmax by **14%**
+- Account in PRV margins
+
+---
+
+## POSTOP SBRT CONSIDERATIONS
+
+**If tumor resected (GTR):**
+- **TCP:** 27.5 Gy/5fx → estimated TCP >80%
+- **NTCP:** Tumor bed ~3mm from ON → goal <25 Gy max; <23 Gy <0.2cc
+- **Technical:** Vertical arc to minimize lateral spread; IGR setup to medial orbit edge
+- **Clinical:** Flap reconstruction status, RI, tissue recovery, surgeon agreement
+
+---
+
 ## REFERENCES
 
 - Phan J et al. Seminars in Radiation Oncology 2025
