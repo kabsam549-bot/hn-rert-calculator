@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import MDACCPathway from '@/components/MDACCPathway';
 import Calculator from '@/components/Calculator';
 import GuidelinesTab from '@/components/GuidelinesTab';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'calculator' | 'guidelines'>('calculator');
+  const [activeTab, setActiveTab] = useState<'pathway' | 'calculator' | 'guidelines'>('pathway');
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
@@ -34,6 +35,21 @@ export default function Home() {
         <div className="max-w-[1600px] mx-auto px-4 md:px-6">
           <nav className="flex gap-1" aria-label="Tabs">
             <button
+              onClick={() => setActiveTab('pathway')}
+              className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === 'pathway'
+                  ? 'border-teal-600 text-teal-700 bg-teal-50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                MDACC Pathway
+              </span>
+            </button>
+            <button
               onClick={() => setActiveTab('calculator')}
               className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
                 activeTab === 'calculator'
@@ -45,7 +61,7 @@ export default function Home() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
-                Dose Calculator
+                MIRI Calculator
               </span>
             </button>
             <button
@@ -60,7 +76,7 @@ export default function Home() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
-                Re-RT Guidelines
+                Guidelines
               </span>
             </button>
           </nav>
@@ -69,7 +85,11 @@ export default function Home() {
 
       {/* Main Content Area */}
       <div className="flex-grow">
-        {activeTab === 'calculator' ? (
+        {activeTab === 'pathway' ? (
+          <div className="bg-gray-50 min-h-full py-6">
+            <MDACCPathway />
+          </div>
+        ) : activeTab === 'calculator' ? (
           <Calculator />
         ) : (
           <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
