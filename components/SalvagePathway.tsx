@@ -77,11 +77,11 @@ export default function SalvagePathway() {
 
     // Salvage surgery with flap
     if (evaluation.salvageSurgery === true && evaluation.withFlap === true) {
-      score -= 15;
-      considerations.push('Flap reconstruction significantly increases acute toxicity risk with re-irradiation');
+      score += 15;
+      considerations.push('Flap reconstruction improves wound healing and tissue coverage, reducing re-irradiation toxicity');
     } else if (evaluation.salvageSurgery === true && evaluation.withFlap === false) {
-      score += 5;
-      considerations.push('Salvage surgery without flap may help reduce tumor burden before re-irradiation');
+      score -= 5;
+      considerations.push('Surgery without flap — consider flap reconstruction to improve tissue tolerance for re-irradiation');
     }
 
     // Performance status
@@ -173,12 +173,12 @@ export default function SalvagePathway() {
     PS -->|"ECOG 2<br/>(Moderate)"| SurgeryMod{Salvage<br/>Surgery?}
     PS -->|"ECOG 3+<br/>(Poor)"| PoorPS[HIGH RISK<br/>Poor Tolerance]:::redNode
     
-    Surgery -->|"Yes + Flap"| HighTox[CAUTION<br/>Flap Increases Toxicity]:::yellowNode
-    Surgery -->|"Yes, No Flap"| ModTox[CONSIDER<br/>May Reduce Tumor Burden]:::yellowNode
+    Surgery -->|"Yes + Flap"| LowTox[FAVORABLE<br/>Flap Improves Tolerance]:::greenNode
+    Surgery -->|"Yes, No Flap"| ModTox[CONSIDER<br/>Flap May Improve Outcomes]:::yellowNode
     Surgery -->|No| NoSurg[CONSIDER<br/>Re-RT Primary]:::yellowNode
     
-    SurgeryMod -->|"Yes + Flap"| HighToxMod[HIGH RISK<br/>Multiple Risk Factors]:::redNode
-    SurgeryMod -->|"Yes, No Flap"| ModToxMod[CAUTION<br/>Moderate Concerns]:::yellowNode
+    SurgeryMod -->|"Yes + Flap"| ModToxMod[CAUTION<br/>Flap Helps but Other Risks]:::yellowNode
+    SurgeryMod -->|"Yes, No Flap"| HighToxMod[CAUTION<br/>Consider Flap Reconstruction]:::yellowNode
     SurgeryMod -->|No| NoSurgMod[CAUTION<br/>Re-RT with Concerns]:::yellowNode
     
     HighTox --> Refer[Refer to Radiation Oncology<br/>for Detailed Evaluation]:::actionNode
@@ -393,7 +393,7 @@ export default function SalvagePathway() {
               {evaluation.withFlap === true && (
                 <div className="mt-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
                   <p className="text-sm text-amber-800">
-                    <strong>Note:</strong> Flap reconstruction significantly increases toxicity risk with re-irradiation
+                    <strong>Note:</strong> Flap reconstruction is favorable — improves wound healing and tissue tolerance for re-irradiation
                   </p>
                 </div>
               )}
