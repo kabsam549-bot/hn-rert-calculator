@@ -5,6 +5,7 @@ import MDACCPathway from '@/components/MDACCPathway';
 import Calculator from '@/components/Calculator';
 import GuidelinesTab from '@/components/GuidelinesTab';
 import SalvagePathway from '@/components/SalvagePathway';
+import OARDoseBudget from '@/components/OARDoseBudget';
 
 function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
   return (
@@ -74,7 +75,7 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
 }
 
 type ViewMode = 'landing' | 'radonc' | 'salvage';
-type RadOncTab = 'pathway' | 'calculator' | 'guidelines';
+type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'guidelines';
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('landing');
@@ -346,6 +347,21 @@ export default function Home() {
                 </span>
               </button>
               <button
+                onClick={() => setRadOncTab('dosebudget')}
+                className={`px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                  radOncTab === 'dosebudget'
+                    ? 'border-teal-600 text-teal-700 bg-teal-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  </svg>
+                  <span className="hidden sm:inline">OAR</span> Dose Budget
+                </span>
+              </button>
+              <button
                 onClick={() => setRadOncTab('guidelines')}
                 className={`px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                   radOncTab === 'guidelines'
@@ -372,6 +388,10 @@ export default function Home() {
             </div>
           ) : radOncTab === 'calculator' ? (
             <Calculator />
+          ) : radOncTab === 'dosebudget' ? (
+            <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
+              <OARDoseBudget />
+            </div>
           ) : (
             <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
               <GuidelinesTab />
