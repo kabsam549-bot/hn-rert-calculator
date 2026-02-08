@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import MDACCPathway from '@/components/MDACCPathway';
 import Calculator from '@/components/Calculator';
 import GuidelinesTab from '@/components/GuidelinesTab';
+import PatientPath from '@/components/PatientPath';
 
 function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
   return (
@@ -73,7 +74,7 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'pathway' | 'calculator' | 'guidelines'>('pathway');
+  const [activeTab, setActiveTab] = useState<'pathway' | 'calculator' | 'guidelines' | 'patient'>('pathway');
   const [showDisclaimer, setShowDisclaimer] = useState(true);
 
   // Check if user has previously accepted disclaimer (session-based)
@@ -163,6 +164,21 @@ export default function Home() {
                 Guidelines
               </span>
             </button>
+            <button
+              onClick={() => setActiveTab('patient')}
+              className={`px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'patient'
+                  ? 'border-teal-600 text-teal-700 bg-teal-50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Patient Path
+              </span>
+            </button>
           </nav>
         </div>
       </div>
@@ -175,9 +191,13 @@ export default function Home() {
           </div>
         ) : activeTab === 'calculator' ? (
           <Calculator />
-        ) : (
+        ) : activeTab === 'guidelines' ? (
           <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
             <GuidelinesTab />
+          </div>
+        ) : (
+          <div className="bg-gray-50 min-h-full py-6">
+            <PatientPath />
           </div>
         )}
       </div>

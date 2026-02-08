@@ -5,11 +5,13 @@ import { useState } from 'react';
 // Types
 interface PatientEvaluation {
   // Step 1: TCP Factors
-  histology: 'scc' | 'non-scc' | '';
+  histology: 'scc' | 'non-scc' | 'melanoma-sarcoma' | '';
   surgicalStatus: 'intact' | 'postop' | '';
+  flapReconstruction: 'yes' | 'no' | '';
+  recurrenceType: 'recurrent' | 'new-primary' | '';
+  fieldRelationship: 'in-field' | 'marginal' | 'out-of-field' | '';
   recurrenceSite: 'mucosal-op' | 'mucosal-np' | 'mucosal-larynx' | 'mucosal-oc' | 'neck-small' | 'neck-large' | 'skull-base' | 'pns' | '';
-  gtvVolume: number | undefined;
-  ctvVolume: number | undefined;
+  tumorVolume: number | undefined;
   
   // Step 2: NTCP Factors
   reirradiationInterval: number | undefined;
@@ -31,9 +33,11 @@ interface PatientEvaluation {
 const initialEvaluation: PatientEvaluation = {
   histology: '',
   surgicalStatus: '',
+  flapReconstruction: '',
+  recurrenceType: '',
+  fieldRelationship: '',
   recurrenceSite: '',
-  gtvVolume: undefined,
-  ctvVolume: undefined,
+  tumorVolume: undefined,
   reirradiationInterval: undefined,
   priorDose: undefined,
   priorFractions: undefined,
@@ -105,18 +109,13 @@ export default function MDACCPathway() {
   };
 
   const getVolumeRisk = () => {
-    const gtv = evaluation.gtvVolume;
-    const ctv = evaluation.ctvVolume;
+    const volume = evaluation.tumorVolume;
     
-    if (gtv !== undefined) {
-      if (gtv <= 15) return { level: 'low', text: 'Favorable', color: 'green' };
-      if (gtv <= 25) return { level: 'moderate', text: 'Acceptable', color: 'amber' };
-      return { level: 'high', text: 'Elevated Risk', color: 'red' };
-    }
-    if (ctv !== undefined) {
-      if (ctv <= 25) return { level: 'low', text: 'Favorable', color: 'green' };
-      if (ctv <= 50) return { level: 'moderate', text: 'Acceptable', color: 'amber' };
-      return { level: 'high', text: 'High Risk (G3+ >57%)', color: 'red' };
+    if (volume !== undefined) {
+      if (volume < 15) return { level: 'low', text: 'Favorable', color: 'green' };
+      if (volume >= 15 && volume < 25) return { level: 'acceptable', text: 'Acceptable', color: 'yellow' };
+      if (volume >= 25 && volume < 50) return { level: 'moderate', text: 'Moderately Elevated', color: 'amber' };
+      return { level: 'high', text: 'High Risk', color: 'red' };
     }
     return null;
   };
@@ -147,10 +146,16 @@ export default function MDACCPathway() {
     const volumeRisk = getVolumeRisk();
     if (volumeRisk) {
       if (volumeRisk.level === 'low') {
-        recommendations.push('Tumor volume is favorable for re-irradiation');
+        recommendations.push('Tumor volume <15cc is favorable for re-irradiation');
         score += 20;
+      } else if (volumeRisk.level === 'acceptable') {
+        recommendations.push('Tumor volume 15-25cc is acceptable');
+        score += 10;
+      } else if (volumeRisk.level === 'moderate') {
+        concerns.push('Tumor volume 25-50cc: Moderately elevated toxicity risk');
+        score -= 10;
       } else if (volumeRisk.level === 'high') {
-        concerns.push('Large tumor volume associated with higher toxicity (>57% G3+ when CTV >50cc)');
+        concerns.push('Large tumor volume (>50cc) associated with higher toxicity');
         score -= 20;
       }
     }
@@ -169,15 +174,47 @@ export default function MDACCPathway() {
         if (outcomes.g3Tox > 30) {
           concerns.push(`${outcomes.label}: High toxicity expected (${outcomes.g3Tox}% G3+)`);
         }
+        
+        // Systemic Therapy Recommendation based on out-of-field recurrence risk
+        const outOfFieldRisk = outcomes.rr + outcomes.dm;
+        if (outOfFieldRisk > 40) {
+          recommendations.push('⚠️ Systemic therapy strongly recommended given elevated out-of-field recurrence risk (>40%)');
+        } else if (outOfFieldRisk > 20) {
+          recommendations.push('Consider maintenance systemic therapy / immunotherapy given elevated out-of-field recurrence risk (>20%)');
+        }
       }
     }
 
     // Histology
     if (evaluation.histology === 'non-scc') {
-      recommendations.push('Non-SCC histology associated with better outcomes (HR 0.24 vs SCC)');
+      recommendations.push('Non-SCC histology (excluding mel/sarc) associated with better outcomes');
       score += 15;
     } else if (evaluation.histology === 'scc') {
-      concerns.push('SCC histology: HR 4.2 for mortality compared to non-SCC');
+      concerns.push('SCC histology: Higher mortality risk compared to non-SCC');
+      score -= 5;
+    } else if (evaluation.histology === 'melanoma-sarcoma') {
+      concerns.push('Melanoma/Sarcoma: Poor outcomes, requires aggressive approach');
+      score -= 15;
+    }
+
+    // Recurrence Type
+    if (evaluation.recurrenceType === 'new-primary') {
+      recommendations.push('New primary tumor: Different prognostic considerations than true recurrence');
+      score += 5;
+    } else if (evaluation.recurrenceType === 'recurrent') {
+      concerns.push('Recurrent tumor at same site: Consider radioresistance');
+    }
+
+    // Field Relationship
+    if (evaluation.fieldRelationship === 'in-field') {
+      concerns.push('In-field recurrence: Full dose overlap region, maximum toxicity risk');
+      score -= 15;
+    } else if (evaluation.fieldRelationship === 'marginal') {
+      concerns.push('Marginal recurrence: Partial overlap with prior field');
+      score -= 5;
+    } else if (evaluation.fieldRelationship === 'out-of-field') {
+      recommendations.push('Out-of-field recurrence: Minimal prior dose overlap, lower toxicity risk');
+      score += 10;
     }
 
     // Carotid
@@ -188,10 +225,19 @@ export default function MDACCPathway() {
       recommendations.push('Carotid adjacent to target: Apply MDACC constraints (Dmax <30Gy, V27 <0.5cc)');
     }
 
-    // Surgical status
+    // Surgical status + Flap
     if (evaluation.surgicalStatus === 'postop') {
-      recommendations.push('Postoperative setting may allow lower doses (27.5 Gy/5fx for TCP >80% after GTR)');
+      recommendations.push('Postoperative setting: Recommend 32 Gy in 4 fractions');
       score += 10;
+      
+      if (evaluation.flapReconstruction === 'yes') {
+        recommendations.push('Flap reconstruction present: May reduce toxicity risk with improved tissue vascularity');
+        score += 5;
+      } else if (evaluation.flapReconstruction === 'no') {
+        concerns.push('No flap reconstruction: Increased wound healing complications possible');
+      }
+    } else if (evaluation.surgicalStatus === 'intact') {
+      recommendations.push('Gross disease: Recommend 36 Gy in 4 fractions for tumor control');
     }
 
     // Performance Status
@@ -279,10 +325,11 @@ export default function MDACCPathway() {
       {/* Histology */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Tumor Histology</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { value: 'scc', label: 'Squamous Cell Carcinoma', note: 'HR 4.2 for mortality vs non-SCC' },
-            { value: 'non-scc', label: 'Non-Squamous', note: 'ACC, SNUC, NPC, Adenocarcinoma' },
+            { value: 'scc', label: 'SCC', note: 'Includes NPC' },
+            { value: 'non-scc', label: 'Non-SCC (excluding mel/sarc)', note: 'ACC, salivary gland, better outcomes' },
+            { value: 'melanoma-sarcoma', label: 'Melanoma/Sarcoma', note: 'Poor outcomes, aggressive approach needed' },
           ].map((opt) => (
             <button
               key={opt.value}
@@ -300,17 +347,69 @@ export default function MDACCPathway() {
         </div>
       </div>
 
+      {/* Recurrence Type */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-800 mb-3">Recurrence Type</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            { value: 'recurrent', label: 'Recurrent Tumor', note: 'Same histology, same site' },
+            { value: 'new-primary', label: 'New Primary', note: 'Different histology or separate origin' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => updateEvaluation('recurrenceType', opt.value)}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                evaluation.recurrenceType === opt.value
+                  ? 'border-teal-500 bg-teal-50 shadow-md'
+                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <div className="font-semibold text-gray-900">{opt.label}</div>
+              <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Field Relationship */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-800 mb-3">Relationship to Prior RT Field</label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            { value: 'in-field', label: 'In-Field', note: 'Within prior high-dose region, full overlap' },
+            { value: 'marginal', label: 'Marginal', note: 'At edge of prior field, partial overlap' },
+            { value: 'out-of-field', label: 'Out-of-Field', note: 'Outside prior treatment volume' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => updateEvaluation('fieldRelationship', opt.value)}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                evaluation.fieldRelationship === opt.value
+                  ? 'border-teal-500 bg-teal-50 shadow-md'
+                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <div className="font-semibold text-gray-900">{opt.label}</div>
+              <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Surgical Status */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Disease Status</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { value: 'intact', label: 'Gross Disease', note: 'Intact, unresected tumor' },
-            { value: 'postop', label: 'Postoperative', note: 'Prior salvage surgery' },
+            { value: 'postop', label: 'Post-Salvage Surgery', note: 'After surgical resection' },
           ].map((opt) => (
             <button
               key={opt.value}
-              onClick={() => updateEvaluation('surgicalStatus', opt.value)}
+              onClick={() => {
+                updateEvaluation('surgicalStatus', opt.value);
+                if (opt.value === 'intact') updateEvaluation('flapReconstruction', '');
+              }}
               className={`p-4 rounded-xl border-2 text-left transition-all ${
                 evaluation.surgicalStatus === opt.value
                   ? 'border-teal-500 bg-teal-50 shadow-md'
@@ -323,6 +422,32 @@ export default function MDACCPathway() {
           ))}
         </div>
       </div>
+
+      {/* Flap Reconstruction (conditional) */}
+      {evaluation.surgicalStatus === 'postop' && (
+        <div className="ml-4 border-l-4 border-teal-200 pl-4">
+          <label className="block text-sm font-semibold text-gray-800 mb-3">Flap Reconstruction?</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { value: 'yes', label: 'Yes', note: 'Flap reconstruction performed' },
+              { value: 'no', label: 'No', note: 'Primary closure or no flap' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => updateEvaluation('flapReconstruction', opt.value)}
+                className={`p-3 rounded-lg border-2 text-left transition-all ${
+                  evaluation.flapReconstruction === opt.value
+                    ? 'border-teal-500 bg-teal-50 shadow-md'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <div className="font-semibold text-gray-900 text-sm">{opt.label}</div>
+                <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recurrence Site */}
       <div>
@@ -389,42 +514,52 @@ export default function MDACCPathway() {
 
       {/* Volume */}
       <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-3">Tumor Volume</label>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">GTV (cc)</label>
-            <input
-              type="number"
-              value={evaluation.gtvVolume ?? ''}
-              onChange={(e) => updateEvaluation('gtvVolume', e.target.value ? Number(e.target.value) : undefined)}
-              placeholder="e.g., 15"
-              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
-            />
+        <div className="flex items-center gap-2 mb-3">
+          <label className="block text-sm font-semibold text-gray-800">Tumor Volume</label>
+          <div className="group relative">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+              Estimated gross tumor volume. For SBRT, CTV margins are typically minimal.
+            </div>
           </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">CTV (cc) - optional</label>
-            <input
-              type="number"
-              value={evaluation.ctvVolume ?? ''}
-              onChange={(e) => updateEvaluation('ctvVolume', e.target.value ? Number(e.target.value) : undefined)}
-              placeholder="e.g., 35"
-              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
-            />
-          </div>
+        </div>
+        <div className="mb-4">
+          <input
+            type="number"
+            value={evaluation.tumorVolume ?? ''}
+            onChange={(e) => updateEvaluation('tumorVolume', e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="Enter tumor volume in cc (e.g., 15)"
+            className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
+          />
+          <div className="text-xs text-gray-500 mt-1">Volume in cubic centimeters (cc)</div>
         </div>
         
         {/* Volume Risk Indicator */}
         {getVolumeRisk() && (
           <div className={`p-3 rounded-lg ${
             getVolumeRisk()?.color === 'green' ? 'bg-green-50 border border-green-200' :
+            getVolumeRisk()?.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
             getVolumeRisk()?.color === 'amber' ? 'bg-amber-50 border border-amber-200' :
             'bg-red-50 border border-red-200'
           }`}>
             <div className={`font-semibold ${
               getVolumeRisk()?.color === 'green' ? 'text-green-700' :
+              getVolumeRisk()?.color === 'yellow' ? 'text-yellow-700' :
               getVolumeRisk()?.color === 'amber' ? 'text-amber-700' : 'text-red-700'
             }`}>
               Volume Risk: {getVolumeRisk()?.text}
+            </div>
+            <div className={`text-xs mt-1 ${
+              getVolumeRisk()?.color === 'green' ? 'text-green-600' :
+              getVolumeRisk()?.color === 'yellow' ? 'text-yellow-600' :
+              getVolumeRisk()?.color === 'amber' ? 'text-amber-600' : 'text-red-600'
+            }`}>
+              {getVolumeRisk()?.level === 'low' && '<15 cc: Favorable for re-irradiation'}
+              {getVolumeRisk()?.level === 'acceptable' && '15-25 cc: Acceptable risk'}
+              {getVolumeRisk()?.level === 'moderate' && '25-50 cc: Moderately elevated toxicity risk'}
+              {getVolumeRisk()?.level === 'high' && '>50 cc: High toxicity risk'}
             </div>
           </div>
         )}
@@ -620,12 +755,12 @@ export default function MDACCPathway() {
         <label className="block text-sm font-semibold text-gray-800 mb-3">Planned Treatment Modality</label>
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {[
-            { value: 'sbrt', label: 'SBRT', note: 'GTV <25cc', icon: 'S' },
+            { value: 'sbrt', label: 'SBRT', note: 'Volume <25cc', icon: 'S' },
             { value: 'imrt', label: 'IMRT', note: 'Larger vols', icon: 'I' },
             { value: 'pbt', label: 'Proton', note: 'Skull base', icon: 'P' },
           ].map((opt) => {
             const isRecommended = 
-              (opt.value === 'sbrt' && evaluation.gtvVolume && evaluation.gtvVolume <= 25) ||
+              (opt.value === 'sbrt' && evaluation.tumorVolume && evaluation.tumorVolume <= 25) ||
               (opt.value === 'pbt' && evaluation.recurrenceSite?.includes('skull'));
             return (
               <button
@@ -680,6 +815,25 @@ export default function MDACCPathway() {
         </div>
       </div>
 
+      {/* Dose Prescription Recommendation */}
+      {(evaluation.surgicalStatus === 'intact' || evaluation.surgicalStatus === 'postop') && (
+        <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-4 rounded-xl border-2 border-teal-200">
+          <h4 className="font-bold text-teal-800 mb-2">Recommended Dose Prescription</h4>
+          {evaluation.surgicalStatus === 'intact' && (
+            <div className="bg-white p-3 rounded-lg">
+              <div className="text-lg font-bold text-gray-900">36 Gy in 4 fractions</div>
+              <div className="text-sm text-gray-600 mt-1">For gross disease tumor control</div>
+            </div>
+          )}
+          {evaluation.surgicalStatus === 'postop' && (
+            <div className="bg-white p-3 rounded-lg">
+              <div className="text-lg font-bold text-gray-900">32 Gy in 4 fractions</div>
+              <div className="text-sm text-gray-600 mt-1">Post-operative adjuvant re-irradiation</div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* SBRT Dose Guide */}
       {evaluation.plannedModality === 'sbrt' && (
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl">
@@ -689,7 +843,8 @@ export default function MDACCPathway() {
               { dose: '45 Gy / 5 fx', eqd2: '71-80', lc: '~90%', context: 'Non-mucosal, high-grade', risk: 'Higher toxicity' },
               { dose: '42.5 Gy / 5 fx', eqd2: '65-73', lc: '~85%', context: 'Standard curative', risk: 'Moderate' },
               { dose: '40 Gy / 5 fx', eqd2: '60-67', lc: '75-85%', context: 'Large nodal, moderate-dose', risk: 'Moderate' },
-              { dose: '36 Gy / 4 fx', eqd2: '57-64', lc: '70-80%', context: 'Small tumors, non-SCC', risk: 'Lower' },
+              { dose: '36 Gy / 4 fx', eqd2: '57-64', lc: '70-80%', context: 'Gross disease (recommended)', risk: 'Lower', recommended: evaluation.surgicalStatus === 'intact' },
+              { dose: '32 Gy / 4 fx', eqd2: '49-56', lc: '65-75%', context: 'Post-op (recommended)', risk: 'Lower', recommended: evaluation.surgicalStatus === 'postop' },
               { dose: '27 Gy / 3 fx', eqd2: '43-48', lc: '65-73%', context: 'High-risk mucosal, palliative', risk: 'Lowest' },
             ].map((row) => {
               const isSelected = 
@@ -697,11 +852,19 @@ export default function MDACCPathway() {
                 (row.dose === '42.5 Gy / 5 fx' && evaluation.plannedDose === 42.5 && evaluation.plannedFractions === 5) ||
                 (row.dose === '40 Gy / 5 fx' && evaluation.plannedDose === 40 && evaluation.plannedFractions === 5) ||
                 (row.dose === '36 Gy / 4 fx' && evaluation.plannedDose === 36 && evaluation.plannedFractions === 4) ||
+                (row.dose === '32 Gy / 4 fx' && evaluation.plannedDose === 32 && evaluation.plannedFractions === 4) ||
                 (row.dose === '27 Gy / 3 fx' && evaluation.plannedDose === 27 && evaluation.plannedFractions === 3);
               return (
-                <div key={row.dose} className={`p-3 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${
-                  isSelected ? 'bg-teal-100 border-2 border-teal-400' : 'bg-white border border-gray-200'
+                <div key={row.dose} className={`p-3 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 relative ${
+                  isSelected ? 'bg-teal-100 border-2 border-teal-400' : 
+                  row.recommended ? 'bg-emerald-50 border-2 border-emerald-300' :
+                  'bg-white border border-gray-200'
                 }`}>
+                  {row.recommended && !isSelected && (
+                    <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                      RECOMMENDED
+                    </span>
+                  )}
                   <div>
                     <span className="font-bold text-gray-900">{row.dose}</span>
                     <span className="text-gray-400 mx-2">-</span>
@@ -849,9 +1012,9 @@ export default function MDACCPathway() {
             <div className="font-bold text-gray-900 text-sm sm:text-base">{outcomes?.label || 'Not specified'}</div>
           </div>
           <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
-            <div className="text-xs text-gray-500 mb-1">Volume</div>
+            <div className="text-xs text-gray-500 mb-1">Tumor Volume</div>
             <div className="font-bold text-gray-900 text-sm sm:text-base">
-              {evaluation.gtvVolume ? `GTV ${evaluation.gtvVolume}cc` : evaluation.ctvVolume ? `CTV ${evaluation.ctvVolume}cc` : 'Not specified'}
+              {evaluation.tumorVolume ? `${evaluation.tumorVolume} cc` : 'Not specified'}
             </div>
           </div>
           <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border">
