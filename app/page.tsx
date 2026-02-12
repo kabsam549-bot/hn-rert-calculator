@@ -76,10 +76,12 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
 
 type ViewMode = 'landing' | 'radonc' | 'salvage';
 type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'guidelines';
+type LandingTab = 'home' | 'about';
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('landing');
   const [radOncTab, setRadOncTab] = useState<RadOncTab>('pathway');
+  const [landingTab, setLandingTab] = useState<LandingTab>('home');
   const [showDisclaimer, setShowDisclaimer] = useState(true);
 
   // Check if user has previously accepted disclaimer (session-based)
@@ -98,55 +100,287 @@ export default function Home() {
   // Landing Page View
   if (viewMode === 'landing') {
     return (
-      <main className="min-h-screen bg-white flex flex-col">
+      <main className="min-h-screen bg-background flex flex-col">
         {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
 
         {/* Header */}
-        <div className="border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 py-12 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Head & Neck Re-Irradiation Tool
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Evidence-Based Decision Support for Recurrent Head & Neck Cancer
-            </p>
+        <header className="bg-header text-white shadow-md">
+          <div className="max-w-7xl mx-auto px-4 py-6 md:px-6">
+            <div className="text-center">
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight text-white">
+                HEAD & NECK RE-IRRADIATION <span className="font-light opacity-80">TOOL</span>
+              </h1>
+              <p className="text-sm md:text-base text-teal-100 mt-2 font-light tracking-wide">
+                Evidence-Based Decision Support for Recurrent Head & Neck Cancer
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {/* Tab Navigation */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <nav className="flex gap-1" aria-label="Landing tabs">
+              <button
+                onClick={() => setLandingTab('home')}
+                className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                  landingTab === 'home'
+                    ? 'border-teal-600 text-teal-700 bg-teal-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Home
+              </button>
+              <button
+                onClick={() => setLandingTab('about')}
+                className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                  landingTab === 'about'
+                    ? 'border-teal-600 text-teal-700 bg-teal-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                About
+              </button>
+            </nav>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-grow flex items-center justify-center p-6">
-          <div className="max-w-3xl w-full space-y-6">
-            {/* Radiation Oncology Button */}
-            <button
-              onClick={() => setViewMode('radonc')}
-              className="w-full bg-white border-2 border-gray-200 hover:border-teal-500 rounded-lg p-6 text-left transition-colors group"
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-teal-600">
-                Radiation Oncology Pathway
-              </h2>
-              <p className="text-gray-600">
-                MDACC evaluation, dosimetric assessment, OAR constraints
-              </p>
-            </button>
+        {/* Content */}
+        <div className="flex-grow">
+          {landingTab === 'home' ? (
+            <div className="max-w-7xl mx-auto px-4 py-12 md:px-6">
+              {/* Hero Section */}
+              <div className="text-center mb-12">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                  Choose Your Pathway
+                </h2>
+                <p className="text-base md:text-lg text-gray-600 max-w-3xl mx-auto">
+                  This tool provides comprehensive decision support for evaluating re-irradiation candidacy 
+                  in patients with recurrent head and neck cancer. Select the pathway appropriate for your role.
+                </p>
+              </div>
 
-            {/* Referring Physician Button */}
-            <button
-              onClick={() => setViewMode('salvage')}
-              className="w-full bg-white border-2 border-gray-200 hover:border-teal-500 rounded-lg p-6 text-left transition-colors group"
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-teal-600">
-                Referring Physician Guide
-              </h2>
-              <p className="text-gray-600">
-                Quick assessment for surgeons and medical oncologists
-              </p>
-            </button>
-          </div>
+              {/* Pathway Cards */}
+              <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                {/* Radiation Oncology Card */}
+                <button
+                  onClick={() => setViewMode('radonc')}
+                  className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-600 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-teal-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                      </svg>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-teal-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors">
+                    Radiation Oncology Pathway
+                  </h3>
+                  <p className="text-gray-600 mb-4 text-sm">
+                    Comprehensive evaluation and dosimetric assessment for radiation oncologists
+                  </p>
+                  
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>MDACC Clinical Pathway</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>MIRI Risk Calculator</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>OAR Dose Budget Tool</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Evidence-Based Guidelines</span>
+                    </li>
+                  </ul>
+                </button>
+
+                {/* Referring Physician Card */}
+                <button
+                  onClick={() => setViewMode('salvage')}
+                  className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-600 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors">
+                    Referring Physician Guide
+                  </h3>
+                  <p className="text-gray-600 mb-4 text-sm">
+                    Quick assessment tool for surgeons and medical oncologists
+                  </p>
+                  
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Quick 2-step assessment</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Visual decision pathway</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Traffic-light risk output</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Print-ready summary</span>
+                    </li>
+                  </ul>
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* About Section */
+            <div className="max-w-5xl mx-auto px-4 py-12 md:px-6">
+              <div className="prose prose-lg max-w-none">
+                {/* About This Tool */}
+                <div className="mb-12">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Tool</h2>
+                  <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
+                    <p className="text-gray-700">
+                      Developed at <strong>The University of Texas MD Anderson Cancer Center</strong>, 
+                      Department of Radiation Oncology, Division of Radiation Oncology.
+                    </p>
+                    <p className="text-gray-700">
+                      This tool implements the MDACC re-irradiation evaluation framework for head and neck cancer, 
+                      providing evidence-based decision support for evaluating re-irradiation candidacy in patients 
+                      with recurrent disease.
+                    </p>
+                  </div>
+                </div>
+
+                {/* The SBRT Program */}
+                <div className="mb-12">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">The SBRT Program</h2>
+                  <div className="bg-teal-50 rounded-xl border border-teal-200 p-6 space-y-4">
+                    <p className="text-gray-700">
+                      The <strong>Head & Neck Stereotactic Radiotherapy Program</strong> at MD Anderson was established 
+                      by Dr. Jack Phan and is one of the largest programs of its kind. The program has treated over 
+                      <strong> 500 SBRT patients</strong> since inception (as of April 2022).
+                    </p>
+                    <p className="text-gray-700">
+                      The program provides a comprehensive clinical and research pathway for patients with recurrent 
+                      head and neck and skull base malignancies.
+                    </p>
+                    <div className="bg-white rounded-lg p-4 space-y-2">
+                      <p className="text-gray-700 font-semibold">Current Research Leadership:</p>
+                      <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                        <li>
+                          Dr. Phan is PI of <strong>HYDRA</strong> (stereotactic ablative radiotherapy for larynx cancer, CPRIT-funded)
+                        </li>
+                        <li>
+                          Dr. Phan is PI of <strong>SOAR</strong> (phase 2 RCT comparing SBRT vs conventionally fractionated 
+                          RT for unresectable H&N recurrence)
+                        </li>
+                        <li>
+                          He leads a long-term prospective registry on H&N reirradiation funded by the 
+                          MD Anderson Clinical Innovator Award
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Key Publications */}
+                <div className="mb-12">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Key Publications</h2>
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-sm text-teal-700 font-semibold mb-2">PMID: 40090750</p>
+                      <p className="text-gray-800 mb-2">
+                        Phan J, Spiotto MT, Goodman CD, Reddy J, Newcomm P, Garden AS, Lee A.
+                      </p>
+                      <p className="text-gray-700 italic mb-1">
+                        "Reirradiation for Locally Recurrent Head and Neck Cancer: State-of-the-Art and Future Directions."
+                      </p>
+                      <p className="text-gray-500 text-sm">(2025)</p>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-sm text-teal-700 font-semibold mb-2">PMID: 34269492</p>
+                      <p className="text-gray-800 mb-2">
+                        Diao K, Nguyen TP, Moreno AC, Reddy JP, Garden AS, Wang CH, Tung S, Wang C, Wang XA, 
+                        Rosenthal DI, Fuller CD, Gunn GB, Frank SJ, Morrison WH, Shah SJ, Lee A, Spiotto MT, 
+                        Su SY, Ferrarotto R, Phan J.
+                      </p>
+                      <p className="text-gray-700 italic mb-1">
+                        "Stereotactic body ablative radiotherapy for reirradiation of small volume head and neck 
+                        cancers is associated with prolonged survival."
+                      </p>
+                      <p className="text-gray-500 text-sm">(2021)</p>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-sm text-teal-700 font-semibold mb-2">Head Neck. 2018;40(9):2078-2093</p>
+                      <p className="text-gray-800 mb-2">
+                        Ho JC, Phan J.
+                      </p>
+                      <p className="text-gray-700 italic">
+                        "Reirradiation of head and neck cancer using modern highly conformal techniques."
+                      </p>
+                      <p className="text-gray-500 text-sm">(2018)</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact */}
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact & Institutional</h2>
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <p className="text-gray-700 mb-2">
+                      <strong>MD Anderson Cancer Center</strong><br />
+                      Department of Radiation Oncology<br />
+                      Houston, Texas
+                    </p>
+                    <p className="text-gray-600 text-sm mt-4">
+                      For clinical inquiries, please refer to MD Anderson's H&N SBRT program.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-gray-200 bg-gray-50">
-          <div className="max-w-4xl mx-auto px-6 py-6">
+        <footer className="border-t border-gray-200 bg-gray-50 mt-auto">
+          <div className="max-w-7xl mx-auto px-4 py-6 md:px-6">
             <p className="text-xs text-gray-600 text-center max-w-3xl mx-auto">
               <strong>DISCLAIMER:</strong> For educational and research purposes only. Not validated for clinical use. 
               This tool aids in risk assessment but does not replace multidisciplinary review.
