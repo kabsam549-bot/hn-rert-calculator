@@ -264,7 +264,7 @@ export default function SalvagePathway() {
         <div className="grid grid-cols-2 gap-4">
           {[
             { value: true, label: 'Yes', note: 'Patient received prior head & neck RT' },
-            { value: false, label: 'No', note: 'This tool is not relevant' },
+            { value: false, label: 'No', note: 'No prior radiation therapy' },
           ].map((opt) => (
             <button
               key={opt.label}
@@ -281,6 +281,32 @@ export default function SalvagePathway() {
           ))}
         </div>
       </div>
+
+      {evaluation.priorRadiation === false && (
+        <div className="mt-6 p-6 rounded-2xl bg-gray-100 border-2 border-gray-300">
+          <div className="text-center">
+            <div className="text-5xl mb-3">ℹ️</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">This Tool Is Not Applicable</h3>
+            <p className="text-gray-700 text-base mb-4">
+              This calculator is designed specifically for patients who have received prior radiation to the head and neck region. 
+              For patients without prior radiation, standard radiation treatment protocols apply.
+            </p>
+            <div className="bg-white p-4 rounded-xl border border-gray-200">
+              <p className="text-sm text-gray-600">
+                <strong>Recommendation:</strong> Refer to radiation oncology for standard treatment evaluation.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => updateEvaluation('priorRadiation', null)}
+              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      )}
 
       {evaluation.priorRadiation === true && (
         <>
@@ -705,8 +731,13 @@ export default function SalvagePathway() {
           
           {currentStep < 2 ? (
             <button
-              onClick={() => setCurrentStep(2)}
-              className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
+              onClick={() => evaluation.priorRadiation === true && setCurrentStep(2)}
+              disabled={evaluation.priorRadiation !== true}
+              className={`px-6 py-3 font-semibold rounded-xl transition-colors shadow-lg ${
+                evaluation.priorRadiation === true
+                  ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
             >
               Next
             </button>
