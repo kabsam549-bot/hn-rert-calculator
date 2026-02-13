@@ -117,26 +117,26 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Tab Navigation */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <nav className="flex gap-1" aria-label="Landing tabs">
+        {/* Subtle Tab Navigation */}
+        <div className="bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-3">
+            <nav className="flex justify-center gap-6" aria-label="Landing tabs">
               <button
                 onClick={() => setLandingTab('home')}
-                className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                className={`text-sm transition-colors ${
                   landingTab === 'home'
-                    ? 'border-teal-600 text-teal-700 bg-teal-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'text-teal-700 font-medium border-b-2 border-teal-600 pb-1'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 Home
               </button>
               <button
                 onClick={() => setLandingTab('about')}
-                className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                className={`text-sm transition-colors ${
                   landingTab === 'about'
-                    ? 'border-teal-600 text-teal-700 bg-teal-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'text-teal-700 font-medium border-b-2 border-teal-600 pb-1'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 About
@@ -149,17 +149,6 @@ export default function Home() {
         <div className="flex-grow">
           {landingTab === 'home' ? (
             <div className="max-w-7xl mx-auto px-4 py-12 md:px-6">
-              {/* Hero Section */}
-              <div className="text-center mb-12">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                  Choose Your Pathway
-                </h2>
-                <p className="text-base md:text-lg text-gray-600 max-w-3xl mx-auto">
-                  This tool provides comprehensive decision support for evaluating re-irradiation candidacy 
-                  in patients with recurrent head and neck cancer. Select the pathway appropriate for your role.
-                </p>
-              </div>
-
               {/* Pathway Cards */}
               <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                 {/* Radiation Oncology Card */}
@@ -275,10 +264,10 @@ export default function Home() {
                   <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
                     <p className="text-gray-700">
                       Developed at <strong>The University of Texas MD Anderson Cancer Center</strong>, 
-                      Department of Radiation Oncology, Division of Radiation Oncology.
+                      Department of Radiation Oncology.
                     </p>
                     <p className="text-gray-700">
-                      This tool implements the MDACC re-irradiation evaluation framework for head and neck cancer, 
+                      This tool implements the MD Anderson re-irradiation evaluation framework for head and neck cancer, 
                       providing evidence-based decision support for evaluating re-irradiation candidacy in patients 
                       with recurrent disease.
                     </p>
@@ -287,33 +276,51 @@ export default function Home() {
 
                 {/* The SBRT Program */}
                 <div className="mb-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">The SBRT Program</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">The MD Anderson H&N SBRT Program</h2>
                   <div className="bg-teal-50 rounded-xl border border-teal-200 p-6 space-y-4">
                     <p className="text-gray-700">
-                      The <strong>Head & Neck Stereotactic Radiotherapy Program</strong> at MD Anderson was established 
-                      by Dr. Jack Phan and is one of the largest programs of its kind. The program has treated over 
-                      <strong> 500 SBRT patients</strong> since inception (as of April 2022).
+                      The <strong>Head & Neck Stereotactic Body Radiotherapy (SBRT) Program</strong> at MD Anderson 
+                      is one of the largest and most comprehensive programs of its kind, with over <strong>500 patients 
+                      treated</strong> since program inception.
                     </p>
                     <p className="text-gray-700">
-                      The program provides a comprehensive clinical and research pathway for patients with recurrent 
-                      head and neck and skull base malignancies.
+                      The program provides specialized care for patients with recurrent head and neck and skull base 
+                      malignancies, integrating cutting-edge treatment techniques with prospective clinical research.
                     </p>
                     <div className="bg-white rounded-lg p-4 space-y-2">
-                      <p className="text-gray-700 font-semibold">Current Research Leadership:</p>
-                      <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                      <p className="text-gray-800 font-semibold mb-3">Active Clinical Research</p>
+                      <ul className="list-disc list-inside space-y-2 text-gray-700 ml-2">
                         <li>
-                          Dr. Phan is PI of <strong>HYDRA</strong> (stereotactic ablative radiotherapy for larynx cancer, CPRIT-funded)
+                          <strong>HYDRA Trial</strong> — CPRIT-funded study of stereotactic ablative radiotherapy 
+                          for larynx-preserving treatment
                         </li>
                         <li>
-                          Dr. Phan is PI of <strong>SOAR</strong> (phase 2 RCT comparing SBRT vs conventionally fractionated 
-                          RT for unresectable H&N recurrence)
+                          <strong>SOAR Trial</strong> — Phase 2 randomized controlled trial comparing SBRT versus 
+                          conventionally fractionated radiotherapy for unresectable head and neck recurrence
                         </li>
                         <li>
-                          He leads a long-term prospective registry on H&N reirradiation funded by the 
-                          MD Anderson Clinical Innovator Award
+                          <strong>Prospective Registry</strong> — Long-term outcomes database for head and neck 
+                          re-irradiation, funded by the MD Anderson Clinical Innovator Award
                         </li>
                       </ul>
                     </div>
+                  </div>
+                </div>
+
+                {/* Program Leadership */}
+                <div className="mb-12">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Program Leadership</h2>
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <ul className="space-y-2 text-gray-700">
+                      <li>
+                        <strong>Dr. Jack Phan</strong> — Director of Head & Neck Stereotactic Radiotherapy; 
+                        Director of Head & Neck Clinical Research
+                      </li>
+                      <li><strong>Dr. Michael Spiotto</strong> — Faculty, Head & Neck Radiation Oncology</li>
+                      <li><strong>Dr. Anna Lee</strong> — Faculty, Head & Neck Radiation Oncology</li>
+                      <li><strong>Dr. Adam Garden</strong> — Faculty, Head & Neck Radiation Oncology</li>
+                      <li><strong>Dr. Jay Reddy</strong> — Faculty, Head & Neck Radiation Oncology</li>
+                    </ul>
                   </div>
                 </div>
 
@@ -329,11 +336,11 @@ export default function Home() {
                       <p className="text-gray-700 italic mb-1">
                         "Reirradiation for Locally Recurrent Head and Neck Cancer: State-of-the-Art and Future Directions."
                       </p>
-                      <p className="text-gray-500 text-sm">(2025)</p>
+                      <p className="text-gray-500 text-sm">2025</p>
                     </div>
 
                     <div className="bg-white rounded-xl border border-gray-200 p-6">
-                      <p className="text-sm text-teal-700 font-semibold mb-2">PMID: 34269492</p>
+                      <p className="text-sm text-teal-700 font-semibold mb-2">PMID: 34269492 · 27 citations</p>
                       <p className="text-gray-800 mb-2">
                         Diao K, Nguyen TP, Moreno AC, Reddy JP, Garden AS, Wang CH, Tung S, Wang C, Wang XA, 
                         Rosenthal DI, Fuller CD, Gunn GB, Frank SJ, Morrison WH, Shah SJ, Lee A, Spiotto MT, 
@@ -343,25 +350,49 @@ export default function Home() {
                         "Stereotactic body ablative radiotherapy for reirradiation of small volume head and neck 
                         cancers is associated with prolonged survival."
                       </p>
-                      <p className="text-gray-500 text-sm">(2021)</p>
+                      <p className="text-gray-500 text-sm">Head Neck. 2021.</p>
                     </div>
 
                     <div className="bg-white rounded-xl border border-gray-200 p-6">
-                      <p className="text-sm text-teal-700 font-semibold mb-2">Head Neck. 2018;40(9):2078-2093</p>
+                      <p className="text-sm text-teal-700 font-semibold mb-2">PMID: 29684256 · 44 citations</p>
                       <p className="text-gray-800 mb-2">
                         Ho JC, Phan J.
                       </p>
-                      <p className="text-gray-700 italic">
+                      <p className="text-gray-700 italic mb-1">
                         "Reirradiation of head and neck cancer using modern highly conformal techniques."
                       </p>
-                      <p className="text-gray-500 text-sm">(2018)</p>
+                      <p className="text-gray-500 text-sm">Head Neck. 2018;40(9):2078-2093.</p>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-sm text-teal-700 font-semibold mb-2">PMID: 31552172 · 22 citations</p>
+                      <p className="text-gray-800 mb-2">
+                        Gogineni E, Rana Z, Vempati P, Kabolizadeh P, Chera B, Suen A, Weiss J, Grilley-Olson J, 
+                        Patel S, Zanation A, Hackman T, Senior B, Thorp B, Mendenhall W, Phan J.
+                      </p>
+                      <p className="text-gray-700 italic mb-1">
+                        "Quality of Life Outcomes Following Organ-Sparing SBRT in Previously Irradiated Recurrent 
+                        Head and Neck Cancer."
+                      </p>
+                      <p className="text-gray-500 text-sm">Front Oncol. 2019.</p>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-sm text-teal-700 font-semibold mb-2">PMID: 34701302</p>
+                      <p className="text-gray-800 mb-2">
+                        Moreno AC, Oladeru OT, Frank SJ, Phan J.
+                      </p>
+                      <p className="text-gray-700 italic mb-1">
+                        "Patterns of Failure After SBRT Reirradiation for Recurrent Head and Neck Cancer."
+                      </p>
+                      <p className="text-gray-500 text-sm">Int J Radiat Oncol Biol Phys. 2021.</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Contact */}
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact & Institutional</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Information</h2>
                   <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <p className="text-gray-700 mb-2">
                       <strong>MD Anderson Cancer Center</strong><br />
@@ -369,7 +400,8 @@ export default function Home() {
                       Houston, Texas
                     </p>
                     <p className="text-gray-600 text-sm mt-4">
-                      For clinical inquiries, please refer to MD Anderson's H&N SBRT program.
+                      For clinical consultations or research inquiries regarding head and neck re-irradiation, 
+                      please contact the MD Anderson Head & Neck SBRT program.
                     </p>
                   </div>
                 </div>

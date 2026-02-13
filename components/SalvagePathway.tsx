@@ -7,7 +7,7 @@ interface SalvageEvaluation {
   // Step 1: Patient Overview
   priorRadiation: boolean | null;
   timeAgo: '<6mo' | '6-12mo' | '1-2yr' | '>2yr' | '';
-  location: string;
+  locations: string[];
   salvageSurgery: boolean | null;
   withFlap: boolean | null;
 
@@ -15,17 +15,19 @@ interface SalvageEvaluation {
   performanceStatus: 'good' | 'moderate' | 'poor' | '';
   feedingTube: boolean | null;
   tumorSize: 'small' | 'medium' | 'large' | 'unknown' | '';
+  organDysfunction: string[];
 }
 
 const initialEvaluation: SalvageEvaluation = {
   priorRadiation: null,
   timeAgo: '',
-  location: '',
+  locations: [],
   salvageSurgery: null,
   withFlap: null,
   performanceStatus: '',
   feedingTube: null,
   tumorSize: '',
+  organDysfunction: [],
 };
 
 const CheckIcon = () => (
@@ -52,11 +54,11 @@ export default function SalvagePathway() {
     if (evaluation.priorRadiation === false) {
       return {
         outcome: 'not-applicable',
-        message: 'This tool is for re-irradiation assessment. Standard radiation protocols apply for patients without prior radiation.',
+        message: 'For patients without prior radiation history, standard treatment protocols apply. This re-irradiation assessment tool is not applicable.',
         color: 'gray',
         score: 0,
         considerations: [],
-        recommendations: ['Refer to radiation oncology for standard treatment evaluation']
+        recommendations: []
       };
     }
 
@@ -102,6 +104,17 @@ export default function SalvagePathway() {
       considerations.push('Pre-existing feeding tube indicates baseline swallowing dysfunction');
     }
 
+    // Organ dysfunction (new)
+    if (evaluation.organDysfunction.length >= 3) {
+      score -= 15;
+      considerations.push(`Multiple organ dysfunctions (${evaluation.organDysfunction.length}) substantially limit re-irradiation options`);
+    } else if (evaluation.organDysfunction.length > 0) {
+      score -= (evaluation.organDysfunction.length * 5);
+      evaluation.organDysfunction.forEach(organ => {
+        considerations.push(`Pre-existing ${organ} dysfunction limits re-irradiation options for nearby structures`);
+      });
+    }
+
     // Tumor size
     if (evaluation.tumorSize === 'large') {
       score -= 10;
@@ -111,27 +124,27 @@ export default function SalvagePathway() {
       considerations.push('Smaller tumor volume (<25cc) is favorable for dose delivery');
     }
 
-    // Determine outcome
+    // Determine outcome (3 tiers)
     let outcome: 'green' | 'yellow' | 'red';
     let message: string;
     let color: string;
 
-    if (score >= 60) {
+    if (score >= 55) {
       outcome = 'green';
-      message = 'Re-irradiation likely feasible — refer to radiation oncology for detailed evaluation';
+      message = 'Based on the clinical factors assessed, this patient appears to be a reasonable candidate for re-irradiation evaluation.';
       color = 'green';
-    } else if (score >= 35) {
+    } else if (score >= 30) {
       outcome = 'yellow';
-      message = 'Re-irradiation may be feasible with caveats — radiation oncology consultation recommended';
+      message = 'Re-irradiation may be considered but significant risk factors are present. Detailed evaluation by a radiation oncologist is essential.';
       color = 'yellow';
     } else {
       outcome = 'red';
-      message = 'Re-irradiation carries significant risk — discuss with radiation oncology, consider alternatives';
+      message = 'Based on the clinical factors assessed, re-irradiation carries substantial risk and may not be appropriate. Alternative treatment strategies should be discussed.';
       color = 'red';
     }
 
     const recommendations = [
-      'Refer patient to radiation oncology for comprehensive evaluation',
+      'A comprehensive evaluation by a radiation oncologist is recommended to determine final treatment feasibility',
       'Radiation oncology will assess dosimetric feasibility and organ-at-risk constraints',
       'Multidisciplinary tumor board discussion recommended',
     ];
@@ -146,6 +159,10 @@ export default function SalvagePathway() {
 
     if (evaluation.performanceStatus === 'poor') {
       recommendations.push('Optimize performance status and nutritional support before treatment');
+    }
+
+    if (evaluation.organDysfunction.length >= 2) {
+      recommendations.push('Pre-existing organ dysfunction may significantly impact treatment tolerance and should be thoroughly evaluated');
     }
 
     return { outcome, message, color, score, considerations, recommendations };
@@ -285,15 +302,20 @@ export default function SalvagePathway() {
       {evaluation.priorRadiation === false && (
         <div className="mt-6 p-6 rounded-2xl bg-gray-100 border-2 border-gray-300">
           <div className="text-center">
-            <div className="text-5xl mb-3">ℹ️</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">This Tool Is Not Applicable</h3>
+            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Not Applicable</h3>
             <p className="text-gray-700 text-base mb-4">
-              This calculator is designed specifically for patients who have received prior radiation to the head and neck region. 
-              For patients without prior radiation, standard radiation treatment protocols apply.
+              This calculator is designed for patients who have previously received radiation therapy to the 
+              head and neck region. If the patient has not received prior radiation, this tool does not apply.
             </p>
             <div className="bg-white p-4 rounded-xl border border-gray-200">
               <p className="text-sm text-gray-600">
-                <strong>Recommendation:</strong> Refer to radiation oncology for standard treatment evaluation.
+                <strong>Recommendation:</strong> For patients without prior radiation history, standard treatment 
+                protocols apply. This re-irradiation assessment tool is not applicable.
               </p>
             </div>
           </div>
@@ -340,10 +362,10 @@ export default function SalvagePathway() {
             </div>
           </div>
 
-          {/* Location */}
+          {/* Location - Multiple Selection */}
           <div>
             <label className="block text-base font-semibold text-gray-800 mb-3">
-              Recurrence location
+              Recurrence location(s) <span className="text-sm text-gray-500 font-normal">(select all that apply)</span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
@@ -352,9 +374,14 @@ export default function SalvagePathway() {
               ].map((loc) => (
                 <button
                   key={loc}
-                  onClick={() => updateEvaluation('location', loc)}
+                  onClick={() => {
+                    const newLocations = evaluation.locations.includes(loc)
+                      ? evaluation.locations.filter(l => l !== loc)
+                      : [...evaluation.locations, loc];
+                    updateEvaluation('locations', newLocations);
+                  }}
                   className={`p-3 rounded-lg border-2 text-center transition-all ${
-                    evaluation.location === loc
+                    evaluation.locations.includes(loc)
                       ? 'border-teal-500 bg-teal-50 shadow-md'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
@@ -492,6 +519,44 @@ export default function SalvagePathway() {
         </div>
       </div>
 
+      {/* Organ Dysfunction - Multiple Selection */}
+      <div>
+        <label className="block text-base font-semibold text-gray-800 mb-3">
+          Any current organ dysfunction? <span className="text-sm text-gray-500 font-normal">(select all that apply)</span>
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {[
+            'Swallowing/Dysphagia',
+            'Speech',
+            'Vision',
+            'Hearing',
+            'Airway/Breathing',
+            'Spinal Cord',
+            'Brain/Cognitive'
+          ].map((organ) => (
+            <button
+              key={organ}
+              onClick={() => {
+                const newDysfunction = evaluation.organDysfunction.includes(organ)
+                  ? evaluation.organDysfunction.filter(o => o !== organ)
+                  : [...evaluation.organDysfunction, organ];
+                updateEvaluation('organDysfunction', newDysfunction);
+              }}
+              className={`p-3 rounded-lg border-2 text-center transition-all ${
+                evaluation.organDysfunction.includes(organ)
+                  ? 'border-red-500 bg-red-50 shadow-md'
+                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <div className="text-sm font-medium text-gray-900">{organ}</div>
+            </button>
+          ))}
+        </div>
+        {evaluation.organDysfunction.length === 0 && (
+          <p className="text-sm text-gray-500 mt-2">No organ dysfunction selected</p>
+        )}
+      </div>
+
       {/* Tumor Size */}
       <div>
         <label className="block text-base font-semibold text-gray-800 mb-3">
@@ -534,22 +599,14 @@ export default function SalvagePathway() {
         <div className="space-y-6">
           <div className="p-8 rounded-2xl bg-gray-100 border-2 border-gray-300">
             <div className="text-center">
-              <div className="text-6xl mb-4">ℹ️</div>
+              <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Not Applicable</h2>
               <p className="text-gray-700 text-lg">{assessment.message}</p>
             </div>
-          </div>
-
-          <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
-            <h4 className="font-bold text-blue-900 mb-3">Next Steps</h4>
-            <ul className="space-y-2">
-              {assessment.recommendations.map((rec, i) => (
-                <li key={i} className="text-blue-800 text-sm flex items-start gap-2">
-                  <span className="text-blue-400 mt-0.5">→</span>
-                  {rec}
-                </li>
-              ))}
-            </ul>
           </div>
 
           <button
@@ -564,6 +621,12 @@ export default function SalvagePathway() {
 
     return (
       <div className="space-y-6">
+        {/* Decision Tree - Now shown BEFORE results */}
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Decision Pathway</h3>
+          <Mermaid chart={getMermaidChart()} />
+        </div>
+
         {/* Main Result Card */}
         <div className={`p-8 rounded-2xl shadow-xl ${
           assessment.color === 'green' ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white' :
@@ -576,12 +639,15 @@ export default function SalvagePathway() {
                 Assessment Result
               </div>
               <div className="text-3xl sm:text-4xl font-bold mb-4">
-                {assessment.color === 'green' ? '✓ LIKELY FEASIBLE' :
-                 assessment.color === 'yellow' ? '~ POSSIBLY FEASIBLE' :
-                 '! SIGNIFICANT CONCERNS'}
+                {assessment.color === 'green' ? 'RECOMMENDED FOR EVALUATION' :
+                 assessment.color === 'yellow' ? 'PROCEED WITH CAUTION' :
+                 'NOT RECOMMENDED'}
               </div>
               <p className="text-base sm:text-lg leading-relaxed opacity-95">
                 {assessment.message}
+              </p>
+              <p className="text-sm mt-4 opacity-90 font-medium">
+                A comprehensive evaluation by a radiation oncologist is recommended to determine final treatment feasibility.
               </p>
             </div>
           </div>
@@ -615,12 +681,6 @@ export default function SalvagePathway() {
           </ul>
         </div>
 
-        {/* Decision Tree */}
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Decision Pathway</h3>
-          <Mermaid chart={getMermaidChart()} />
-        </div>
-
         {/* Patient Summary */}
         <div className="bg-white p-6 rounded-xl border-2 border-gray-200">
           <h4 className="font-bold text-gray-900 mb-4">Patient Summary</h4>
@@ -639,10 +699,10 @@ export default function SalvagePathway() {
                 }</span>
               </div>
             )}
-            {evaluation.location && (
+            {evaluation.locations.length > 0 && (
               <div>
-                <span className="text-gray-500 font-medium">Location:</span>
-                <span className="ml-2 text-gray-900">{evaluation.location}</span>
+                <span className="text-gray-500 font-medium">Location(s):</span>
+                <span className="ml-2 text-gray-900">{evaluation.locations.join(', ')}</span>
               </div>
             )}
             {evaluation.salvageSurgery !== null && (
@@ -663,6 +723,12 @@ export default function SalvagePathway() {
               <div>
                 <span className="text-gray-500 font-medium">Feeding Tube:</span>
                 <span className="ml-2 text-gray-900">{evaluation.feedingTube ? 'Yes' : 'No'}</span>
+              </div>
+            )}
+            {evaluation.organDysfunction.length > 0 && (
+              <div className="sm:col-span-2">
+                <span className="text-gray-500 font-medium">Organ Dysfunction:</span>
+                <span className="ml-2 text-gray-900">{evaluation.organDysfunction.join(', ')}</span>
               </div>
             )}
             {evaluation.tumorSize && (
