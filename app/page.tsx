@@ -76,7 +76,7 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
 
 type ViewMode = 'landing' | 'radonc' | 'salvage';
 type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'guidelines';
-type LandingTab = 'home' | 'about';
+type LandingTab = 'home' | 'about' | 'guidelines';
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('landing');
@@ -140,6 +140,16 @@ export default function Home() {
                 }`}
               >
                 About
+              </button>
+              <button
+                onClick={() => setLandingTab('guidelines')}
+                className={`text-sm transition-colors ${
+                  landingTab === 'guidelines'
+                    ? 'text-teal-700 font-medium border-b-2 border-teal-600 pb-1'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Guidelines
               </button>
             </nav>
           </div>
@@ -254,7 +264,7 @@ export default function Home() {
                 </button>
               </div>
             </div>
-          ) : (
+          ) : landingTab === 'about' ? (
             /* About Section */
             <div className="max-w-5xl mx-auto px-4 py-12 md:px-6">
               <div className="prose prose-lg max-w-none">
@@ -406,6 +416,11 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+          ) : (
+            /* Guidelines Section */
+            <div className="max-w-7xl mx-auto px-4 py-12 md:px-6">
+              <GuidelinesTab />
             </div>
           )}
         </div>
