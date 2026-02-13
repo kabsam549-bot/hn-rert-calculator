@@ -36,10 +36,23 @@ const CheckIcon = () => (
   </svg>
 );
 
+const FlowchartIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
 export default function SalvagePathway() {
   const [currentStep, setCurrentStep] = useState(1);
   const [evaluation, setEvaluation] = useState<SalvageEvaluation>(initialEvaluation);
   const [showResults, setShowResults] = useState(false);
+  const [showSchemaModal, setShowSchemaModal] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateEvaluation = (field: keyof SalvageEvaluation, value: any) => {
@@ -170,48 +183,96 @@ export default function SalvagePathway() {
 
   const getMermaidChart = () => {
     return `graph TD
-    Start([Patient with H&N Recurrence]):::startNode
-    Start --> PriorRT{Prior Radiation<br/>to Head & Neck?}
+    A([Recurrent H&N Cancer<br/>with Prior RT]):::startNode
+    A --> B{Time Since<br/>Prior RT}
     
-    PriorRT -->|No| NoReRT[Standard Radiation<br/>Protocols Apply]:::grayNode
-    PriorRT -->|Yes| TimeAgo{Time Since<br/>Prior RT?}
+    B -->|< 6 months| C[High Risk<br/>Tissue Recovery Insufficient]:::redNode
+    B -->|6-24 months| D[Moderate Risk<br/>Partial Recovery]:::yellowNode
+    B -->|> 2 years| E[Lower Risk<br/>Favorable Recovery Window]:::greenNode
     
-    TimeAgo -->|"< 6 months"| ShortInterval[HIGH RISK<br/>Insufficient Recovery]:::redNode
-    TimeAgo -->|"6-12 months"| MedInterval[MODERATE RISK<br/>Limited Recovery]:::yellowNode
-    TimeAgo -->|"1-2 years"| GoodInterval[ACCEPTABLE<br/>Adequate Recovery]:::yellowNode
-    TimeAgo -->|"> 2 years"| LongInterval[FAVORABLE<br/>Good Recovery]:::greenNode
+    C --> F{Performance<br/>Status}
+    D --> F
+    E --> F
     
-    ShortInterval --> PS{Performance<br/>Status?}
-    MedInterval --> PS
-    GoodInterval --> PS
-    LongInterval --> PS
+    F -->|ECOG 0-1| G{Salvage<br/>Surgery?}
+    F -->|ECOG 2| H[Requires Careful<br/>Risk-Benefit Analysis]:::yellowNode
+    F -->|ECOG 3+| I[Re-RT Generally<br/>Not Recommended]:::redNode
     
-    PS -->|"ECOG 0-1<br/>(Good)"| Surgery{Salvage<br/>Surgery?}
-    PS -->|"ECOG 2<br/>(Moderate)"| SurgeryMod{Salvage<br/>Surgery?}
-    PS -->|"ECOG 3+<br/>(Poor)"| PoorPS[HIGH RISK<br/>Poor Tolerance]:::redNode
+    G -->|Yes + Flap| J[Flap Protective<br/>Improves Tissue Tolerance]:::greenNode
+    G -->|Yes, No Flap| K[Consider Flap<br/>for Better Outcomes]:::yellowNode
+    G -->|No Surgery| L[Primary Re-RT<br/>Considered]:::yellowNode
     
-    Surgery -->|"Yes + Flap"| LowTox[FAVORABLE<br/>Flap Improves Tolerance]:::greenNode
-    Surgery -->|"Yes, No Flap"| ModTox[CONSIDER<br/>Flap May Improve Outcomes]:::yellowNode
-    Surgery -->|No| NoSurg[CONSIDER<br/>Re-RT Primary]:::yellowNode
+    H --> M{Organ<br/>Dysfunction?}
+    J --> M
+    K --> M
+    L --> M
     
-    SurgeryMod -->|"Yes + Flap"| ModToxMod[CAUTION<br/>Flap Helps but Other Risks]:::yellowNode
-    SurgeryMod -->|"Yes, No Flap"| HighToxMod[CAUTION<br/>Consider Flap Reconstruction]:::yellowNode
-    SurgeryMod -->|No| NoSurgMod[CAUTION<br/>Re-RT with Concerns]:::yellowNode
+    M -->|None or Minimal| N[Favorable for<br/>Re-Irradiation]:::greenNode
+    M -->|Moderate| O[Dose-Limited<br/>Re-Irradiation]:::yellowNode
+    M -->|Significant| P[Alternative Tx<br/>May Be Preferred]:::redNode
     
-    HighTox --> Refer[Refer to Radiation Oncology<br/>for Detailed Evaluation]:::actionNode
-    ModTox --> Refer
-    NoSurg --> Refer
-    HighToxMod --> Refer
-    ModToxMod --> Refer
-    NoSurgMod --> Refer
-    PoorPS --> Refer
-    
+    N --> Q([Radiation Oncology<br/>Detailed Evaluation]):::actionNode
+    O --> Q
+    P --> Q
+    I --> Q
+
     classDef startNode fill:#3b82f6,stroke:#1e40af,stroke-width:3px,color:#fff
     classDef greenNode fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
     classDef yellowNode fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#000
     classDef redNode fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#fff
-    classDef grayNode fill:#6b7280,stroke:#4b5563,stroke-width:2px,color:#fff
     classDef actionNode fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff`;
+  };
+
+  const SchemaButton = () => (
+    <button
+      onClick={() => setShowSchemaModal(true)}
+      className="inline-flex items-center gap-2 px-4 py-2 border-2 border-teal-500 text-teal-700 rounded-full hover:bg-teal-50 transition-colors font-medium text-sm"
+    >
+      <FlowchartIcon />
+      View Decision Schema
+    </button>
+  );
+
+  const SchemaModal = () => {
+    if (!showSchemaModal) return null;
+
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        onClick={() => setShowSchemaModal(false)}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        
+        {/* Modal */}
+        <div 
+          className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 rounded-t-2xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Re-Irradiation Decision Framework</h2>
+                <p className="text-gray-600 mt-1">Clinical evaluation schema for head and neck re-irradiation candidacy</p>
+              </div>
+              <button
+                onClick={() => setShowSchemaModal(false)}
+                className="ml-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="p-8">
+            <Mermaid chart={getMermaidChart()} />
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderStepIndicator = () => (
@@ -621,10 +682,9 @@ export default function SalvagePathway() {
 
     return (
       <div className="space-y-6">
-        {/* Decision Tree - Now shown BEFORE results */}
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Decision Pathway</h3>
-          <Mermaid chart={getMermaidChart()} />
+        {/* Schema Button at top of results */}
+        <div className="flex justify-end">
+          <SchemaButton />
         </div>
 
         {/* Main Result Card */}
@@ -761,62 +821,73 @@ export default function SalvagePathway() {
 
   if (showResults) {
     return (
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
-        {renderResults()}
-      </div>
+      <>
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
+          {renderResults()}
+        </div>
+        <SchemaModal />
+      </>
     );
   }
 
   return (
-    <div className="min-h-full">
-      {renderStepIndicator()}
-      
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
-          {currentStep === 1 && renderStep1()}
-          {currentStep === 2 && renderStep2()}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-            disabled={currentStep === 1}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-              currentStep === 1
-                ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                : 'bg-white border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            Previous
-          </button>
-          
-          <div className="text-sm text-gray-400">
-            Step {currentStep} of 2
+    <>
+      <div className="min-h-full">
+        {renderStepIndicator()}
+        
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
+          {/* Schema Button at top of form */}
+          <div className="flex justify-end mb-4">
+            <SchemaButton />
           </div>
-          
-          {currentStep < 2 ? (
+
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-between items-center">
             <button
-              onClick={() => evaluation.priorRadiation === true && setCurrentStep(2)}
-              disabled={evaluation.priorRadiation !== true}
-              className={`px-6 py-3 font-semibold rounded-xl transition-colors shadow-lg ${
-                evaluation.priorRadiation === true
-                  ? 'bg-teal-600 hover:bg-teal-700 text-white'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+              disabled={currentStep === 1}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                currentStep === 1
+                  ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                  : 'bg-white border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
-              Next
+              Previous
             </button>
-          ) : (
-            <button
-              onClick={() => { setShowResults(true); setCurrentStep(3); }}
-              className="px-8 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg"
-            >
-              Get Assessment
-            </button>
-          )}
+            
+            <div className="text-sm text-gray-400">
+              Step {currentStep} of 2
+            </div>
+            
+            {currentStep < 2 ? (
+              <button
+                onClick={() => evaluation.priorRadiation === true && setCurrentStep(2)}
+                disabled={evaluation.priorRadiation !== true}
+                className={`px-6 py-3 font-semibold rounded-xl transition-colors shadow-lg ${
+                  evaluation.priorRadiation === true
+                    ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => { setShowResults(true); setCurrentStep(3); }}
+                className="px-8 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg"
+              >
+                Get Assessment
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      <SchemaModal />
+    </>
   );
 }
