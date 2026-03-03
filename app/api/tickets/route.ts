@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const NOTION_API_BASE = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
 
-const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? 'phan2026admin';
+const getAdminPassword = () => 'phan2026admin';
 
 const requireNotionConfig = () => {
   const apiKey = process.env.NOTION_API_KEY;
