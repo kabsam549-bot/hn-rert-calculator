@@ -40,10 +40,7 @@ interface AuditEntry {
   newValue: unknown;
 }
 
-const ADMIN_PASSWORD =
-  process.env.NEXT_PUBLIC_ADMIN_PASSWORD ??
-  process.env.ADMIN_PASSWORD ??
-  'phan2025admin';
+const ADMIN_PASSWORD = 'phan2026admin';
 
 const formatDateTime = (value?: string | null) => {
   if (!value) {

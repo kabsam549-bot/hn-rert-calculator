@@ -16,7 +16,7 @@ interface AuditEntry {
   newValue: unknown;
 }
 
-const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? 'phan2025admin';
+const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? 'phan2026admin';
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
