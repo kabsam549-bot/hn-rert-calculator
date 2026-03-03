@@ -6,7 +6,7 @@ const NOTION_VERSION = '2022-06-28';
 const getAdminPassword = () => 'phan2026admin';
 
 const requireNotionConfig = () => {
-  const apiKey = process.env.NOTION_API_KEY;
+  const apiKey = process.env.NOTION_TICKET_API_KEY || process.env.NOTION_API_KEY;
   const databaseId = process.env.NOTION_TICKET_DB_ID;
   if (!apiKey || !databaseId) {
     return null;
@@ -32,9 +32,38 @@ const getSelect = (property?: { select?: { name?: string } | null }) => {
   return property?.select?.name ?? '';
 };
 
+const getStatus = (property?: { status?: { name?: string } | null }) => {
+  return property?.status?.name ?? '';
+};
+
 const getDate = (property?: { date?: { start?: string } | null }) => {
   return property?.date?.start ?? null;
 };
+
+// Map admin UI status values to Notion status options
+const mapStatusToNotion = (status: string): string => {
+  const mapping: Record<string, string> = {
+    'Submitted': 'Backlog',
+    'In Progress': 'In Progress',
+    'In Review': 'In Review',
+    'Done': 'Done',
+    'Verified': 'Done',
+  };
+  return mapping[status] ?? 'Backlog';
+};
+
+// Map Notion status back to admin UI values
+const mapStatusFromNotion = (status: string): string => {
+  const mapping: Record<string, string> = {
+    'Backlog': 'Submitted',
+    'In Progress': 'In Progress',
+    'In Review': 'In Review',
+    'Done': 'Done',
+  };
+  return mapping[status] ?? status;
+};
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -67,6 +96,9 @@ export async function POST(request: Request) {
 
     const submittedAt = body.submittedAt ?? new Date().toISOString();
 
+    // Map priority: Notion DB has Low/Medium/High (no Critical), map Critical → High
+    const notionPriority = body.priority === 'Critical' ? 'High' : body.priority;
+
     const response = await fetch(`${NOTION_API_BASE}/pages`, {
       method: 'POST',
       headers: {
@@ -77,20 +109,20 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         parent: { database_id: config.databaseId },
         properties: {
-          Name: {
+          Title: {
             title: [{ text: { content: body.title } }],
           },
           Description: {
             rich_text: [{ text: { content: body.description } }],
           },
           Priority: {
-            select: { name: body.priority },
+            select: { name: notionPriority },
           },
           Category: {
             select: { name: body.category },
           },
           Status: {
-            select: { name: body.status ?? 'Submitted' },
+            status: { name: mapStatusToNotion(body.status ?? 'Submitted') },
           },
           'Submitted By': {
             rich_text: [{ text: { content: body.submittedBy } }],
@@ -160,11 +192,11 @@ export async function GET() {
       const props = page.properties ?? {};
       return {
         id: page.id,
-        title: getTitle(props.Name),
+        title: getTitle(props.Title),
         description: getText(props.Description),
         priority: getSelect(props.Priority),
         category: getSelect(props.Category),
-        status: getSelect(props.Status),
+        status: mapStatusFromNotion(getStatus(props.Status)),
         submittedBy: getText(props['Submitted By']),
         submittedAt: getDate(props['Submitted At']) ?? page.created_time ?? null,
         completedAt: getDate(props['Completed At']),
