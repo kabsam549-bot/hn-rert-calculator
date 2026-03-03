@@ -62,19 +62,7 @@ const SITE_OUTCOMES = {
   'pns': { lc: 73, rr: 15, dm: 17, os: 72, pfs: 47, g3Tox: 11, label: 'Paranasal Sinus' },
 };
 
-// Volume thresholds from MDACC data
-const VOLUME_DATA = {
-  gtv: [
-    { threshold: '<15 cc', modality: 'IMRT', outcome: 'Improved LC', toxicity: 'Less acute/late', ref: 'Ward et al' },
-    { threshold: '<25 cc', modality: 'SBRT', outcome: 'Improved LC & OS', toxicity: 'Less severe', ref: 'Vargo et al' },
-    { threshold: '>20 cc', modality: 'SBRT', outcome: 'Reduced OS', toxicity: 'No difference', ref: 'Diao et al' },
-  ],
-  ctv: [
-    { threshold: '<25 cc', modality: 'IMRT/PBT', outcome: 'NS', toxicity: 'No G3+', ref: 'Holliday et al' },
-    { threshold: '<50 cc', modality: 'IMRT/PBT', outcome: 'NS', toxicity: 'G3+ <21%', ref: 'Takiar, Phan' },
-    { threshold: '>50 cc', modality: 'Any', outcome: 'Reduced', toxicity: 'G3+ >57%', ref: 'MDACC Series' },
-  ],
-};
+
 
 // SVG Icons
 const CheckIcon = () => (
@@ -248,8 +236,16 @@ export default function MDACCPathway() {
       }
     }
 
+    // If no meaningful inputs were provided, default to unfavorable (incomplete)
+    const hasMinimumInputs = 
+      evaluation.histology !== '' ||
+      evaluation.recurrenceSite !== '' ||
+      evaluation.reirradiationInterval !== undefined ||
+      evaluation.tumorVolume !== undefined;
+
     let viability: 'favorable' | 'conditional' | 'unfavorable';
-    if (score >= 15) viability = 'favorable';
+    if (!hasMinimumInputs) viability = 'unfavorable';
+    else if (score >= 15) viability = 'favorable';
     else if (score >= -10) viability = 'conditional';
     else viability = 'unfavorable';
 
@@ -482,34 +478,7 @@ export default function MDACCPathway() {
             </button>
           ))}
         </div>
-        {evaluation.recurrenceSite && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm font-medium text-gray-700 mb-2">Expected 2-Year Outcomes (MDACC Data)</div>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-teal-600">
-                  {SITE_OUTCOMES[evaluation.recurrenceSite as keyof typeof SITE_OUTCOMES]?.lc}%
-                </div>
-                <div className="text-xs text-gray-500">Local Control</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {SITE_OUTCOMES[evaluation.recurrenceSite as keyof typeof SITE_OUTCOMES]?.os}%
-                </div>
-                <div className="text-xs text-gray-500">Overall Survival</div>
-              </div>
-              <div>
-                <div className={`text-2xl font-bold ${
-                  (SITE_OUTCOMES[evaluation.recurrenceSite as keyof typeof SITE_OUTCOMES]?.g3Tox || 0) > 30 
-                    ? 'text-red-500' : 'text-green-600'
-                }`}>
-                  {SITE_OUTCOMES[evaluation.recurrenceSite as keyof typeof SITE_OUTCOMES]?.g3Tox}%
-                </div>
-                <div className="text-xs text-gray-500">G3+ Toxicity</div>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Volume */}
@@ -564,36 +533,7 @@ export default function MDACCPathway() {
           </div>
         )}
 
-        {/* Volume Reference Table */}
-        <details className="mt-4">
-          <summary className="text-sm text-teal-600 font-medium cursor-pointer hover:text-teal-700">
-            View Volume Thresholds Reference
-          </summary>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="p-2 text-left">Volume</th>
-                  <th className="p-2 text-left">Modality</th>
-                  <th className="p-2 text-left">Outcome</th>
-                  <th className="p-2 text-left">Toxicity</th>
-                  <th className="p-2 text-left">Reference</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {[...VOLUME_DATA.gtv, ...VOLUME_DATA.ctv].map((row, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
-                    <td className="p-2 font-medium">{row.threshold}</td>
-                    <td className="p-2">{row.modality}</td>
-                    <td className="p-2">{row.outcome}</td>
-                    <td className="p-2">{row.toxicity}</td>
-                    <td className="p-2 text-gray-500">{row.ref}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
+
       </div>
     </div>
   );
@@ -1190,7 +1130,20 @@ export default function MDACCPathway() {
           ) : (
             <button
               onClick={() => setShowResults(true)}
-              className="px-4 sm:px-8 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg text-sm sm:text-base"
+              disabled={
+                evaluation.histology === '' &&
+                evaluation.recurrenceSite === '' &&
+                evaluation.reirradiationInterval === undefined &&
+                evaluation.tumorVolume === undefined
+              }
+              className={`px-4 sm:px-8 py-3 font-bold rounded-xl transition-all text-sm sm:text-base ${
+                evaluation.histology === '' &&
+                evaluation.recurrenceSite === '' &&
+                evaluation.reirradiationInterval === undefined &&
+                evaluation.tumorVolume === undefined
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg'
+              }`}
             >
               Generate Report
             </button>

@@ -26,17 +26,10 @@ export default function Calculator() {
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [calcError, setCalcError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    // Disclaimer must be accepted every visit - no persistence
   }, []);
-
-  const handleAcceptDisclaimer = () => {
-    // Only set for current session - no localStorage persistence
-    setDisclaimerAccepted(true);
-  };
 
   const handleLoadSampleCase = () => {
     setPatientData({
@@ -226,41 +219,8 @@ export default function Calculator() {
 
   return (
     <div className="relative">
-      {/* Disclaimer Modal */}
-      {!disclaimerAccepted && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-8 text-center border-t-4 border-teal-600">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Important Notice</h2>
-            <div className="prose prose-sm text-gray-600 mb-8 text-left bg-gray-50 p-4 rounded border border-gray-100">
-              <p className="mb-2">
-                This tool is intended solely for <strong>educational and research purposes</strong>. 
-                It is not validated for clinical use and must not be used to guide patient care decisions.
-              </p>
-              <p>
-                By proceeding, you acknowledge that this tool does not constitute medical advice and 
-                should not replace professional clinical judgment.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => window.location.href = 'about:blank'}
-                className="px-6 py-2.5 rounded text-gray-600 hover:bg-gray-100 transition-colors font-medium border border-gray-200"
-              >
-                Exit
-              </button>
-              <button
-                onClick={handleAcceptDisclaimer}
-                className="px-6 py-2.5 rounded bg-teal-primary hover:bg-teal-dark text-white font-medium transition-all shadow-lg shadow-teal-500/30"
-              >
-                I Understand - Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
-      <div className={`max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 transition-all duration-500 ${!disclaimerAccepted ? 'blur-md opacity-30 pointer-events-none' : ''}`}>
+      <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
         
         {/* Intro & Sample Case Header */}
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-6">
