@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { defaultContent, type EditableContent } from '@/lib/editableContent';
 
+export const dynamic = 'force-dynamic';
+
 const CONTENT_KEY = 'hn-rert:content';
 const AUDIT_KEY = 'hn-rert:audit';
 

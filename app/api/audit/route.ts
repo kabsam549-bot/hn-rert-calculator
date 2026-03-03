@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import Redis from 'ioredis';
 
+export const dynamic = 'force-dynamic';
+
 const AUDIT_KEY = 'hn-rert:audit';
 
 // Initialize Redis if URL is available
