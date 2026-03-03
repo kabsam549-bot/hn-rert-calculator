@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
 import { defaultContent, type EditableContent } from '@/lib/editableContent';
 
 const CONTENT_KEY = 'hn-rert:content';
 const AUDIT_KEY = 'hn-rert:audit';
+
+// Initialize Redis if URL is available
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 interface AuditEntry {
   timestamp: string;
@@ -13,10 +16,7 @@ interface AuditEntry {
   newValue: unknown;
 }
 
-const isKVConfigured = () => Boolean(
-  process.env.KV_REST_API_URL &&
-  process.env.KV_REST_API_TOKEN
-);
+const isKVConfigured = () => Boolean(redis);
 
 const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? 'phan2025admin';
 
@@ -83,13 +83,15 @@ const diffObjects = (
 
 export async function GET() {
   try {
-    if (!isKVConfigured()) {
+    if (!redis) {
       return NextResponse.json(defaultContent, { status: 200 });
     }
 
-    const stored = await kv.get<EditableContent>(CONTENT_KEY);
+    const raw = await redis.get(CONTENT_KEY);
+    const stored = raw ? JSON.parse(raw) : null;
     return NextResponse.json(stored ?? defaultContent, { status: 200 });
   } catch (error) {
+    console.error('Failed to load content:', error);
     return NextResponse.json(
       { error: 'Failed to load content' },
       { status: 500 }
@@ -99,9 +101,9 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    if (!isKVConfigured()) {
+    if (!redis) {
       return NextResponse.json(
-        { error: 'KV not configured' },
+        { error: 'Redis not configured' },
         { status: 503 }
       );
     }
@@ -118,8 +120,9 @@ export async function PUT(request: Request) {
     const author = request.headers.get('x-admin-author') || 'Admin';
 
     const incoming = (await request.json()) as EditableContent;
-    const currentContent =
-      (await kv.get<EditableContent>(CONTENT_KEY)) ?? defaultContent;
+    
+    const rawCurrent = await redis.get(CONTENT_KEY);
+    const currentContent = rawCurrent ? JSON.parse(rawCurrent) : defaultContent;
 
     const updatedContent: EditableContent = {
       ...incoming,
@@ -131,14 +134,16 @@ export async function PUT(request: Request) {
     diffObjects(currentContent, updatedContent, '', auditEntries, author);
 
     if (auditEntries.length > 0) {
-      const existingAudit = (await kv.get<AuditEntry[]>(AUDIT_KEY)) ?? [];
-      await kv.set(AUDIT_KEY, [...existingAudit, ...auditEntries]);
+      const rawAudit = await redis.get(AUDIT_KEY);
+      const existingAudit = rawAudit ? JSON.parse(rawAudit) : [];
+      await redis.set(AUDIT_KEY, JSON.stringify([...existingAudit, ...auditEntries]));
     }
 
-    await kv.set(CONTENT_KEY, updatedContent);
+    await redis.set(CONTENT_KEY, JSON.stringify(updatedContent));
 
     return NextResponse.json(updatedContent, { status: 200 });
   } catch (error) {
+    console.error('Failed to save content:', error);
     return NextResponse.json(
       { error: 'Failed to save content' },
       { status: 500 }
