@@ -23,7 +23,7 @@ export function useEditableContent() {
         if (isMounted) {
           setContent(data);
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setError('Failed to load content');
           setContent(defaultContent);

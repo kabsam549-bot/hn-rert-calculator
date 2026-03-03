@@ -18,7 +18,7 @@ type TicketPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 type TicketCategory = 'Clinical Parameters' | 'Dosimetry' | 'UI-UX' | 'Data' | 'Bug';
 
-type TicketStatus = 'Submitted' | 'In Progress' | 'Done' | 'Verified';
+// type TicketStatus = 'Submitted' | 'In Progress' | 'Done' | 'Verified';
 
 interface Ticket {
   id: string;
@@ -117,7 +117,7 @@ export default function AdminPage() {
         if (isMounted) {
           setContent(data);
         }
-      } catch (error) {
+      } catch {
         if (isMounted) {
           setLoadError('Unable to load content. Using defaults.');
           setContent(defaultContent);
@@ -151,7 +151,7 @@ export default function AdminPage() {
         }
         const data = (await response.json()) as Ticket[];
         setTickets(data);
-      } catch (error) {
+      } catch {
         setTicketsError('Unable to load tickets.');
       } finally {
         setTicketsLoading(false);
@@ -176,7 +176,7 @@ export default function AdminPage() {
         }
         const data = (await response.json()) as AuditEntry[];
         setAuditLog(data);
-      } catch (error) {
+      } catch {
         setAuditError('Unable to load audit log.');
       } finally {
         setAuditLoading(false);
@@ -240,7 +240,7 @@ export default function AdminPage() {
       setContent(updated);
       setSaveStatus('saved');
       window.setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
+    } catch {
       setSaveStatus('error');
       setSaveError('Save failed. Check your password or KV configuration.');
     }
@@ -375,7 +375,7 @@ export default function AdminPage() {
         category: 'Clinical Parameters',
         submittedBy: ticketForm.submittedBy,
       });
-    } catch (error) {
+    } catch {
       setTicketStatus('error');
       setTicketMessage('Unable to submit ticket.');
     }

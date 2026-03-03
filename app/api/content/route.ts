@@ -16,8 +16,6 @@ interface AuditEntry {
   newValue: unknown;
 }
 
-const isKVConfigured = () => Boolean(redis);
-
 const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? 'phan2025admin';
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
@@ -62,13 +60,13 @@ const diffObjects = (
 
   if (isPlainObject(oldValue) && isPlainObject(newValue)) {
     const keys = new Set([...Object.keys(oldValue), ...Object.keys(newValue)]);
-    for (const key of keys) {
+    keys.forEach((key) => {
       if (key === 'lastUpdated' || key === 'updatedBy') {
-        continue;
+        return;
       }
       const nextPath = path ? `${path}.${key}` : key;
       diffObjects(oldValue[key], newValue[key], nextPath, entries, author);
-    }
+    });
     return;
   }
 

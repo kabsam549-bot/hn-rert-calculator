@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       { id: created.id },
       { status: 201 }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to create ticket' },
       { status: 500 }
@@ -155,6 +155,7 @@ export async function GET() {
     }
 
     const data = await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tickets = (data.results ?? []).map((page: any) => {
       const props = page.properties ?? {};
       return {
@@ -171,7 +172,7 @@ export async function GET() {
     });
 
     return NextResponse.json(tickets, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to load tickets' },
       { status: 500 }

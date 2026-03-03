@@ -16,7 +16,7 @@ export async function GET() {
     const auditLog = raw ? JSON.parse(raw) : [];
 
     // Sort by timestamp desc
-    const sorted = auditLog.sort((a: any, b: any) => {
+    const sorted = auditLog.sort((a: { timestamp: string }, b: { timestamp: string }) => {
       return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
 
