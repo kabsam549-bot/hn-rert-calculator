@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   defaultContent,
   type EditableContent,
@@ -10,7 +11,9 @@ import {
   type EditableReference,
 } from '@/lib/editableContent';
 
-type TabKey = 'oar' | 'regimens' | 'guidelines' | 'references' | 'request' | 'tickets' | 'audit';
+const TipTapEditor = dynamic(() => import('@/components/TipTapEditor'), { ssr: false });
+
+type TabKey = 'oar' | 'regimens' | 'guidelines' | 'references' | 'request' | 'tickets' | 'audit' | 'pages';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -99,6 +102,20 @@ export default function AdminPage() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState('');
 
+  // Page editor state
+  const [pageEditorHtml, setPageEditorHtml] = useState('');
+  const [pageEditorLoading, setPageEditorLoading] = useState(false);
+  const [pageEditorSaveStatus, setPageEditorSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [selectedPage, setSelectedPage] = useState('guidelines-overview');
+
+  const editablePages = useMemo(() => [
+    { id: 'guidelines-overview', label: 'Guidelines - Overview' },
+    { id: 'guidelines-constraints', label: 'Guidelines - OAR Constraints' },
+    { id: 'guidelines-outcomes', label: 'Guidelines - Outcomes' },
+    { id: 'guidelines-cbs', label: 'Guidelines - CBS/BE Risk' },
+    { id: 'guidelines-references', label: 'Guidelines - References' },
+  ], []);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -183,6 +200,44 @@ export default function AdminPage() {
     loadAudit();
   }, [activeTab]);
 
+  // Load page content when page editor tab is active
+  useEffect(() => {
+    if (activeTab !== 'pages') return;
+    const loadPage = async () => {
+      setPageEditorLoading(true);
+      try {
+        const response = await fetch(`/api/pages?id=${selectedPage}`);
+        if (!response.ok) throw new Error('Failed to load');
+        const data = await response.json();
+        setPageEditorHtml(data.html || '<p>Start editing this section. Your changes will appear on the live site.</p>');
+      } catch {
+        setPageEditorHtml('<p>Unable to load content. Start fresh here.</p>');
+      } finally {
+        setPageEditorLoading(false);
+      }
+    };
+    loadPage();
+  }, [activeTab, selectedPage]);
+
+  const handlePageSave = useCallback(async () => {
+    setPageEditorSaveStatus('saving');
+    try {
+      const response = await fetch('/api/pages', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ id: selectedPage, html: pageEditorHtml }),
+      });
+      if (!response.ok) throw new Error('Failed to save');
+      setPageEditorSaveStatus('saved');
+      window.setTimeout(() => setPageEditorSaveStatus('idle'), 2000);
+    } catch {
+      setPageEditorSaveStatus('error');
+    }
+  }, [authToken, selectedPage, pageEditorHtml]);
+
   const tabItems = useMemo(
     () => [
       { key: 'oar', label: 'OAR Constraints' },
@@ -192,6 +247,7 @@ export default function AdminPage() {
       { key: 'request', label: 'Request a Change' },
       { key: 'tickets', label: 'Ticket History' },
       { key: 'audit', label: 'Audit Log' },
+      { key: 'pages', label: 'Page Editor' },
     ],
     []
   );
@@ -915,6 +971,71 @@ export default function AdminPage() {
                       )}
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === 'pages' && (
+                <div className="space-y-4">
+                  <div className="bg-white rounded-xl shadow-sm border p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-gray-700">Section:</label>
+                        <select
+                          value={selectedPage}
+                          onChange={(e) => setSelectedPage(e.target.value)}
+                          className="px-3 py-2 border rounded-lg text-sm"
+                        >
+                          {editablePages.map((p) => (
+                            <option key={p.id} value={p.id}>{p.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        onClick={handlePageSave}
+                        disabled={pageEditorSaveStatus === 'saving'}
+                        className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                          pageEditorSaveStatus === 'saved'
+                            ? 'bg-green-600 text-white'
+                            : pageEditorSaveStatus === 'saving'
+                            ? 'bg-gray-400 text-white cursor-wait'
+                            : pageEditorSaveStatus === 'error'
+                            ? 'bg-red-600 text-white'
+                            : 'bg-teal-600 hover:bg-teal-700 text-white'
+                        }`}
+                      >
+                        {pageEditorSaveStatus === 'saving' ? 'Saving...' : pageEditorSaveStatus === 'saved' ? 'Saved!' : pageEditorSaveStatus === 'error' ? 'Error - Retry' : 'Save Page'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid lg:grid-cols-2 gap-4">
+                    {/* Editor */}
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-gray-500 mb-2 font-semibold">Editor</div>
+                      {pageEditorLoading ? (
+                        <div className="bg-white rounded-xl shadow-sm border p-6 flex items-center justify-center min-h-[400px]">
+                          <span className="h-5 w-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : (
+                        <TipTapEditor
+                          key={selectedPage}
+                          content={pageEditorHtml}
+                          onChange={setPageEditorHtml}
+                        />
+                      )}
+                    </div>
+
+                    {/* Live Preview */}
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-gray-500 mb-2 font-semibold">Live Preview</div>
+                      <div className="bg-white rounded-xl shadow-sm border p-6 min-h-[400px]">
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: pageEditorHtml }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </>
