@@ -427,12 +427,13 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-gray-200 bg-gray-50 mt-auto">
-          <div className="max-w-7xl mx-auto px-4 py-6 md:px-6">
+          <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 relative">
             <p className="text-xs text-gray-600 text-center max-w-3xl mx-auto">
               <strong>DISCLAIMER:</strong> For educational and research purposes only. Not validated for clinical use. 
               This tool aids in risk assessment but does not replace multidisciplinary review.
             </p>
             <p className="text-xs text-gray-400 text-center mt-2">v2.4.0</p>
+            <a href="/admin" className="absolute bottom-2 right-4 text-[10px] text-gray-300 hover:text-gray-400 transition-colors">admin</a>
           </div>
         </footer>
       </main>
@@ -567,6 +568,7 @@ export default function Home() {
               </p>
               <div className="text-xs text-gray-400 flex items-center gap-3">
                 <span>v2.4.0</span>
+                <a href="/admin" className="text-[10px] text-gray-300 hover:text-gray-400 transition-colors ml-2">admin</a>
               </div>
             </div>
           </div>
@@ -620,6 +622,7 @@ export default function Home() {
             </p>
             <div className="text-xs text-gray-400 flex items-center gap-3">
               <span>v2.4.0</span>
+              <a href="/admin" className="text-[10px] text-gray-300 hover:text-gray-400 transition-colors ml-2">admin</a>
             </div>
           </div>
         </div>
