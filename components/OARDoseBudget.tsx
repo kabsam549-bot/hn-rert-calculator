@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   OAR_BUDGET_DATA,
   calculateOARBudget,
@@ -9,6 +9,7 @@ import {
   type OARBudgetResult,
   type OARBudgetData,
 } from '@/lib/oarDoseBudget';
+import { useEditableContent } from '@/lib/hooks/useEditableContent';
 import Tooltip from './Tooltip';
 
 interface OARInput {
@@ -19,9 +20,22 @@ interface OARInput {
 }
 
 export default function OARDoseBudget() {
+  const { content } = useEditableContent();
   const [selectedOARs, setSelectedOARs] = useState<OARInput[]>([]);
   const [results, setResults] = useState<OARBudgetResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+
+  const availableOARData = useMemo<OARBudgetData[]>(() => {
+    if (!content?.oarConstraints?.length) {
+      return OAR_BUDGET_DATA;
+    }
+    return content.oarConstraints.map((oar) => ({
+      name: oar.name,
+      lifetimeToleranceEQD2: oar.limitEQD2,
+      alphaBeta: oar.alphaBeta,
+      complication: oar.complication,
+    }));
+  }, [content]);
 
   const handleAddOAR = (oar: OARBudgetData) => {
     if (selectedOARs.some(item => item.oar.name === oar.name)) {
@@ -93,7 +107,7 @@ export default function OARDoseBudget() {
   );
 
   const renderOARSelector = () => {
-    const availableOARs = OAR_BUDGET_DATA.filter(
+    const availableOARs = availableOARData.filter(
       oar => !selectedOARs.some(item => item.oar.name === oar.name)
     );
 

@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useEditableContent } from '@/lib/hooks/useEditableContent';
 
 type Section = 'overview' | 'constraints' | 'outcomes' | 'cbs' | 'references';
 
 export default function GuidelinesTab() {
   const [activeSection, setActiveSection] = useState<Section>('overview');
+  const { content } = useEditableContent();
+  const adminGuidelines = content?.guidelines ?? [];
 
   const sections: { id: Section; label: string }[] = [
     { id: 'overview', label: 'Overview' },
@@ -37,6 +40,19 @@ export default function GuidelinesTab() {
       {/* Overview */}
       {activeSection === 'overview' && (
         <div className="space-y-6">
+          {adminGuidelines.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Clinical Guidelines</h2>
+              <div className="space-y-3">
+                {adminGuidelines.map((guideline) => (
+                  <div key={guideline.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="font-semibold text-gray-900">{guideline.title}</div>
+                    <div className="text-sm text-gray-600 mt-1">{guideline.content}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="bg-white rounded-xl shadow-sm border p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">MDACC 4-Step Evaluation Framework</h2>
             <div className="grid md:grid-cols-2 gap-4">
