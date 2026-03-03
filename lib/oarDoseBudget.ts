@@ -78,7 +78,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
     lifetimeToleranceEQD2: 64,
     alphaBeta: 3,
     complication: 'Brainstem necrosis',
-    specialNote: 'Plexopathy risk <5% if cumulative BED <120 Gy₃'
+    specialNote: 'Brainstem necrosis risk <5% if cumulative BED <120 Gy₃'
   },
   {
     name: 'Spinal cord',
