@@ -548,37 +548,30 @@ export default function MDACCPathway() {
       {/* Reirradiation Interval */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Reirradiation Interval</label>
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            value={evaluation.reirradiationInterval ?? ''}
-            onChange={(e) => updateEvaluation('reirradiationInterval', e.target.value ? Number(e.target.value) : undefined)}
-            placeholder="Months"
-            className="flex-1 p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
-          />
-          <span className="text-gray-500 font-medium shrink-0">months</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { min: 0, max: 6, label: '<6m', color: 'red', note: 'Not rec.' },
-            { min: 6, max: 12, label: '6-12m', color: 'amber', note: 'Caution' },
-            { min: 12, max: 24, label: '12-24m', color: 'yellow', note: 'OK' },
-            { min: 24, max: Infinity, label: '>=24m', color: 'green', note: 'Favorable' },
-          ].map((range) => {
-            const ri = evaluation.reirradiationInterval;
-            const isActive = ri !== undefined && ri >= range.min && ri < range.max;
+            { value: 3, label: '< 6 months', color: 'red', note: 'Not recommended' },
+            { value: 9, label: '6-12 months', color: 'amber', note: 'Caution required' },
+            { value: 18, label: '12-24 months', color: 'yellow', note: 'Acceptable' },
+            { value: 30, label: '> 24 months', color: 'green', note: 'Favorable' },
+          ].map((opt) => {
+            const isActive = evaluation.reirradiationInterval === opt.value;
             return (
-              <div key={range.label} className={`p-2 rounded text-center ${
-                isActive
-                  ? range.color === 'red' ? 'bg-red-100 border-2 border-red-400' :
-                    range.color === 'amber' ? 'bg-amber-100 border-2 border-amber-400' :
-                    range.color === 'yellow' ? 'bg-yellow-100 border-2 border-yellow-400' :
-                    'bg-green-100 border-2 border-green-400'
-                  : 'bg-gray-100 border border-gray-200'
-              }`}>
-                <div className="font-semibold text-xs sm:text-sm">{range.label}</div>
-                <div className="text-gray-500 text-[10px] sm:text-xs">{range.note}</div>
-              </div>
+              <button
+                key={opt.value}
+                onClick={() => updateEvaluation('reirradiationInterval', opt.value)}
+                className={`p-4 rounded-xl border-2 text-center transition-all ${
+                  isActive
+                    ? opt.color === 'red' ? 'border-red-500 bg-red-50 shadow-md' :
+                      opt.color === 'amber' ? 'border-amber-500 bg-amber-50 shadow-md' :
+                      opt.color === 'yellow' ? 'border-yellow-500 bg-yellow-50 shadow-md' :
+                      'border-green-500 bg-green-50 shadow-md'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <div className="font-semibold text-gray-900 text-sm">{opt.label}</div>
+                <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
+              </button>
             );
           })}
         </div>
@@ -693,10 +686,10 @@ export default function MDACCPathway() {
       {/* Modality Selection */}
       <div>
         <label className="block text-sm font-semibold text-gray-800 mb-3">Planned Treatment Modality</label>
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
-            { value: 'sbrt', label: 'SBRT', note: 'Volume <25cc', icon: 'S' },
-            { value: 'imrt', label: 'IMRT', note: 'Larger vols', icon: 'I' },
+            { value: 'sbrt', label: 'SBRT', note: 'Volume <25cc (includes GK/CK)', icon: 'S' },
+            { value: 'imrt', label: 'IMRT', note: 'Larger volumes', icon: 'I' },
             { value: 'pbt', label: 'Proton', note: 'Skull base', icon: 'P' },
           ].map((opt) => {
             const isRecommended = 
@@ -774,63 +767,173 @@ export default function MDACCPathway() {
         </div>
       )}
 
-      {/* SBRT Dose Guide */}
-      {evaluation.plannedModality === 'sbrt' && (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl">
-          <h4 className="font-bold text-gray-800 mb-4">MDACC SBRT Dose Selection Guide</h4>
-          <div className="space-y-2">
-            {[
-              { dose: '45 Gy / 5 fx', eqd2: '71-80', lc: '~90%', context: 'Non-mucosal, high-grade', risk: 'Higher toxicity' },
-              { dose: '42.5 Gy / 5 fx', eqd2: '65-73', lc: '~85%', context: 'Standard curative', risk: 'Moderate' },
-              { dose: '40 Gy / 5 fx', eqd2: '60-67', lc: '75-85%', context: 'Large nodal, moderate-dose', risk: 'Moderate' },
-              { dose: '36 Gy / 4 fx', eqd2: '57-64', lc: '70-80%', context: 'Gross disease (recommended)', risk: 'Lower', recommended: evaluation.surgicalStatus === 'intact' },
-              { dose: '32 Gy / 4 fx', eqd2: '49-56', lc: '65-75%', context: 'Post-op (recommended)', risk: 'Lower', recommended: evaluation.surgicalStatus === 'postop' },
-              { dose: '27 Gy / 3 fx', eqd2: '43-48', lc: '65-73%', context: 'High-risk mucosal, palliative', risk: 'Lowest' },
-            ].map((row) => {
-              const isSelected = 
-                (row.dose === '45 Gy / 5 fx' && evaluation.plannedDose === 45 && evaluation.plannedFractions === 5) ||
-                (row.dose === '42.5 Gy / 5 fx' && evaluation.plannedDose === 42.5 && evaluation.plannedFractions === 5) ||
-                (row.dose === '40 Gy / 5 fx' && evaluation.plannedDose === 40 && evaluation.plannedFractions === 5) ||
-                (row.dose === '36 Gy / 4 fx' && evaluation.plannedDose === 36 && evaluation.plannedFractions === 4) ||
-                (row.dose === '32 Gy / 4 fx' && evaluation.plannedDose === 32 && evaluation.plannedFractions === 4) ||
-                (row.dose === '27 Gy / 3 fx' && evaluation.plannedDose === 27 && evaluation.plannedFractions === 3);
-              return (
-                <div key={row.dose} className={`p-3 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 relative ${
-                  isSelected ? 'bg-teal-100 border-2 border-teal-400' : 
-                  row.recommended ? 'bg-emerald-50 border-2 border-emerald-300' :
-                  'bg-white border border-gray-200'
-                }`}>
-                  {row.recommended && !isSelected && (
-                    <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                      RECOMMENDED
-                    </span>
-                  )}
-                  <div>
-                    <span className="font-bold text-gray-900">{row.dose}</span>
-                    <span className="text-gray-400 mx-2">-</span>
-                    <span className="text-gray-600">EQD2: {row.eqd2} Gy</span>
-                  </div>
-                  <div className="sm:text-right">
-                    <span className="text-sm font-medium text-teal-700">{row.lc} LC</span>
-                    <span className="text-xs text-gray-500 ml-2">{row.context}</span>
-                  </div>
+      {/* Dose Recommendations - Check for borderline cases */}
+      {(() => {
+        const isBorderline = evaluation.recurrenceSite?.includes('mucosal') || (evaluation.tumorVolume && evaluation.tumorVolume > 25);
+        const showBoth = isBorderline && (evaluation.plannedModality === 'imrt' || evaluation.plannedModality === 'sbrt');
+        
+        return (
+          <>
+            {/* Borderline case warning */}
+            {showBoth && (
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <h4 className="font-bold text-amber-800">Borderline Case</h4>
                 </div>
-              );
-            })}
-          </div>
+                <p className="text-sm text-amber-700">
+                  {evaluation.recurrenceSite?.includes('mucosal') ? 'Mucosal site' : 'Large tumor volume (>25cc)'} - Consider both IMRT and SBRT approaches for optimal clinical decision-making
+                </p>
+              </div>
+            )}
+
+            {/* SBRT Dose Guide */}
+            {(evaluation.plannedModality === 'sbrt' || showBoth) && (
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl">
+                <h4 className="font-bold text-gray-800 mb-4">MDACC SBRT Dose Selection Guide</h4>
+                <div className="space-y-2">
+                  {[
+                    { dose: '45 Gy / 5 fx', eqd2: '71-80', lc: '~90%', context: 'Non-mucosal, high-grade', risk: 'Higher toxicity' },
+                    { dose: '42.5 Gy / 5 fx', eqd2: '65-73', lc: '~85%', context: 'Standard curative', risk: 'Moderate' },
+                    { dose: '40 Gy / 5 fx', eqd2: '60-67', lc: '75-85%', context: 'Large nodal, moderate-dose', risk: 'Moderate' },
+                    { dose: '36 Gy / 4 fx', eqd2: '57-64', lc: '70-80%', context: 'Gross disease (recommended)', risk: 'Lower', recommended: evaluation.surgicalStatus === 'intact' },
+                    { dose: '32 Gy / 4 fx', eqd2: '49-56', lc: '65-75%', context: 'Post-op (recommended)', risk: 'Lower', recommended: evaluation.surgicalStatus === 'postop' },
+                    { dose: '27 Gy / 3 fx', eqd2: '43-48', lc: '65-73%', context: 'High-risk mucosal, palliative', risk: 'Lowest' },
+                  ].map((row) => {
+                    const isSelected = 
+                      (row.dose === '45 Gy / 5 fx' && evaluation.plannedDose === 45 && evaluation.plannedFractions === 5) ||
+                      (row.dose === '42.5 Gy / 5 fx' && evaluation.plannedDose === 42.5 && evaluation.plannedFractions === 5) ||
+                      (row.dose === '40 Gy / 5 fx' && evaluation.plannedDose === 40 && evaluation.plannedFractions === 5) ||
+                      (row.dose === '36 Gy / 4 fx' && evaluation.plannedDose === 36 && evaluation.plannedFractions === 4) ||
+                      (row.dose === '32 Gy / 4 fx' && evaluation.plannedDose === 32 && evaluation.plannedFractions === 4) ||
+                      (row.dose === '27 Gy / 3 fx' && evaluation.plannedDose === 27 && evaluation.plannedFractions === 3);
+                    return (
+                      <div key={row.dose} className={`p-3 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 relative ${
+                        isSelected ? 'bg-teal-100 border-2 border-teal-400' : 
+                        row.recommended ? 'bg-emerald-50 border-2 border-emerald-300' :
+                        'bg-white border border-gray-200'
+                      }`}>
+                        {row.recommended && !isSelected && (
+                          <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                            RECOMMENDED
+                          </span>
+                        )}
+                        <div>
+                          <span className="font-bold text-gray-900">{row.dose}</span>
+                          <span className="text-gray-400 mx-2">-</span>
+                          <span className="text-gray-600">EQD2: {row.eqd2} Gy</span>
+                        </div>
+                        <div className="sm:text-right">
+                          <span className="text-sm font-medium text-teal-700">{row.lc} LC</span>
+                          <span className="text-xs text-gray-500 ml-2">{row.context}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* IMRT Dose Guide */}
+            {(evaluation.plannedModality === 'imrt' || showBoth) && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-5 rounded-xl">
+                <h4 className="font-bold text-gray-800 mb-4">IMRT Fractionation Options</h4>
+                <div className="space-y-2">
+                  {[
+                    { dose: '33 Gy', context: 'Palliative / Limited intent', note: 'Lower toxicity risk' },
+                    { dose: '35 Gy', context: 'Moderate dose', note: 'Acceptable risk-benefit' },
+                    { dose: '66-70 Gy', context: 'Gross disease (current institutional practice)', note: 'Curative intent', recommended: evaluation.surgicalStatus === 'intact' },
+                    { dose: '64 Gy', context: 'Other indications', note: 'Standard fractionation' },
+                  ].map((row) => {
+                    return (
+                      <div key={row.dose} className={`p-3 rounded-lg relative ${
+                        row.recommended ? 'bg-emerald-50 border-2 border-emerald-300' :
+                        'bg-white border border-gray-200'
+                      }`}>
+                        {row.recommended && (
+                          <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                            RECOMMENDED
+                          </span>
+                        )}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-gray-900">{row.dose}</span>
+                            <span className="text-gray-400 mx-2">-</span>
+                            <span className="text-gray-600">{row.context}</span>
+                          </div>
+                          <div className="sm:text-right">
+                            <span className="text-xs text-gray-500">{row.note}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Proton Recommendations */}
+            {evaluation.plannedModality === 'pbt' && (
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 sm:p-5 rounded-xl">
+                <h4 className="font-bold text-gray-800 mb-3">Proton Therapy Considerations</h4>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-500 mt-0.5">•</span>
+                    <span>Imaging verification every 1-2 weeks recommended</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-500 mt-0.5">•</span>
+                    <span>Caution with air interface regions (paranasal sinuses, nasopharynx)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-500 mt-0.5">•</span>
+                    <span>CBCT/IGRT when available strongly recommended</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-500 mt-0.5">•</span>
+                    <span>Monitor for hot spots in high-gradient regions</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* Technical Considerations - Dynamic based on modality */}
+      {evaluation.plannedModality && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="font-semibold text-blue-800 mb-2">Technical Considerations</h4>
+          <ul className="text-sm text-blue-700 space-y-1">
+            {(evaluation.plannedModality === 'imrt') && (
+              <>
+                <li>- Dose gradient ~8% per millimeter</li>
+                <li>- Margin considerations for target coverage and OAR sparing</li>
+                <li>- See Catherine & Shane Meskel, Red Journal</li>
+              </>
+            )}
+            {(evaluation.plannedModality === 'sbrt') && (
+              <>
+                <li>- Dose gradient ~10% per millimeter</li>
+                <li>- PTV expansion: Typically 2mm (skull base), 3mm (mucosal), 3.5mm (neck)</li>
+                <li>- QOD fractionation reduces CBS/BE risk vs daily treatment</li>
+                <li>- Gamma Knife: Prescription dose typically 50% isodose line (range 40-60%)</li>
+                <li>- CyberKnife: Prescription dose typically 80% isodose line</li>
+              </>
+            )}
+            {(evaluation.plannedModality === 'pbt') && (
+              <>
+                <li>- Imaging verification every 1-2 weeks recommended</li>
+                <li>- Caution with air interface regions (paranasal sinuses, nasopharynx)</li>
+                <li>- CBCT/IGRT when available strongly recommended</li>
+                <li>- Monitor for hot spots in high-gradient regions</li>
+              </>
+            )}
+          </ul>
         </div>
       )}
-
-      {/* Technical Notes */}
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <h4 className="font-semibold text-blue-800 mb-2">Technical Considerations</h4>
-        <ul className="text-sm text-blue-700 space-y-1">
-          <li>- LINAC/VMAT achieves ~8% dose reduction per mm from target</li>
-          <li>- GK/CK: Best conformity for tumors &lt;15cc (superior gradient)</li>
-          <li>- PTV expansion: Typically 2mm (skull base), 3mm (mucosal), 3.5mm (neck)</li>
-          <li>- SBRT QOD fractionation reduces CBS/BE risk vs daily treatment</li>
-        </ul>
-      </div>
     </div>
   );
 

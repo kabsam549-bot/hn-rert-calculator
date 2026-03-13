@@ -76,7 +76,7 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
 
 type ViewMode = 'landing' | 'radonc' | 'salvage';
 type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'guidelines';
-type LandingTab = 'home' | 'about' | 'guidelines';
+type LandingTab = 'home' | 'about' | 'dosebudget' | 'guidelines';
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('landing');
@@ -142,6 +142,16 @@ export default function Home() {
                 About
               </button>
               <button
+                onClick={() => setLandingTab('dosebudget')}
+                className={`text-sm transition-colors ${
+                  landingTab === 'dosebudget'
+                    ? 'text-teal-700 font-medium border-b-2 border-teal-600 pb-1'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Dose Budget
+              </button>
+              <button
                 onClick={() => setLandingTab('guidelines')}
                 className={`text-sm transition-colors ${
                   landingTab === 'guidelines'
@@ -189,7 +199,13 @@ export default function Home() {
                       <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>MDACC Clinical Pathway</span>
+                      <span>4-Step Clinical Evaluation</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>OAR Dose Budget Calculator</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-gray-700">
                       <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,18 +217,12 @@ export default function Home() {
                       <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>OAR Dose Budget Tool</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Evidence-Based Guidelines</span>
+                      <span>Guidelines & Publications</span>
                     </li>
                   </ul>
                 </button>
 
-                {/* Referring Physician Card */}
+                {/* Re-Irradiation Decisions Card */}
                 <button
                   onClick={() => setViewMode('salvage')}
                   className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
@@ -229,7 +239,7 @@ export default function Home() {
                   </div>
                   
                   <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors">
-                    Referring Physician Guide
+                    Re-Irradiation Decisions
                   </h3>
                   <p className="text-gray-600 mb-4 text-sm">
                     Quick assessment tool for surgeons and medical oncologists
@@ -263,6 +273,11 @@ export default function Home() {
                   </ul>
                 </button>
               </div>
+            </div>
+          ) : landingTab === 'dosebudget' ? (
+            /* Dose Budget Section */
+            <div className="max-w-7xl mx-auto px-4 py-12 md:px-6">
+              <OARDoseBudget />
             </div>
           ) : landingTab === 'about' ? (
             /* About Section */
@@ -588,10 +603,10 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight text-white">
-                SALVAGE DECISION SUPPORT <span className="font-light opacity-80">TOOL</span>
+                RE-IRRADIATION DECISIONS
               </h1>
               <p className="text-sm text-purple-100 mt-1 font-light tracking-wide">
-                Re-Irradiation Candidacy Assessment for Non-Radiation Oncologists
+                Quick Assessment for Referring Physicians
               </p>
             </div>
             <button
