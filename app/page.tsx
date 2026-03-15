@@ -404,10 +404,10 @@ export default function Home() {
                   </ul>
                 </button>
 
-                {/* Re-Irradiation Decisions Card */}
+                {/* Referring Provider Card */}
                 <button
                   onClick={() => setViewMode('salvage')}
-                  className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
+                  className="bg-white border-2 border-gray-200 hover:border-purple-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-600 transition-colors">
@@ -421,10 +421,10 @@ export default function Home() {
                   </div>
                   
                   <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors">
-                    Re-Irradiation Decisions
+                    Referring Provider
                   </h3>
                   <p className="text-gray-600 mb-4 text-sm">
-                    Quick assessment for referring physicians
+                    Quick assessment for surgeons and medical oncologists
                   </p>
                   
                   <ul className="space-y-2">
@@ -981,10 +981,10 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight text-white">
-                RE-IRRADIATION DECISIONS
+                REIRRADIATION DECISION <span className="font-light opacity-80">TOOL</span>
               </h1>
               <p className="text-sm text-purple-100 mt-1 font-light tracking-wide">
-                Quick Assessment for Referring Physicians
+                Quick Assessment for Surgeons & Medical Oncologists
               </p>
             </div>
             <button
