@@ -205,7 +205,7 @@ function HowToUseModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-type ViewMode = 'landing' | 'radonc' | 'salvage';
+type ViewMode = 'landing' | 'radonc' | 'radonc-landing' | 'salvage';
 type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'guidelines';
 type LandingTab = 'home' | 'about' | 'dosebudget' | 'guidelines';
 
@@ -316,7 +316,7 @@ export default function Home() {
               <div className="grid md:grid-cols-3 gap-6 max-w-7xl mx-auto">
                 {/* Radiation Oncology Card */}
                 <button
-                  onClick={() => setViewMode('radonc')}
+                  onClick={() => setViewMode('radonc-landing')}
                   className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -676,13 +676,13 @@ export default function Home() {
   }
 
   // Radiation Oncology Pathway View
-  if (viewMode === 'radonc') {
+  if (viewMode === 'radonc-landing') {
     return (
-      <main className="min-h-screen bg-background flex flex-col">
+      <main className="min-h-screen bg-gray-50 flex flex-col">
         {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
 
         {/* Header */}
-        <header className="bg-header text-white shadow-md z-50">
+        <header className="bg-header text-white shadow-md">
           <div className="max-w-[1600px] mx-auto px-4 py-4 md:px-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
@@ -701,6 +701,164 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 Back to Home
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Sub-Landing Cards */}
+        <div className="flex-grow flex items-center justify-center py-12 px-4">
+          <div className="max-w-5xl w-full">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Select a Tool</h2>
+              <p className="text-gray-500">Choose from the available radiation oncology decision support tools</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* MDACC Pathway Card */}
+              <button
+                onClick={() => { setRadOncTab('pathway'); setViewMode('radonc'); }}
+                className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-2xl p-8 text-left transition-all group shadow-sm hover:shadow-xl"
+              >
+                <div className="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-teal-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-teal-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors">MDACC 3-Step Evaluation</h3>
+                <p className="text-gray-600 text-sm mb-4">Comprehensive re-irradiation candidacy assessment using the MD Anderson framework</p>
+                <ul className="space-y-2 text-sm text-gray-500">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
+                    Tumor control probability (TCP)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
+                    Normal tissue complication probability (NTCP)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
+                    Technical feasibility & modality selection
+                  </li>
+                </ul>
+              </button>
+
+              {/* OAR Dose Budget Card */}
+              <button
+                onClick={() => { setRadOncTab('dosebudget'); setViewMode('radonc'); }}
+                className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-2xl p-8 text-left transition-all group shadow-sm hover:shadow-xl"
+              >
+                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-blue-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors">OAR Dose Budget</h3>
+                <p className="text-gray-600 text-sm mb-4">Calculate remaining dose budget for organs at risk with tissue recovery modeling</p>
+                <ul className="space-y-2 text-sm text-gray-500">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                    Per-organ EQD2 budget with recovery factors
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                    Multiple prior RT course support
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                    Physical dose budgets for 2-5 fraction schemes
+                  </li>
+                </ul>
+              </button>
+
+              {/* MIRI Calculator Card */}
+              <button
+                onClick={() => { setRadOncTab('calculator'); setViewMode('radonc'); }}
+                className="bg-white border-2 border-gray-200 hover:border-amber-500 rounded-2xl p-8 text-left transition-all group shadow-sm hover:shadow-xl"
+              >
+                <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-amber-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-amber-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-amber-700 transition-colors">MIRI Calculator</h3>
+                <p className="text-gray-600 text-sm mb-4">Multi-Institutional Re-Irradiation risk classification and scoring</p>
+                <ul className="space-y-2 text-sm text-gray-500">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                    Evidence-based risk stratification
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                    Class I-III classification
+                  </li>
+                </ul>
+              </button>
+
+              {/* Guidelines Card */}
+              <button
+                onClick={() => { setRadOncTab('guidelines'); setViewMode('radonc'); }}
+                className="bg-white border-2 border-gray-200 hover:border-purple-500 rounded-2xl p-8 text-left transition-all group shadow-sm hover:shadow-xl"
+              >
+                <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-purple-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-purple-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors">Guidelines & Publications</h3>
+                <p className="text-gray-600 text-sm mb-4">Reference guidelines, key publications, and institutional protocols</p>
+                <ul className="space-y-2 text-sm text-gray-500">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                    QUANTEC, HyTEC, TCPG guidelines
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                    Key publications and references
+                  </li>
+                </ul>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-divider mt-auto">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 text-center">
+            <p className="text-xs text-secondary">
+              <strong>DISCLAIMER:</strong> For educational and research purposes only. Not validated for clinical use.
+            </p>
+          </div>
+        </footer>
+      </main>
+    );
+  }
+
+  if (viewMode === 'radonc') {
+    return (
+      <main className="min-h-screen bg-background flex flex-col">
+        {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
+
+        {/* Header */}
+        <header className="bg-header text-white shadow-md z-50">
+          <div className="max-w-[1600px] mx-auto px-4 py-4 md:px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight text-white">
+                  HEAD & NECK RE-IRRADIATION <span className="font-light opacity-80">TOOL</span>
+                </h1>
+                <p className="text-sm text-teal-100 mt-1 font-light tracking-wide">
+                  Radiation Oncology Decision Support & Dosimetric Assessment
+                </p>
+              </div>
+              <button
+                onClick={() => setViewMode('radonc-landing')}
+                className="text-xs text-teal-100 hover:text-white transition-colors flex items-center gap-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Tools
               </button>
             </div>
           </div>
