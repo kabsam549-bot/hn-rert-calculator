@@ -92,26 +92,26 @@ export const OAR_CONSTRAINTS: OARConstraint[] = [
   {
     name: "Spinal cord",
     tier: 1,
-    limitEQD2: 50,
+    limitEQD2: 100,
     alphaBeta: 2,
     complication: "Myelopathy",
-    description: "Max point dose; myelopathy risk <1% at 50 Gy EQD2, increases significantly above this threshold"
+    description: "Cumulative lifetime tolerance with tissue recovery; initial tolerance ~50 Gy EQD2, with recovery over 12-24+ months cumulative re-RT tolerance ~100 Gy EQD2. Re-RT course: Dmax <12 Gy (2mm PRV) per Diao et al."
   },
   {
     name: "Brainstem",
     tier: 1,
-    limitEQD2: 54,
+    limitEQD2: 64,
     alphaBeta: 2,
     complication: "Brainstem necrosis",
-    description: "Max point dose; necrosis risk <5% at 54 Gy, substantially higher above 60 Gy"
+    description: "Cumulative lifetime tolerance; necrosis risk <5% if cumulative BED <120 Gy. Re-RT course: Dmax <13 Gy per Diao et al."
   },
   {
     name: "Optic chiasm",
     tier: 1,
-    limitEQD2: 50,
+    limitEQD2: 54,
     alphaBeta: 2,
     complication: "Blindness",
-    description: "Max point dose; optic neuropathy risk <3% at 50 Gy, increases rapidly above"
+    description: "Max point dose; optic neuropathy risk <3% at 54 Gy EQD2 cumulative. Re-RT course: Dmax <12 Gy (1mm PRV) per Diao et al."
   },
   {
     name: "Optic nerves",
@@ -119,7 +119,7 @@ export const OAR_CONSTRAINTS: OARConstraint[] = [
     limitEQD2: 55,
     alphaBeta: 2,
     complication: "Blindness",
-    description: "Max point dose to either nerve; slightly higher tolerance than chiasm"
+    description: "Max point dose to either nerve. Re-RT course: ipsilateral Dmax <12-15 Gy, contralateral <4 Gy per Phan PD."
   },
 
   // ============================================================================

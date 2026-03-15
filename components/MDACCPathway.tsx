@@ -3,6 +3,11 @@
 import { useState } from 'react';
 
 // Types
+interface PriorCourse {
+  dose: number | undefined;
+  fractions: number | undefined;
+}
+
 interface PatientEvaluation {
   // Step 1: TCP Factors
   histology: 'scc' | 'non-scc' | 'melanoma-sarcoma' | '';
@@ -17,6 +22,7 @@ interface PatientEvaluation {
   reirradiationInterval: number | undefined;
   priorDose: number | undefined;
   priorFractions: number | undefined;
+  priorCourses: PriorCourse[];
   criticalOARsNearby: string[];
   carotidInvolvement: 'none' | 'adjacent' | 'encased' | '';
   
@@ -41,6 +47,7 @@ const initialEvaluation: PatientEvaluation = {
   reirradiationInterval: undefined,
   priorDose: undefined,
   priorFractions: undefined,
+  priorCourses: [],
   criticalOARsNearby: [],
   carotidInvolvement: '',
   plannedModality: '',
@@ -81,6 +88,7 @@ export default function MDACCPathway() {
   const [currentStep, setCurrentStep] = useState(1);
   const [evaluation, setEvaluation] = useState<PatientEvaluation>(initialEvaluation);
   const [showResults, setShowResults] = useState(false);
+  const [showMethodology, setShowMethodology] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateEvaluation = (field: keyof PatientEvaluation, value: any) => {
@@ -578,31 +586,104 @@ export default function MDACCPathway() {
 
       {/* Prior RT Dose */}
       <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-3">Prior Radiation Course</label>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Total Dose (Gy)</label>
-            <input
-              type="number"
-              value={evaluation.priorDose ?? ''}
-              onChange={(e) => updateEvaluation('priorDose', e.target.value ? Math.min(99, Number(e.target.value)) : undefined)}
-              placeholder="e.g., 70"
-              max={99}
-              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Fractions</label>
-            <input
-              type="number"
-              value={evaluation.priorFractions ?? ''}
-              onChange={(e) => updateEvaluation('priorFractions', e.target.value ? Math.min(99, Number(e.target.value)) : undefined)}
-              placeholder="e.g., 35"
-              max={99}
-              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
-            />
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-sm font-semibold text-gray-800">Prior Radiation Courses</label>
+        </div>
+        
+        {/* Primary prior course */}
+        <div className="mb-3">
+          <div className="text-xs text-gray-500 mb-2 font-medium">Course 1 (Primary)</div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Total Dose (Gy)</label>
+              <input
+                type="number"
+                value={evaluation.priorDose ?? ''}
+                onChange={(e) => updateEvaluation('priorDose', e.target.value ? Math.min(99, Number(e.target.value)) : undefined)}
+                placeholder="e.g., 70"
+                max={99}
+                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Fractions</label>
+              <input
+                type="number"
+                value={evaluation.priorFractions ?? ''}
+                onChange={(e) => updateEvaluation('priorFractions', e.target.value ? Math.min(99, Number(e.target.value)) : undefined)}
+                placeholder="e.g., 35"
+                max={99}
+                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
+
+        {/* Additional prior courses */}
+        {evaluation.priorCourses.map((course, index) => (
+          <div key={index} className="mb-3 border-l-4 border-amber-200 pl-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs text-gray-500 font-medium">Course {index + 2}</div>
+              <button
+                onClick={() => {
+                  const updated = evaluation.priorCourses.filter((_, i) => i !== index);
+                  setEvaluation(prev => ({ ...prev, priorCourses: updated }));
+                }}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Remove
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Total Dose (Gy)</label>
+                <input
+                  type="number"
+                  value={course.dose ?? ''}
+                  onChange={(e) => {
+                    const updated = [...evaluation.priorCourses];
+                    updated[index] = { ...updated[index], dose: e.target.value ? Math.min(99, Number(e.target.value)) : undefined };
+                    setEvaluation(prev => ({ ...prev, priorCourses: updated }));
+                  }}
+                  placeholder="e.g., 45"
+                  max={99}
+                  className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Fractions</label>
+                <input
+                  type="number"
+                  value={course.fractions ?? ''}
+                  onChange={(e) => {
+                    const updated = [...evaluation.priorCourses];
+                    updated[index] = { ...updated[index], fractions: e.target.value ? Math.min(99, Number(e.target.value)) : undefined };
+                    setEvaluation(prev => ({ ...prev, priorCourses: updated }));
+                  }}
+                  placeholder="e.g., 5"
+                  max={99}
+                  className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Add course button */}
+        <button
+          onClick={() => {
+            setEvaluation(prev => ({
+              ...prev,
+              priorCourses: [...prev.priorCourses, { dose: undefined, fractions: undefined }]
+            }));
+          }}
+          className="mt-2 text-sm text-teal-600 hover:text-teal-800 font-medium flex items-center gap-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Prior RT Course
+        </button>
       </div>
 
       {/* Carotid Involvement */}
@@ -1274,6 +1355,58 @@ export default function MDACCPathway() {
               </li>
             </ul>
           </div>
+        </div>
+
+        {/* Show Our Work */}
+        <div className="border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setShowMethodology(!showMethodology)}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+          >
+            <span className="font-semibold text-gray-700 text-sm">Show Our Work</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 transition-transform ${showMethodology ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showMethodology && (
+            <div className="p-4 bg-white border-t text-sm text-gray-700 space-y-4">
+              <div>
+                <h5 className="font-semibold text-gray-800 mb-1">Assessment Methodology</h5>
+                <p>This tool uses the MDACC 3-step evaluation framework for H&amp;N re-irradiation candidacy assessment, incorporating tumor control probability (TCP), normal tissue complication probability (NTCP), and technical feasibility factors.</p>
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-800 mb-1">Scoring</h5>
+                <ul className="space-y-1 text-gray-600">
+                  <li>- Re-irradiation interval: +20 (&gt;24mo), +10 (12-24mo), -10 (6-12mo), -30 (&lt;6mo)</li>
+                  <li>- Volume: +20 (&lt;15cc), +10 (15-25cc), -10 (25-50cc), -20 (&gt;50cc)</li>
+                  <li>- Histology: +15 (non-SCC), -5 (SCC), -15 (melanoma/sarcoma)</li>
+                  <li>- Field relationship: +10 (out-of-field), -5 (marginal), -15 (in-field)</li>
+                  <li>- Carotid: -15 (encased &gt;180 deg)</li>
+                  <li>- Surgical status: +10 (post-op), +5 (with flap)</li>
+                  <li>- Performance status: -10 (ECOG &gt;=2)</li>
+                </ul>
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-800 mb-1">Classification</h5>
+                <ul className="space-y-1 text-gray-600">
+                  <li>- <strong>Favorable</strong>: Score &gt;= 15</li>
+                  <li>- <strong>Conditional</strong>: Score -10 to 14</li>
+                  <li>- <strong>Unfavorable</strong>: Score &lt; -10</li>
+                </ul>
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-800 mb-1">Dose Constraints</h5>
+                <p>SBRT constraints based on Diao et al (Head &amp; Neck, 2022) and MDACC institutional planning directives (Phan). Organized by 3-tier toxicity classification.</p>
+              </div>
+              <div>
+                <h5 className="font-semibold text-gray-800 mb-1">Outcome Data</h5>
+                <p>2-year outcomes (LC, RR, DM, OS, PFS, G3+ toxicity) from MDACC institutional SBRT re-irradiation series, stratified by anatomic subsite.</p>
+              </div>
+              <div className="text-xs text-gray-400 pt-2 border-t">
+                This tool is for clinical decision support only. All treatment decisions should be made in a multidisciplinary setting. Not an official MD Anderson tool.
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Actions */}

@@ -82,9 +82,10 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Spinal cord',
-    lifetimeToleranceEQD2: 50,
+    lifetimeToleranceEQD2: 100,
     alphaBeta: 3,
-    complication: 'Myelopathy'
+    complication: 'Myelopathy',
+    specialNote: 'Initial tolerance ~50 Gy EQD2; with tissue recovery (12-24+ mo), cumulative re-RT tolerance ~100 Gy EQD2. Re-RT course Dmax <12 Gy (2mm PRV).'
   },
   {
     name: 'Brachial plexus',
