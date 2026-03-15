@@ -1173,7 +1173,7 @@ export default function MDACCPathway() {
                 {results.viability === 'favorable' ? 'FAVORABLE' :
                  results.viability === 'conditional' ? 'CONDITIONAL' : 'UNFAVORABLE'}
               </h2>
-              <p className="text-sm opacity-90 mt-2">Based on MDACC 4-Step Evaluation</p>
+              <p className="text-sm opacity-90 mt-2">Based on MDACC 3-Step Evaluation</p>
             </div>
             <div className="text-5xl sm:text-6xl opacity-30 font-bold">
               {results.viability === 'favorable' ? '+' :
