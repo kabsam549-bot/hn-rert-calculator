@@ -747,20 +747,38 @@ export default function MDACCPathway() {
         </div>
       </div>
 
-      {/* Dose Prescription Recommendation */}
-      {(evaluation.surgicalStatus === 'intact' || evaluation.surgicalStatus === 'postop') && (
+      {/* Dose Prescription Recommendation - Modality-Specific */}
+      {(evaluation.surgicalStatus === 'intact' || evaluation.surgicalStatus === 'postop') && evaluation.plannedModality && (
         <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-4 rounded-xl border-2 border-teal-200">
           <h4 className="font-bold text-teal-800 mb-2">Recommended Dose Prescription</h4>
-          {evaluation.surgicalStatus === 'intact' && (
+          {evaluation.plannedModality === 'sbrt' && evaluation.surgicalStatus === 'intact' && (
             <div className="bg-white p-3 rounded-lg">
-              <div className="text-lg font-bold text-gray-900">36 Gy in 4 fractions</div>
+              <div className="text-lg font-bold text-gray-900">36 Gy in 4 fractions (SBRT)</div>
               <div className="text-sm text-gray-600 mt-1">For gross disease tumor control</div>
             </div>
           )}
-          {evaluation.surgicalStatus === 'postop' && (
+          {evaluation.plannedModality === 'sbrt' && evaluation.surgicalStatus === 'postop' && (
             <div className="bg-white p-3 rounded-lg">
-              <div className="text-lg font-bold text-gray-900">32 Gy in 4 fractions</div>
+              <div className="text-lg font-bold text-gray-900">32 Gy in 4 fractions (SBRT)</div>
               <div className="text-sm text-gray-600 mt-1">Post-operative adjuvant re-irradiation</div>
+            </div>
+          )}
+          {evaluation.plannedModality === 'imrt' && evaluation.surgicalStatus === 'intact' && (
+            <div className="bg-white p-3 rounded-lg">
+              <div className="text-lg font-bold text-gray-900">66-70 Gy (IMRT)</div>
+              <div className="text-sm text-gray-600 mt-1">Curative intent for gross disease (current institutional practice)</div>
+            </div>
+          )}
+          {evaluation.plannedModality === 'imrt' && evaluation.surgicalStatus === 'postop' && (
+            <div className="bg-white p-3 rounded-lg">
+              <div className="text-lg font-bold text-gray-900">64 Gy (IMRT)</div>
+              <div className="text-sm text-gray-600 mt-1">Post-operative adjuvant re-irradiation, standard fractionation</div>
+            </div>
+          )}
+          {evaluation.plannedModality === 'pbt' && (
+            <div className="bg-white p-3 rounded-lg">
+              <div className="text-lg font-bold text-gray-900">Dose per institutional protocol (Protons)</div>
+              <div className="text-sm text-gray-600 mt-1">Proton dose depends on target, proximity to OARs, and prior dose</div>
             </div>
           )}
         </div>
@@ -918,8 +936,12 @@ export default function MDACCPathway() {
                 <li>- Dose gradient ~10% per millimeter</li>
                 <li>- PTV expansion: Typically 2mm (skull base), 3mm (mucosal), 3.5mm (neck)</li>
                 <li>- QOD fractionation reduces CBS/BE risk vs daily treatment</li>
-                <li>- Gamma Knife: Prescription dose typically 50% isodose line (range 40-60%)</li>
-                <li>- CyberKnife: Prescription dose typically 80% isodose line</li>
+                <li>- Rx to 90-98% IDL; hotspots 105-110% within target (Diao et al, 2022)</li>
+                <li>- Skull base: Rx to 80-90% IDL, allow &gt;120% hotspots in GTV</li>
+                <li>- Mucosal: Rx to 95-98% IDL, mucosal hotspots &lt;107%, avoid hotspots in bone/cartilage/vessels</li>
+                <li>- Gamma Knife: Prescription typically 50% IDL (range 40-60%)</li>
+                <li>- CyberKnife: Prescription typically 80% IDL</li>
+                <li>- Use avoidance structures + &quot;preferred isodose line fall off&quot; volume to guide arc placement (ALARA)</li>
               </>
             )}
             {(evaluation.plannedModality === 'pbt') && (
@@ -1010,6 +1032,41 @@ export default function MDACCPathway() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* High-Risk Subsite Warning */}
+        {evaluation.recurrenceSite && ['mucosal-larynx', 'mucosal-op'].includes(evaluation.recurrenceSite) && (
+          <div className="bg-red-50 p-4 sm:p-5 rounded-xl border border-red-200">
+            <h4 className="font-bold text-red-800 mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">!</span>
+              High-Risk Subsite Considerations
+            </h4>
+            <p className="text-sm text-red-700 mb-3">
+              The following anatomic features increase re-irradiation toxicity risk and require careful planning:
+            </p>
+            <ul className="space-y-2 text-sm text-red-700">
+              <li className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5">-</span>
+                <span><strong>Tumor adjacent to hyoid bone:</strong> Increased risk of osteoradionecrosis and cartilage necrosis</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5">-</span>
+                <span><strong>Posterior pharyngeal wall involvement:</strong> Risk of mucosal ulceration and carotid exposure</span>
+              </li>
+              {evaluation.recurrenceSite === 'mucosal-larynx' && (
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400 mt-0.5">-</span>
+                  <span><strong>Supraglottic tumors:</strong> Higher toxicity profile than glottic; consider laryngeal substructure-specific constraints</span>
+                </li>
+              )}
+              {evaluation.recurrenceSite === 'mucosal-op' && (
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400 mt-0.5">-</span>
+                  <span><strong>Hypopharynx/piriform involvement:</strong> Elevated risk of lingual artery bleed and severe dysphagia</span>
+                </li>
+              )}
+            </ul>
           </div>
         )}
 
