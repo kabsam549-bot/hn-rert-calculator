@@ -28,16 +28,30 @@ export interface OARBudgetData {
 }
 
 /**
+ * A single prior RT course with dose info
+ */
+export interface PriorRTCourse {
+  /** Dose to this organ from this course (Gy) */
+  dose: number;
+  /** Number of fractions */
+  fractions: number;
+  /** Time since this course in months */
+  timeSinceRT: number;
+}
+
+/**
  * Input data for a single OAR budget calculation
  */
 export interface OARBudgetInput {
   oar: OARBudgetData;
-  /** Actual prior dose to THIS organ (Gy) */
+  /** Actual prior dose to THIS organ (Gy) - for single course backward compat */
   priorDose: number;
   /** Number of fractions for prior treatment */
   priorFractions: number;
   /** Time since prior RT in months */
   timeSinceRT: number;
+  /** Additional prior courses (optional) */
+  additionalCourses?: PriorRTCourse[];
 }
 
 /**
@@ -286,23 +300,41 @@ export function generateWarningMessage(
 
 /**
  * Calculate dose budget for a single OAR
+ * Supports multiple prior RT courses -- each course has its own recovery factor
  */
 export function calculateOARBudget(input: OARBudgetInput): OARBudgetResult {
-  const { oar, priorDose, priorFractions, timeSinceRT } = input;
+  const { oar, priorDose, priorFractions, timeSinceRT, additionalCourses } = input;
   
   // Validate inputs
   if (priorDose < 0 || priorFractions < 1 || timeSinceRT < 0) {
     throw new Error('Invalid input values for dose budget calculation');
   }
   
-  // Step 1: Convert prior dose to EQD2
+  // Step 1: Convert primary prior course to EQD2 with recovery
   const priorBED = calculateBED(priorDose, priorFractions, oar.alphaBeta);
   const priorEQD2 = calculateEQD2(priorBED, oar.alphaBeta);
+  const primaryRecovery = calculateRecoveryFactor(timeSinceRT);
+  let totalEffectiveEQD2 = priorEQD2 * (1 - primaryRecovery);
+  let totalRawEQD2 = priorEQD2;
   
-  // Step 2: Apply tissue recovery
-  const recoveryPercent = calculateRecoveryFactor(timeSinceRT) * 100;
-  const recoveryFraction = recoveryPercent / 100;
-  const effectivePriorEQD2 = priorEQD2 * (1 - recoveryFraction);
+  // Step 2: Add additional courses (each with own recovery)
+  if (additionalCourses && additionalCourses.length > 0) {
+    for (const course of additionalCourses) {
+      if (course.dose > 0 && course.fractions >= 1) {
+        const courseBED = calculateBED(course.dose, course.fractions, oar.alphaBeta);
+        const courseEQD2 = calculateEQD2(courseBED, oar.alphaBeta);
+        const courseRecovery = calculateRecoveryFactor(course.timeSinceRT);
+        totalRawEQD2 += courseEQD2;
+        totalEffectiveEQD2 += courseEQD2 * (1 - courseRecovery);
+      }
+    }
+  }
+  
+  // Use weighted average recovery for display
+  const recoveryPercent = totalRawEQD2 > 0 
+    ? ((1 - totalEffectiveEQD2 / totalRawEQD2) * 100) 
+    : (primaryRecovery * 100);
+  const effectivePriorEQD2 = totalEffectiveEQD2;
   
   // Step 3: Calculate remaining budget
   const remainingBudgetEQD2 = Math.max(0, oar.lifetimeToleranceEQD2 - effectivePriorEQD2);
@@ -322,7 +354,7 @@ export function calculateOARBudget(input: OARBudgetInput): OARBudgetResult {
   
   return {
     oar,
-    priorEQD2,
+    priorEQD2: totalRawEQD2,
     recoveryPercent,
     effectivePriorEQD2,
     remainingBudgetEQD2,

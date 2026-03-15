@@ -74,6 +74,137 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
   );
 }
 
+function HowToUseModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 sm:p-8">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">How to Use This Tool</h2>
+              <p className="text-sm text-gray-600 mt-1">A quick walkthrough with an example case</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-6">
+            {/* Overview */}
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+              <h3 className="font-bold text-teal-800 mb-2">3-Step Evaluation Process</h3>
+              <div className="space-y-2 text-sm text-teal-700">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                  <span><strong>TCP (Tumor Control):</strong> Assess tumor factors affecting local control probability</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                  <span><strong>NTCP (Normal Tissue):</strong> Evaluate toxicity risks to critical structures</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                  <span><strong>Technical Feasibility:</strong> Determine achievable dose and modality selection</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Example Case */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Example Case</h3>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-700">
+                  <strong>55-year-old</strong> with <strong>recurrent squamous cell carcinoma of the oropharynx</strong>
+                  <br />
+                  Prior treatment: <strong>70 Gy in 35 fractions, 18 months ago</strong>
+                  <br />
+                  Current tumor volume: <strong>12 cc</strong>
+                  <br />
+                  Carotid involvement: <strong>None</strong>
+                </p>
+              </div>
+
+              {/* Step-by-step selections */}
+              <div className="space-y-4">
+                <div className="border-l-4 border-teal-500 pl-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Step 1: TCP Factors</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Histology: <strong>SCC</strong></li>
+                    <li>• Recurrence Type: <strong>Recurrent tumor</strong></li>
+                    <li>• Field Relationship: <strong>In-field</strong> (full overlap with prior RT)</li>
+                    <li>• Disease Status: <strong>Gross disease (intact)</strong></li>
+                    <li>• Recurrence Site: <strong>Oropharynx</strong></li>
+                    <li>• Tumor Volume: <strong>12 cc</strong> (favorable, &lt;15cc)</li>
+                  </ul>
+                </div>
+
+                <div className="border-l-4 border-amber-500 pl-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Step 2: NTCP Factors</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Re-irradiation Interval: <strong>18 months</strong> (acceptable, 12-24mo)</li>
+                    <li>• Prior Dose: <strong>70 Gy in 35 fractions</strong></li>
+                    <li>• Carotid Involvement: <strong>No involvement</strong></li>
+                    <li>• Critical OARs: <em>Select as appropriate based on anatomy</em></li>
+                  </ul>
+                </div>
+
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Step 3: Technical Feasibility</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Planned Modality: <strong>SBRT</strong> (volume &lt;25cc)</li>
+                    <li>• Planned Dose: <strong>36 Gy in 4 fractions</strong> (gross disease)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Expected Output */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Expected Assessment</h3>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg">+</div>
+                  <div>
+                    <div className="font-bold text-green-800 text-lg">FAVORABLE</div>
+                    <div className="text-xs text-green-600">Re-irradiation is a reasonable option</div>
+                  </div>
+                </div>
+                <div className="text-sm text-green-700 mt-3">
+                  <strong>Favorable factors:</strong> Small volume (&lt;15cc), acceptable interval (12-24mo), no carotid involvement
+                  <br />
+                  <strong>Expected outcomes:</strong> Based on MDACC data for oropharynx — 77% 2-year local control, 51% 2-year OS
+                </div>
+              </div>
+            </div>
+
+            {/* Close button */}
+            <div className="pt-4">
+              <button
+                onClick={onClose}
+                className="w-full py-3 px-6 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors shadow-lg"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type ViewMode = 'landing' | 'radonc' | 'salvage';
 type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'guidelines';
 type LandingTab = 'home' | 'about' | 'dosebudget' | 'guidelines';
@@ -83,6 +214,7 @@ export default function Home() {
   const [radOncTab, setRadOncTab] = useState<RadOncTab>('pathway');
   const [landingTab, setLandingTab] = useState<LandingTab>('home');
   const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [showHowToUse, setShowHowToUse] = useState(false);
 
   // Check if user has previously accepted disclaimer (session-based)
   useEffect(() => {
@@ -102,17 +234,28 @@ export default function Home() {
     return (
       <main className="min-h-screen bg-background flex flex-col">
         {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
+        {showHowToUse && <HowToUseModal onClose={() => setShowHowToUse(false)} />}
 
         {/* Header */}
         <header className="bg-header text-white shadow-md">
           <div className="max-w-7xl mx-auto px-4 py-6 md:px-6">
-            <div className="text-center">
+            <div className="text-center relative">
               <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight text-white">
                 HEAD & NECK RE-IRRADIATION <span className="font-light opacity-80">TOOL</span>
               </h1>
               <p className="text-sm md:text-base text-teal-100 mt-2 font-light tracking-wide">
                 Evidence-Based Decision Support for Recurrent Head & Neck Cancer
               </p>
+              {/* Help Button */}
+              <button
+                onClick={() => setShowHowToUse(true)}
+                className="absolute top-0 right-0 w-10 h-10 bg-teal-700/50 hover:bg-teal-700 rounded-full flex items-center justify-center transition-colors group"
+                title="How to use this tool"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
             </div>
           </div>
         </header>
@@ -170,7 +313,7 @@ export default function Home() {
           {landingTab === 'home' ? (
             <div className="max-w-7xl mx-auto px-4 py-12 md:px-6">
               {/* Pathway Cards */}
-              <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              <div className="grid md:grid-cols-3 gap-6 max-w-7xl mx-auto">
                 {/* Radiation Oncology Card */}
                 <button
                   onClick={() => setViewMode('radonc')}
@@ -188,10 +331,10 @@ export default function Home() {
                   </div>
                   
                   <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors">
-                    Radiation Oncology Pathway
+                    MDACC Pathway
                   </h3>
                   <p className="text-gray-600 mb-4 text-sm">
-                    Comprehensive evaluation and dosimetric assessment for radiation oncologists
+                    Comprehensive evaluation for radiation oncologists
                   </p>
                   
                   <ul className="space-y-2">
@@ -199,13 +342,7 @@ export default function Home() {
                       <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>4-Step Clinical Evaluation</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>OAR Dose Budget Calculator</span>
+                      <span>3-Step Clinical Evaluation</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-gray-700">
                       <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +354,52 @@ export default function Home() {
                       <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>Guidelines & Publications</span>
+                      <span>Evidence-based constraints</span>
+                    </li>
+                  </ul>
+                </button>
+
+                {/* OAR Dose Budget Card */}
+                <button
+                  onClick={() => setLandingTab('dosebudget')}
+                  className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                      </svg>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors">
+                    OAR Dose Budget
+                  </h3>
+                  <p className="text-gray-600 mb-4 text-sm">
+                    Quick organ-at-risk constraint calculator
+                  </p>
+                  
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>SBRT dose constraints</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>3-tier toxicity classification</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Print-ready summary</span>
                     </li>
                   </ul>
                 </button>
@@ -242,7 +424,7 @@ export default function Home() {
                     Re-Irradiation Decisions
                   </h3>
                   <p className="text-gray-600 mb-4 text-sm">
-                    Quick assessment tool for surgeons and medical oncologists
+                    Quick assessment for referring physicians
                   </p>
                   
                   <ul className="space-y-2">
@@ -264,12 +446,6 @@ export default function Home() {
                       </svg>
                       <span>Traffic-light risk output</span>
                     </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Print-ready summary</span>
-                    </li>
                   </ul>
                 </button>
               </div>
@@ -286,16 +462,60 @@ export default function Home() {
                 {/* About This Tool */}
                 <div className="mb-12">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Tool</h2>
-                  <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
+                  <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                     <p className="text-gray-700">
-                      Developed at <strong>The University of Texas MD Anderson Cancer Center</strong>, 
-                      Department of Radiation Oncology.
+                      This re-irradiation decision support tool is <strong>based on clinical experience and published data from 
+                      The University of Texas MD Anderson Cancer Center</strong>, Department of Radiation Oncology.
                     </p>
+                    
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <p className="text-amber-800 font-semibold mb-2">Important Notice</p>
+                      <p className="text-amber-700 text-sm">
+                        This is <strong>NOT an official MD Anderson Cancer Center product</strong>. It is an independent educational tool 
+                        developed to share evidence-based practices from the MD Anderson Head & Neck SBRT Program.
+                      </p>
+                    </div>
+
                     <p className="text-gray-700">
-                      This tool implements the MD Anderson re-irradiation evaluation framework for head and neck cancer, 
+                      The tool implements the MD Anderson re-irradiation evaluation framework for head and neck cancer, 
                       providing evidence-based decision support for evaluating re-irradiation candidacy in patients 
                       with recurrent disease.
                     </p>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-blue-800 font-semibold mb-2">Development & Contact</p>
+                      <p className="text-blue-700 text-sm mb-3">
+                        <strong>Primary Developer:</strong> Ramez Kouzy, MD<br />
+                        Department of Radiation Oncology<br />
+                        The University of Texas MD Anderson Cancer Center<br />
+                        <a href="mailto:RKouzy@mdanderson.org" className="text-blue-600 hover:underline">RKouzy@mdanderson.org</a>
+                      </p>
+                      <p className="text-blue-700 text-sm">
+                        <strong>Developed in collaboration with:</strong> Jack Phan, MD, PhD<br />
+                        Director of Head & Neck Stereotactic Radiotherapy, MD Anderson Cancer Center
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <p className="text-gray-800 font-semibold mb-2">Key References & Guidelines</p>
+                      <ul className="text-gray-700 text-sm space-y-1 ml-4">
+                        <li>• Diao et al. <em>Head & Neck</em> 2022 — MD Anderson SBRT outcomes and dose constraints</li>
+                        <li>• MIRI (Mortality Index for Re-Irradiation) study — Risk stratification model</li>
+                        <li>• QUANTEC guidelines — Normal tissue dose-volume constraints</li>
+                        <li>• HyTEC guidelines — High-dose re-irradiation constraints</li>
+                        <li>• Phan et al. 2025 — State-of-the-art review of H&N re-irradiation</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
+                      <p className="text-red-800 font-bold mb-2">Clinical Decision Support Only</p>
+                      <p className="text-red-700 text-sm">
+                        This tool is intended for <strong>educational purposes and clinical decision support only</strong>. 
+                        It does not replace comprehensive patient evaluation, multidisciplinary tumor board discussion, 
+                        or individualized treatment planning. All treatment decisions must be made by qualified physicians 
+                        based on complete clinical assessment.
+                      </p>
+                    </div>
                   </div>
                 </div>
 

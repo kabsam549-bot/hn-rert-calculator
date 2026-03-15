@@ -8,6 +8,7 @@ import {
   type OARBudgetInput,
   type OARBudgetResult,
   type OARBudgetData,
+  type PriorRTCourse,
 } from '@/lib/oarDoseBudget';
 import { useEditableContent } from '@/lib/hooks/useEditableContent';
 import Tooltip from './Tooltip';
@@ -17,6 +18,7 @@ interface OARInput {
   priorDose?: number;
   priorFractions?: number;
   timeSinceRT?: number;
+  additionalCourses: { dose?: number; fractions?: number; timeSinceRT?: number }[];
 }
 
 export default function OARDoseBudget() {
@@ -41,7 +43,7 @@ export default function OARDoseBudget() {
     if (selectedOARs.some(item => item.oar.name === oar.name)) {
       return; // Already added
     }
-    setSelectedOARs([...selectedOARs, { oar, priorDose: undefined, priorFractions: undefined, timeSinceRT: undefined }]);
+    setSelectedOARs([...selectedOARs, { oar, priorDose: undefined, priorFractions: undefined, timeSinceRT: undefined, additionalCourses: [] }]);
     setShowResults(false); // Hide results when adding new OAR
   };
 
@@ -74,6 +76,9 @@ export default function OARDoseBudget() {
         priorDose: item.priorDose!,
         priorFractions: item.priorFractions!,
         timeSinceRT: item.timeSinceRT!,
+        additionalCourses: item.additionalCourses
+          .filter(c => c.dose !== undefined && c.fractions !== undefined && c.timeSinceRT !== undefined && c.dose > 0 && c.fractions > 0)
+          .map(c => ({ dose: c.dose!, fractions: c.fractions!, timeSinceRT: c.timeSinceRT! } as PriorRTCourse)),
       }));
 
     if (inputs.length === 0) {
@@ -240,6 +245,122 @@ export default function OARDoseBudget() {
             </div>
           </div>
         </div>
+
+        {/* Additional Prior Courses */}
+        {item.additionalCourses.map((course, idx) => (
+          <div key={idx} className="mt-2 border-l-4 border-amber-200 pl-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-500 font-medium">Course {idx + 2}</span>
+              <button
+                onClick={() => {
+                  const updated = [...selectedOARs];
+                  const oarIdx = updated.findIndex(o => o.oar.name === item.oar.name);
+                  if (oarIdx >= 0) {
+                    updated[oarIdx] = {
+                      ...updated[oarIdx],
+                      additionalCourses: updated[oarIdx].additionalCourses.filter((_, i) => i !== idx)
+                    };
+                    setSelectedOARs(updated);
+                    setShowResults(false);
+                  }
+                }}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Remove
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="relative">
+                <input
+                  type="number"
+                  value={course.dose ?? ''}
+                  onChange={(e) => {
+                    const updated = [...selectedOARs];
+                    const oarIdx = updated.findIndex(o => o.oar.name === item.oar.name);
+                    if (oarIdx >= 0) {
+                      const courses = [...updated[oarIdx].additionalCourses];
+                      courses[idx] = { ...courses[idx], dose: e.target.value === '' ? undefined : Number(e.target.value) };
+                      updated[oarIdx] = { ...updated[oarIdx], additionalCourses: courses };
+                      setSelectedOARs(updated);
+                      setShowResults(false);
+                    }
+                  }}
+                  className="w-full px-2 py-1.5 pr-8 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="Gy"
+                  min="0"
+                  max="200"
+                />
+                <span className="absolute right-1.5 top-1.5 text-[10px] text-gray-400 pointer-events-none">Gy</span>
+              </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={course.fractions ?? ''}
+                  onChange={(e) => {
+                    const updated = [...selectedOARs];
+                    const oarIdx = updated.findIndex(o => o.oar.name === item.oar.name);
+                    if (oarIdx >= 0) {
+                      const courses = [...updated[oarIdx].additionalCourses];
+                      courses[idx] = { ...courses[idx], fractions: e.target.value === '' ? undefined : Number(e.target.value) };
+                      updated[oarIdx] = { ...updated[oarIdx], additionalCourses: courses };
+                      setSelectedOARs(updated);
+                      setShowResults(false);
+                    }
+                  }}
+                  className="w-full px-2 py-1.5 pr-8 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="fx"
+                  min="1"
+                  max="99"
+                />
+                <span className="absolute right-1.5 top-1.5 text-[10px] text-gray-400 pointer-events-none">fx</span>
+              </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={course.timeSinceRT ?? ''}
+                  onChange={(e) => {
+                    const updated = [...selectedOARs];
+                    const oarIdx = updated.findIndex(o => o.oar.name === item.oar.name);
+                    if (oarIdx >= 0) {
+                      const courses = [...updated[oarIdx].additionalCourses];
+                      courses[idx] = { ...courses[idx], timeSinceRT: e.target.value === '' ? undefined : Number(e.target.value) };
+                      updated[oarIdx] = { ...updated[oarIdx], additionalCourses: courses };
+                      setSelectedOARs(updated);
+                      setShowResults(false);
+                    }
+                  }}
+                  className="w-full px-2 py-1.5 pr-8 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="mo"
+                  min="0"
+                  max="999"
+                />
+                <span className="absolute right-1.5 top-1.5 text-[10px] text-gray-400 pointer-events-none">mo</span>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Add Course button */}
+        <button
+          onClick={() => {
+            const updated = [...selectedOARs];
+            const oarIdx = updated.findIndex(o => o.oar.name === item.oar.name);
+            if (oarIdx >= 0) {
+              updated[oarIdx] = {
+                ...updated[oarIdx],
+                additionalCourses: [...updated[oarIdx].additionalCourses, { dose: undefined, fractions: undefined, timeSinceRT: undefined }]
+              };
+              setSelectedOARs(updated);
+              setShowResults(false);
+            }
+          }}
+          className="mt-2 text-xs text-teal-600 hover:text-teal-800 font-medium flex items-center gap-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Prior Course
+        </button>
       </div>
     );
   };

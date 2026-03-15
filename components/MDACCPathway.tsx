@@ -872,18 +872,133 @@ export default function MDACCPathway() {
         
         return (
           <>
-            {/* Borderline case warning */}
+            {/* Borderline case warning with detailed comparison */}
             {showBoth && (
-              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  <h4 className="font-bold text-amber-800">Borderline Case</h4>
+                  <h4 className="font-bold text-amber-800">Borderline Case — Technique Selection Guide</h4>
                 </div>
-                <p className="text-sm text-amber-700">
-                  {evaluation.recurrenceSite?.includes('mucosal') ? 'Mucosal site' : 'Large tumor volume (>25cc)'} - Consider both IMRT and SBRT approaches for optimal clinical decision-making
+                <p className="text-sm text-amber-700 mb-4">
+                  {evaluation.recurrenceSite?.includes('mucosal') ? 'Mucosal site recurrence' : 'Large tumor volume (>25cc)'} — Consider both IMRT and SBRT approaches.
                 </p>
+                
+                {/* IMRT vs SBRT Comparison Cards */}
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  {/* SBRT Card */}
+                  <div className="bg-white rounded-lg border-2 border-teal-200 p-4">
+                    <h5 className="font-bold text-teal-700 mb-2 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      SBRT Approach
+                    </h5>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <p className="font-semibold text-gray-700">Advantages:</p>
+                        <ul className="text-gray-600 space-y-1 ml-4 mt-1">
+                          <li className="flex items-start gap-1">
+                            <span className="text-green-500 mt-0.5">✓</span>
+                            <span>Steep dose gradient (~10%/mm)</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-green-500 mt-0.5">✓</span>
+                            <span>Short treatment course (3-5 fractions)</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-green-500 mt-0.5">✓</span>
+                            <span>QOD fractionation reduces CBS/BE risk</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-700">Considerations:</p>
+                        <ul className="text-gray-600 space-y-1 ml-4 mt-1">
+                          {evaluation.recurrenceSite?.includes('mucosal') && (
+                            <li className="flex items-start gap-1">
+                              <span className="text-amber-500 mt-0.5">⚠</span>
+                              <span>Mucosal hotspots can increase toxicity risk</span>
+                            </li>
+                          )}
+                          {evaluation.tumorVolume && evaluation.tumorVolume > 25 && (
+                            <li className="flex items-start gap-1">
+                              <span className="text-amber-500 mt-0.5">⚠</span>
+                              <span>Large volumes (&gt;25cc) associated with higher toxicity</span>
+                            </li>
+                          )}
+                          <li className="flex items-start gap-1">
+                            <span className="text-amber-500 mt-0.5">⚠</span>
+                            <span>Requires precise immobilization and IGRT</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* IMRT Card */}
+                  <div className="bg-white rounded-lg border-2 border-blue-200 p-4">
+                    <h5 className="font-bold text-blue-700 mb-2 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                      </svg>
+                      IMRT Approach
+                    </h5>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <p className="font-semibold text-gray-700">Advantages:</p>
+                        <ul className="text-gray-600 space-y-1 ml-4 mt-1">
+                          {evaluation.recurrenceSite?.includes('mucosal') && (
+                            <li className="flex items-start gap-1">
+                              <span className="text-green-500 mt-0.5">✓</span>
+                              <span>Dose homogeneity reduces mucosal hotspots</span>
+                            </li>
+                          )}
+                          {evaluation.tumorVolume && evaluation.tumorVolume > 25 && (
+                            <li className="flex items-start gap-1">
+                              <span className="text-green-500 mt-0.5">✓</span>
+                              <span>Better suited for large volumes and complex fields</span>
+                            </li>
+                          )}
+                          <li className="flex items-start gap-1">
+                            <span className="text-green-500 mt-0.5">✓</span>
+                            <span>Lower per-fraction dose reduces acute toxicity</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-green-500 mt-0.5">✓</span>
+                            <span>More flexibility for irregular target shapes</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-700">Considerations:</p>
+                        <ul className="text-gray-600 space-y-1 ml-4 mt-1">
+                          <li className="flex items-start gap-1">
+                            <span className="text-amber-500 mt-0.5">⚠</span>
+                            <span>Longer treatment course (standard fractionation)</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-amber-500 mt-0.5">⚠</span>
+                            <span>Less steep dose gradient (~8%/mm)</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommendation */}
+                <div className="bg-white rounded-lg border border-amber-300 p-3">
+                  <p className="text-sm text-gray-700 flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>
+                      <strong>Recommendation:</strong> Discuss in multidisciplinary tumor board for optimal technique selection based on individual patient anatomy, prior dose distribution, and treatment goals.
+                    </span>
+                  </p>
+                </div>
               </div>
             )}
 
@@ -1190,7 +1305,7 @@ export default function MDACCPathway() {
         {/* MDACC Constraints - SBRT */}
         {evaluation.plannedModality === 'sbrt' && (
           <div className="bg-blue-50 p-4 sm:p-5 rounded-xl border border-blue-200">
-            <h4 className="font-bold text-blue-800 mb-3">MDACC SBRT Dose Constraints (Diao et al, 2022)</h4>
+            <h4 className="font-bold text-blue-800 mb-3">MDACC SBRT Dose Constraints</h4>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
                 <div className="font-semibold text-blue-700 mb-2">Tier 1 (Go/No-Go)</div>
@@ -1220,6 +1335,9 @@ export default function MDACCPathway() {
                 </ul>
               </div>
             </div>
+            <div className="mt-4 pt-3 border-t border-blue-200 text-xs text-blue-700">
+              <strong>References:</strong> Diao et al, Head & Neck 2022;44:289-291 | Phan institutional planning directives
+            </div>
           </div>
         )}
 
@@ -1246,6 +1364,9 @@ export default function MDACCPathway() {
                   <li>Consider dose homogeneity to reduce hotspots</li>
                 </ul>
               </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-indigo-200 text-xs text-indigo-700">
+              <strong>Reference:</strong> MDACC institutional practice
             </div>
           </div>
         )}

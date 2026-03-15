@@ -7,6 +7,7 @@ interface SalvageEvaluation {
   // Step 1: Patient Overview
   priorRadiation: boolean | null;
   timeAgo: '<6mo' | '6-12mo' | '1-2yr' | '>2yr' | '';
+  diseaseFreeInterval: '<6mo' | '6-12mo' | '12-24mo' | '>24mo' | '';
   locations: string[];
   salvageSurgery: boolean | null;
   withFlap: boolean | null;
@@ -21,6 +22,7 @@ interface SalvageEvaluation {
 const initialEvaluation: SalvageEvaluation = {
   priorRadiation: null,
   timeAgo: '',
+  diseaseFreeInterval: '',
   locations: [],
   salvageSurgery: null,
   withFlap: null,
@@ -62,6 +64,7 @@ export default function SalvagePathway() {
   const calculateAssessment = () => {
     let score = 50; // Start at neutral
     const considerations: string[] = [];
+    const recommendations: string[] = [];
 
     // Prior radiation is required
     if (evaluation.priorRadiation === false) {
@@ -88,6 +91,22 @@ export default function SalvagePathway() {
     } else if (evaluation.timeAgo === '>2yr') {
       score += 20;
       considerations.push('Longer interval since prior radiation (>2 years) is favorable for re-treatment');
+    }
+
+    // Disease-free interval (tumor biology indicator)
+    if (evaluation.diseaseFreeInterval === '<6mo') {
+      score -= 15;
+      considerations.push('Disease-free interval <6 months indicates aggressive biology');
+      recommendations.push('Strongly consider adding systemic therapy given aggressive tumor biology');
+    } else if (evaluation.diseaseFreeInterval === '6-12mo') {
+      score -= 5;
+      considerations.push('Disease-free interval 6-12 months suggests moderately aggressive disease');
+      recommendations.push('Consider systemic therapy addition');
+    } else if (evaluation.diseaseFreeInterval === '12-24mo') {
+      considerations.push('Disease-free interval 12-24 months: Moderate biology, standard approach');
+    } else if (evaluation.diseaseFreeInterval === '>24mo') {
+      score += 10;
+      recommendations.push('Disease-free interval >24 months indicates favorable tumor biology');
     }
 
     // Salvage surgery with flap
@@ -156,11 +175,11 @@ export default function SalvagePathway() {
       color = 'red';
     }
 
-    const recommendations = [
+    recommendations.push(
       'A comprehensive evaluation by a radiation oncologist is recommended to determine final treatment feasibility',
       'Radiation oncology will assess dosimetric feasibility and organ-at-risk constraints',
-      'Multidisciplinary tumor board discussion recommended',
-    ];
+      'Multidisciplinary tumor board discussion recommended'
+    );
 
     if (evaluation.timeAgo === '<6mo') {
       recommendations.push('Consider delaying re-irradiation if clinically feasible to allow tissue recovery');
@@ -418,6 +437,37 @@ export default function SalvagePathway() {
                   }`}
                 >
                   <div className="font-bold text-gray-900">{opt.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Disease-Free Interval */}
+          <div>
+            <label className="block text-base font-semibold text-gray-800 mb-3">
+              Disease-free interval (time from initial treatment to recurrence)
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { value: '<6mo', label: '<6 months', color: 'red', note: 'Aggressive biology' },
+                { value: '6-12mo', label: '6-12 months', color: 'amber', note: 'Consider systemic Rx' },
+                { value: '12-24mo', label: '12-24 months', color: 'yellow', note: 'Moderate biology' },
+                { value: '>24mo', label: '>24 months', color: 'green', note: 'Favorable biology' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => updateEvaluation('diseaseFreeInterval', opt.value)}
+                  className={`p-4 rounded-xl border-2 text-center transition-all ${
+                    evaluation.diseaseFreeInterval === opt.value
+                      ? opt.color === 'red' ? 'border-red-500 bg-red-50 shadow-md' :
+                        opt.color === 'amber' ? 'border-amber-500 bg-amber-50 shadow-md' :
+                        opt.color === 'yellow' ? 'border-yellow-500 bg-yellow-50 shadow-md' :
+                        'border-green-500 bg-green-50 shadow-md'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="font-bold text-gray-900">{opt.label}</div>
+                  <div className="text-xs text-gray-500 mt-1">{opt.note}</div>
                 </button>
               ))}
             </div>
@@ -756,6 +806,16 @@ export default function SalvagePathway() {
                   evaluation.timeAgo === '<6mo' ? '<6 months' :
                   evaluation.timeAgo === '6-12mo' ? '6-12 months' :
                   evaluation.timeAgo === '1-2yr' ? '1-2 years' : '>2 years'
+                }</span>
+              </div>
+            )}
+            {evaluation.diseaseFreeInterval && (
+              <div>
+                <span className="text-gray-500 font-medium">Disease-Free Interval:</span>
+                <span className="ml-2 text-gray-900">{
+                  evaluation.diseaseFreeInterval === '<6mo' ? '<6 months' :
+                  evaluation.diseaseFreeInterval === '6-12mo' ? '6-12 months' :
+                  evaluation.diseaseFreeInterval === '12-24mo' ? '12-24 months' : '>24 months'
                 }</span>
               </div>
             )}
