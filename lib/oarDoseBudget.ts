@@ -84,97 +84,120 @@ export interface OARBudgetResult {
 
 /**
  * OAR tolerance database for dose budget planning
- * Based on HyTEC cumulative dose limits for re-irradiation
+ * Cumulative re-irradiation EQD2 limits from published literature
+ *
+ * CNS structures use α/β = 2 Gy (Nieder, Sahgal, Zurich group standard)
+ * Non-CNS structures use α/β = 3 Gy
+ *
+ * Key references:
+ * - Nieder et al. Strahlenther Onkol 2021 (cord re-RT, α/β=2)
+ * - Sahgal et al. IJROBP 2019 (HyTEC cord SBRT re-RT)
+ * - Zurich/Klinik Hirslanden PMC7890358 (brainstem <100, chiasm/optic <75, brain <120, α/β=2)
+ * - Rades et al. Ann Palliat Med 2024 (confirms brainstem <100, chiasm <75)
+ * - Lindvall et al. Cancers 2021 (carotid CBS cutoff 119 Gy, AUC 0.92; bone ORN cutoff 119 Gy)
+ * - Garg et al. (carotid >120 Gy associated with CBS, α/β=3)
+ * - CNAO (carotid cumulative <120 Gy RBE)
+ * - Phan institutional (composite carotid V90 <0.5cc, mandible V70 <10%)
+ * - QUANTEC (cochlea, parotid, constrictors, brachial plexus)
  */
 export const OAR_BUDGET_DATA: OARBudgetData[] = [
   {
     name: 'Brainstem',
-    lifetimeToleranceEQD2: 64,
-    alphaBeta: 3,
+    lifetimeToleranceEQD2: 100,
+    alphaBeta: 2,
     complication: 'Brainstem necrosis',
-    specialNote: 'Brainstem necrosis risk <5% if cumulative BED <120 Gy₃'
+    specialNote: 'Cumulative EQD2₂ <100 Gy considered safe (Zurich 2021, n=76; Rades 2024). No toxicity reported below this threshold across multiple series.'
   },
   {
     name: 'Spinal cord',
-    lifetimeToleranceEQD2: 100,
-    alphaBeta: 3,
+    lifetimeToleranceEQD2: 70,
+    alphaBeta: 2,
     complication: 'Myelopathy',
-    specialNote: 'Initial tolerance ~50 Gy EQD2; with tissue recovery (12-24+ mo), cumulative re-RT tolerance ~100 Gy EQD2. Re-RT course Dmax <12 Gy (2mm PRV).'
+    specialNote: 'Sahgal HyTEC: cumulative thecal sac EQD2₂ Dmax ≤70 Gy associated with lower myelopathy risk. Nieder risk score: low risk if cumulative <65 Gy, interval ≥6 mo, no single course ≥51 Gy. Nieder 2021 series safe up to 80.7 Gy median (max 114.8 Gy) but higher risk. Re-RT course: Dmax <12 Gy, 2mm PRV.'
   },
   {
     name: 'Brachial plexus',
-    lifetimeToleranceEQD2: 66,
+    lifetimeToleranceEQD2: 75,
     alphaBeta: 3,
     complication: 'Brachial plexopathy',
-    specialNote: 'Risk <5% if BED <120, 5-10% at BED 120-150, >10% if BED >150 Gy₃'
+    specialNote: 'QUANTEC: <66 Gy single course. Re-RT cumulative: limited data, estimated ~75 Gy with recovery. RTOG 0813 (5fx): Dmax 32 Gy, D3cc <30 Gy per course.'
   },
   {
     name: 'Optic chiasm',
-    lifetimeToleranceEQD2: 54,
-    alphaBeta: 3,
-    complication: 'Optic neuropathy / blindness'
+    lifetimeToleranceEQD2: 75,
+    alphaBeta: 2,
+    complication: 'Optic neuropathy / blindness',
+    specialNote: 'Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). No optic toxicity reported below this threshold. Single-course QUANTEC: 55 Gy.'
   },
   {
     name: 'Optic nerves',
-    lifetimeToleranceEQD2: 54,
-    alphaBeta: 3,
-    complication: 'Optic neuropathy / blindness'
+    lifetimeToleranceEQD2: 75,
+    alphaBeta: 2,
+    complication: 'Optic neuropathy / blindness',
+    specialNote: 'Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). Single-course QUANTEC: 55 Gy.'
   },
   {
     name: 'Cochlea',
     lifetimeToleranceEQD2: 45,
     alphaBeta: 3,
-    complication: 'Hearing loss'
+    complication: 'Hearing loss',
+    specialNote: 'QUANTEC: mean <45 Gy for sensorineural hearing loss. Phan composite: <40-45 Gy max cumulative. Limited re-RT-specific data.'
   },
   {
     name: 'Mandible',
-    lifetimeToleranceEQD2: 70,
+    lifetimeToleranceEQD2: 120,
     alphaBeta: 3,
-    complication: 'Osteoradionecrosis'
+    complication: 'Osteoradionecrosis',
+    specialNote: 'Lindvall 2021: D1cc cutoff 119 Gy for ORN (AUC 0.74). Bots: median 114 Gy in ORN cases. Phan composite: ideal V40 <40%, V50 <25%; near target <90 Gy max, V70 <10%, V60 <30%.'
   },
   {
     name: 'Temporal lobe',
-    lifetimeToleranceEQD2: 60,
-    alphaBeta: 3,
-    complication: 'Temporal lobe necrosis'
+    lifetimeToleranceEQD2: 120,
+    alphaBeta: 2,
+    complication: 'Temporal lobe necrosis',
+    specialNote: 'Zurich 2021: brain cumulative EQD2₂ up to 120 Gy tolerated. D1cc brain correlated with acute toxicity. Limited H&N-specific re-RT data.'
   },
   {
     name: 'Carotid vessels',
     lifetimeToleranceEQD2: 120,
     alphaBeta: 3,
     complication: 'Carotid blowout',
-    specialNote: 'Consider IR consult for prophylactic intervention if bleed risk >5%'
+    specialNote: 'Lindvall 2021: D1cc cutoff 119 Gy (AUC 0.92, sensitivity 1.00, specificity 0.89). Garg: >120 Gy associated with CBS. CNAO: cumulative <120 Gy RBE. Phan composite: >1cm ideal <65 Gy; <1cm V90 <0.5cc. Consider IR consult if bleed risk >5%.'
   },
   {
     name: 'Lingual artery',
     lifetimeToleranceEQD2: 120,
     alphaBeta: 3,
     complication: 'Lingual artery bleed',
-    specialNote: 'Use carotid constraints. <5mm from target: no hotspot; >5mm: Dmax <20 Gy (5fx). No NTCP data yet.'
+    specialNote: 'Use carotid constraints (Lindvall cutoff 119 Gy). Phan: <5mm from target no hotspot; >5mm Dmax <20 Gy (5fx). No independent NTCP data.'
   },
   {
     name: 'Pharyngeal constrictors',
     lifetimeToleranceEQD2: 50,
     alphaBeta: 3,
-    complication: 'Severe dysphagia'
+    complication: 'Severe dysphagia',
+    specialNote: 'QUANTEC: Dmean <50 Gy for G2+ dysphagia. Limited re-RT composite data. Diao: Dmean <10 Gy per re-RT course if <1cm.'
   },
   {
     name: 'Parotid gland',
-    lifetimeToleranceEQD2: 26,
+    lifetimeToleranceEQD2: 46,
     alphaBeta: 3,
-    complication: 'Xerostomia'
+    complication: 'Xerostomia',
+    specialNote: 'QUANTEC: mean dose <25-30 Gy per course for preserved function. Cumulative ~46 Gy mean for significant xerostomia. Phan: contra avoid; ipsi <14 Gy mean per re-RT course.'
   },
   {
     name: 'Larynx',
-    lifetimeToleranceEQD2: 50,
+    lifetimeToleranceEQD2: 70,
     alphaBeta: 3,
-    complication: 'Voice changes / aspiration'
+    complication: 'Voice changes / aspiration / necrosis',
+    specialNote: 'Lindvall 2021: laryngeal dose associated with G3+ dysphagia. Limited re-RT composite data. Diao: Dmax <12 Gy per re-RT course (non-laryngeal target). Risk of chondronecrosis at high cumulative doses.'
   },
   {
     name: 'Esophagus',
-    lifetimeToleranceEQD2: 55,
+    lifetimeToleranceEQD2: 68,
     alphaBeta: 3,
-    complication: 'Stricture / dysphagia'
+    complication: 'Stricture / perforation',
+    specialNote: 'QUANTEC: Dmean <34 Gy for G2+ esophagitis (single course). Re-RT: RTOG 0813 (5fx) Dmax 105% Rx, D5cc <27.5 Gy per course. Phan: neopharynx <30 Gy point with sharp drop-off.'
   },
 ];
 
