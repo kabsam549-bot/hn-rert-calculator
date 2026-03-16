@@ -285,16 +285,6 @@ export default function Home() {
                 About
               </button>
               <button
-                onClick={() => setLandingTab('dosebudget')}
-                className={`text-sm transition-colors ${
-                  landingTab === 'dosebudget'
-                    ? 'text-teal-700 font-medium border-b-2 border-teal-600 pb-1'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Dose Budget
-              </button>
-              <button
                 onClick={() => setLandingTab('guidelines')}
                 className={`text-sm transition-colors ${
                   landingTab === 'guidelines'
@@ -404,11 +394,6 @@ export default function Home() {
                   </ul>
                 </button>
               </div>
-            </div>
-          ) : landingTab === 'dosebudget' ? (
-            /* Dose Budget Section */
-            <div className="max-w-7xl mx-auto px-4 py-12 md:px-6">
-              <OARDoseBudget />
             </div>
           ) : landingTab === 'about' ? (
             /* About Section */
@@ -609,7 +594,7 @@ export default function Home() {
               <p className="text-gray-500">Choose from the available radiation oncology decision support tools</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* MDACC Pathway Card */}
               <button
                 onClick={() => { setRadOncTab('pathway'); setViewMode('radonc'); }}
@@ -658,6 +643,34 @@ export default function Home() {
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
                     Class I-III classification
+                  </li>
+                </ul>
+              </button>
+
+              {/* OAR Dose Budget Card */}
+              <button
+                onClick={() => { setRadOncTab('dosebudget'); setViewMode('radonc'); }}
+                className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-2xl p-8 text-left transition-all group shadow-sm hover:shadow-xl"
+              >
+                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-blue-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors">OAR Dose Budget</h3>
+                <p className="text-gray-600 text-sm mb-4">Calculate remaining dose budget for organs at risk with tissue recovery modeling</p>
+                <ul className="space-y-2 text-sm text-gray-500">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                    Per-organ EQD2 budget with recovery factors
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                    Multiple prior RT course support
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                    Physical dose budgets for 3-5 fraction schemes
                   </li>
                 </ul>
               </button>
