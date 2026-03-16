@@ -313,7 +313,7 @@ export default function Home() {
           {landingTab === 'home' ? (
             <div className="max-w-7xl mx-auto px-4 py-12 md:px-6">
               {/* Pathway Cards */}
-              <div className="grid md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                 {/* Radiation Oncology Card */}
                 <button
                   onClick={() => setViewMode('radonc-landing')}
@@ -355,51 +355,6 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <span>Evidence-based constraints</span>
-                    </li>
-                  </ul>
-                </button>
-
-                {/* OAR Dose Budget Card */}
-                <button
-                  onClick={() => setLandingTab('dosebudget')}
-                  className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-xl p-8 text-left transition-all group shadow-sm hover:shadow-lg"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                      </svg>
-                    </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors">
-                    OAR Dose Budget
-                  </h3>
-                  <p className="text-gray-600 mb-4 text-sm">
-                    Quick organ-at-risk constraint calculator
-                  </p>
-                  
-                  <ul className="space-y-2">
-                    <li className="flex items-start gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>SBRT dose constraints</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>3-tier toxicity classification</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Print-ready summary</span>
                     </li>
                   </ul>
                 </button>
