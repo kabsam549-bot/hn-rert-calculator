@@ -285,6 +285,12 @@ export default function Home() {
                 About
               </button>
               <button
+                onClick={() => { setRadOncTab('dosebudget'); setViewMode('radonc'); }}
+                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Dose Budget
+              </button>
+              <button
                 onClick={() => setLandingTab('guidelines')}
                 className={`text-sm transition-colors ${
                   landingTab === 'guidelines'
@@ -321,7 +327,7 @@ export default function Home() {
                   </div>
                   
                   <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors">
-                    MDACC Pathway
+                    Radiation Oncology Pathway
                   </h3>
                   <p className="text-gray-600 mb-4 text-sm">
                     Comprehensive evaluation for radiation oncologists
@@ -595,7 +601,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* MDACC Pathway Card */}
+              {/* Rad Onc Pathway Card */}
               <button
                 onClick={() => { setRadOncTab('pathway'); setViewMode('radonc'); }}
                 className="bg-white border-2 border-gray-200 hover:border-teal-500 rounded-2xl p-8 text-left transition-all group shadow-sm hover:shadow-xl"
@@ -605,8 +611,8 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors">MDACC 3-Step Evaluation</h3>
-                <p className="text-gray-600 text-sm mb-4">Comprehensive re-irradiation candidacy assessment using the MD Anderson framework</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors">Rad Onc 3-Step Evaluation</h3>
+                <p className="text-gray-600 text-sm mb-4">Comprehensive re-irradiation candidacy assessment</p>
                 <ul className="space-y-2 text-sm text-gray-500">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
