@@ -92,34 +92,34 @@ export const OAR_CONSTRAINTS: OARConstraint[] = [
   {
     name: "Spinal cord",
     tier: 1,
-    limitEQD2: 100,
+    limitEQD2: 70,
     alphaBeta: 2,
     complication: "Myelopathy",
-    description: "Cumulative lifetime tolerance with tissue recovery; initial tolerance ~50 Gy EQD2, with recovery over 12-24+ months cumulative re-RT tolerance ~100 Gy EQD2. Re-RT course: Dmax <12 Gy (2mm PRV) per Diao et al."
+    description: "Sahgal HyTEC: cumulative thecal sac EQD2₂ Dmax ≤70 Gy. Nieder risk score: low risk <65 Gy, interval ≥6 mo. Re-RT course: Dmax <12 Gy (2mm PRV) per Diao et al."
   },
   {
     name: "Brainstem",
     tier: 1,
-    limitEQD2: 64,
+    limitEQD2: 100,
     alphaBeta: 2,
     complication: "Brainstem necrosis",
-    description: "Cumulative lifetime tolerance; necrosis risk <5% if cumulative BED <120 Gy. Re-RT course: Dmax <13 Gy per Diao et al."
+    description: "Cumulative EQD2₂ <100 Gy considered safe (Zurich 2021, n=76; Rades 2024). No toxicity reported below this threshold. Re-RT course: Dmax <13 Gy per Diao et al."
   },
   {
     name: "Optic chiasm",
     tier: 1,
-    limitEQD2: 54,
+    limitEQD2: 75,
     alphaBeta: 2,
     complication: "Blindness",
-    description: "Max point dose; optic neuropathy risk <3% at 54 Gy EQD2 cumulative. Re-RT course: Dmax <12 Gy (1mm PRV) per Diao et al."
+    description: "Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). Single-course QUANTEC: 55 Gy. Re-RT course: Dmax <12 Gy (1mm PRV) per Diao et al."
   },
   {
     name: "Optic nerves",
     tier: 1,
-    limitEQD2: 55,
+    limitEQD2: 75,
     alphaBeta: 2,
     complication: "Blindness",
-    description: "Max point dose to either nerve. Re-RT course: ipsilateral Dmax <12-15 Gy, contralateral <4 Gy per Phan PD."
+    description: "Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). Re-RT course: ipsilateral Dmax <12-15 Gy, contralateral <4 Gy per Phan PD."
   },
 
   // ============================================================================
@@ -144,26 +144,26 @@ export const OAR_CONSTRAINTS: OARConstraint[] = [
   {
     name: "Temporal lobe",
     tier: 2,
-    limitEQD2: 60,
-    alphaBeta: 3,
+    limitEQD2: 120,
+    alphaBeta: 2,
     complication: "Temporal lobe necrosis",
-    description: "Max dose; necrosis risk increases significantly above 60 Gy EQD2"
+    description: "Zurich 2021: brain cumulative EQD2₂ up to 120 Gy tolerated. D1cc brain correlated with acute toxicity."
   },
   {
     name: "Mandible",
     tier: 2,
-    limitEQD2: 70,
+    limitEQD2: 120,
     alphaBeta: 3,
     complication: "Osteoradionecrosis",
-    description: "Max dose to bone; risk increases with dental extractions and poor healing"
+    description: "Lindvall 2021: D1cc cutoff 119 Gy for ORN (AUC 0.74). Phan composite: V70 <10%, V60 <30%."
   },
   {
     name: "Brachial plexus",
     tier: 2,
-    limitEQD2: 60,
-    alphaBeta: 2,
+    limitEQD2: 75,
+    alphaBeta: 3,
     complication: "Brachial plexopathy",
-    description: "Max point dose; neuropathy risk <5% at 60 Gy"
+    description: "QUANTEC: <66 Gy single course. Re-RT cumulative estimated ~75 Gy with recovery."
   },
 
   // ============================================================================
@@ -188,26 +188,26 @@ export const OAR_CONSTRAINTS: OARConstraint[] = [
   {
     name: "Parotid gland",
     tier: 3,
-    limitEQD2: 26,
+    limitEQD2: 46,
     alphaBeta: 3,
     complication: "Xerostomia",
-    description: "Mean dose to at least one gland; keep <26 Gy to preserve salivary function"
+    description: "QUANTEC cumulative ~46 Gy mean for significant xerostomia. Per course: mean <25-30 Gy."
   },
   {
     name: "Larynx",
     tier: 3,
-    limitEQD2: 50,
+    limitEQD2: 70,
     alphaBeta: 3,
-    complication: "Voice changes, aspiration",
-    description: "Mean dose; voice quality deteriorates above 50 Gy mean dose"
+    complication: "Voice changes, aspiration, chondronecrosis",
+    description: "Risk of chondronecrosis at high cumulative doses. Diao: Dmax <12 Gy per re-RT course (non-laryngeal target)."
   },
   {
     name: "Esophagus",
     tier: 3,
-    limitEQD2: 55,
+    limitEQD2: 68,
     alphaBeta: 3,
-    complication: "Stricture, dysphagia",
-    description: "Mean dose; stricture risk increases above 55 Gy"
+    complication: "Stricture, perforation",
+    description: "QUANTEC + RTOG. Phan: neopharynx <30 Gy point with sharp drop-off."
   },
 ];
 

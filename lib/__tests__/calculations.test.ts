@@ -177,7 +177,7 @@ describe('OAR Constraint Database', () => {
     const spinalCord = getOARConstraint('Spinal cord');
     
     expect(spinalCord).toBeDefined();
-    expect(spinalCord?.limitEQD2).toBe(50);
+    expect(spinalCord?.limitEQD2).toBe(70);
     expect(spinalCord?.alphaBeta).toBe(2);
     expect(spinalCord?.tier).toBe(1);
   });
@@ -186,7 +186,7 @@ describe('OAR Constraint Database', () => {
     const parotid = getOARConstraint('Parotid gland');
     
     expect(parotid).toBeDefined();
-    expect(parotid?.limitEQD2).toBe(26);
+    expect(parotid?.limitEQD2).toBe(46);
     expect(parotid?.alphaBeta).toBe(3);
     expect(parotid?.tier).toBe(3);
   });
