@@ -414,66 +414,6 @@ export default function Home() {
             /* About Section */
             <div className="max-w-5xl mx-auto px-4 py-12 md:px-6">
               <div className="prose prose-lg max-w-none">
-                {/* About This Tool */}
-                <div className="mb-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Tool</h2>
-                  <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <p className="text-gray-700">
-                      This re-irradiation decision support tool is <strong>based on clinical experience and published data from 
-                      The University of Texas MD Anderson Cancer Center</strong>, Department of Radiation Oncology.
-                    </p>
-                    
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <p className="text-amber-800 font-semibold mb-2">Important Notice</p>
-                      <p className="text-amber-700 text-sm">
-                        This is <strong>NOT an official MD Anderson Cancer Center product</strong>. It is an independent educational tool 
-                        developed to share evidence-based practices from the MD Anderson Head & Neck SBRT Program.
-                      </p>
-                    </div>
-
-                    <p className="text-gray-700">
-                      The tool implements the MD Anderson re-irradiation evaluation framework for head and neck cancer, 
-                      providing evidence-based decision support for evaluating re-irradiation candidacy in patients 
-                      with recurrent disease.
-                    </p>
-
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-blue-800 font-semibold mb-2">Development & Contact</p>
-                      <p className="text-blue-700 text-sm mb-3">
-                        <strong>Primary Developer:</strong> Ramez Kouzy, MD<br />
-                        Department of Radiation Oncology<br />
-                        The University of Texas MD Anderson Cancer Center<br />
-                        <a href="mailto:RKouzy@mdanderson.org" className="text-blue-600 hover:underline">RKouzy@mdanderson.org</a>
-                      </p>
-                      <p className="text-blue-700 text-sm">
-                        <strong>Developed in collaboration with:</strong> Jack Phan, MD, PhD<br />
-                        Director of Head & Neck Stereotactic Radiotherapy, MD Anderson Cancer Center
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <p className="text-gray-800 font-semibold mb-2">Key References & Guidelines</p>
-                      <ul className="text-gray-700 text-sm space-y-1 ml-4">
-                        <li>• Diao et al. <em>Head & Neck</em> 2022 — MD Anderson SBRT outcomes and dose constraints</li>
-                        <li>• MIRI (Mortality Index for Re-Irradiation) study — Risk stratification model</li>
-                        <li>• QUANTEC guidelines — Normal tissue dose-volume constraints</li>
-                        <li>• HyTEC guidelines — High-dose re-irradiation constraints</li>
-                        <li>• Phan et al. 2025 — State-of-the-art review of H&N re-irradiation</li>
-                      </ul>
-                    </div>
-
-                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
-                      <p className="text-red-800 font-bold mb-2">Clinical Decision Support Only</p>
-                      <p className="text-red-700 text-sm">
-                        This tool is intended for <strong>educational purposes and clinical decision support only</strong>. 
-                        It does not replace comprehensive patient evaluation, multidisciplinary tumor board discussion, 
-                        or individualized treatment planning. All treatment decisions must be made by qualified physicians 
-                        based on complete clinical assessment.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* The SBRT Program */}
                 <div className="mb-12">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">The MD Anderson H&N SBRT Program</h2>
