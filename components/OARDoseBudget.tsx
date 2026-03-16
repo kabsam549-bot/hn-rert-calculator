@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import {
   OAR_BUDGET_DATA,
   calculateOARBudget,
+  eqd2ToPhysicalDose,
   getRiskColorClass,
   type OARBudgetInput,
   type OARBudgetResult,
@@ -26,6 +27,7 @@ export default function OARDoseBudget() {
   const [selectedOARs, setSelectedOARs] = useState<OARInput[]>([]);
   const [results, setResults] = useState<OARBudgetResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [customFractions, setCustomFractions] = useState<Record<string, number | undefined>>({});
 
   const availableOARData = useMemo<OARBudgetData[]>(() => {
     if (!content?.oarConstraints?.length) {
@@ -450,16 +452,10 @@ export default function OARDoseBudget() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 <tr>
-                  <td className="py-2 px-3 font-medium">2 fx</td>
-                  <td className="py-2 px-3">{result.physicalDoseBudgets.twoFractions.toFixed(1)} Gy</td>
-                  <td className="py-2 px-3">{(result.physicalDoseBudgets.twoFractions / 2).toFixed(1)} Gy</td>
-                  <td className="py-2 px-3 text-xs text-gray-600">Hypofractionated</td>
-                </tr>
-                <tr>
                   <td className="py-2 px-3 font-medium">3 fx</td>
                   <td className="py-2 px-3">{result.physicalDoseBudgets.threeFractions.toFixed(1)} Gy</td>
                   <td className="py-2 px-3">{(result.physicalDoseBudgets.threeFractions / 3).toFixed(1)} Gy</td>
-                  <td className="py-2 px-3 text-xs text-gray-600">Phan newer protocol</td>
+                  <td className="py-2 px-3 text-xs text-gray-600">Phan 3fx protocol</td>
                 </tr>
                 <tr className="bg-teal-50 bg-opacity-30">
                   <td className="py-2 px-3 font-medium">4 fx</td>
@@ -471,7 +467,34 @@ export default function OARDoseBudget() {
                   <td className="py-2 px-3 font-medium">5 fx</td>
                   <td className="py-2 px-3">{result.physicalDoseBudgets.fiveFractions.toFixed(1)} Gy</td>
                   <td className="py-2 px-3">{(result.physicalDoseBudgets.fiveFractions / 5).toFixed(1)} Gy</td>
-                  <td className="py-2 px-3 text-xs text-gray-600">Alternative scheme</td>
+                  <td className="py-2 px-3 text-xs text-gray-600">Phan 5fx protocol</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="py-2 px-3">
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={customFractions[result.oar.name] ?? ''}
+                        onChange={(e) => setCustomFractions(prev => ({ ...prev, [result.oar.name]: e.target.value ? Number(e.target.value) : undefined }))}
+                        className="w-12 px-1.5 py-1 border border-gray-300 rounded text-sm text-center focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                        placeholder="#"
+                        min="1"
+                        max="50"
+                      />
+                      <span className="text-xs text-gray-500">fx</span>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3 text-sm">
+                    {customFractions[result.oar.name] && customFractions[result.oar.name]! >= 1
+                      ? `${eqd2ToPhysicalDose(result.remainingBudgetEQD2, customFractions[result.oar.name]!, result.oar.alphaBeta).toFixed(1)} Gy`
+                      : '—'}
+                  </td>
+                  <td className="py-2 px-3 text-sm">
+                    {customFractions[result.oar.name] && customFractions[result.oar.name]! >= 1
+                      ? `${(eqd2ToPhysicalDose(result.remainingBudgetEQD2, customFractions[result.oar.name]!, result.oar.alphaBeta) / customFractions[result.oar.name]!).toFixed(1)} Gy`
+                      : '—'}
+                  </td>
+                  <td className="py-2 px-3 text-xs text-gray-500 italic">Custom</td>
                 </tr>
               </tbody>
             </table>
