@@ -49,22 +49,22 @@ export interface EditableContent {
 // Default content - matches current implementation
 export const defaultContent: EditableContent = {
   oarConstraints: [
-    // Tier 1: Life-threatening
-    { name: "Spinal cord", tier: 1, limitEQD2: 50, alphaBeta: 2, complication: "Myelopathy", description: "Max point dose" },
-    { name: "Brainstem", tier: 1, limitEQD2: 54, alphaBeta: 2, complication: "Brainstem necrosis", description: "Max point dose" },
-    { name: "Optic chiasm", tier: 1, limitEQD2: 50, alphaBeta: 2, complication: "Blindness", description: "Max point dose" },
-    { name: "Optic nerves", tier: 1, limitEQD2: 55, alphaBeta: 2, complication: "Blindness", description: "Max point dose" },
+    // Tier 1: Life-threatening (CNS: α/β = 2)
+    { name: "Spinal cord", tier: 1, limitEQD2: 70, alphaBeta: 2, complication: "Myelopathy", description: "Sahgal HyTEC: cumulative thecal sac EQD2₂ Dmax ≤70 Gy" },
+    { name: "Brainstem", tier: 1, limitEQD2: 100, alphaBeta: 2, complication: "Brainstem necrosis", description: "Zurich 2021: <100 Gy₂ safe (Rades 2024 confirms)" },
+    { name: "Optic chiasm", tier: 1, limitEQD2: 75, alphaBeta: 2, complication: "Blindness", description: "Zurich 2021: <75 Gy₂ safe (Rades 2024 confirms)" },
+    { name: "Optic nerves", tier: 1, limitEQD2: 75, alphaBeta: 2, complication: "Blindness", description: "Zurich 2021: <75 Gy₂ safe (Rades 2024 confirms)" },
     // Tier 2: Critical
-    { name: "Carotid vessels", tier: 2, limitEQD2: 120, alphaBeta: 3, complication: "Carotid blowout", description: "Max dose to vessel wall" },
-    { name: "Temporal lobe", tier: 2, limitEQD2: 60, alphaBeta: 3, complication: "Temporal lobe necrosis", description: "Max dose" },
-    { name: "Mandible", tier: 2, limitEQD2: 70, alphaBeta: 3, complication: "Osteoradionecrosis", description: "Max dose to bone" },
-    { name: "Brachial plexus", tier: 2, limitEQD2: 60, alphaBeta: 2, complication: "Brachial plexopathy", description: "Max point dose" },
+    { name: "Carotid vessels", tier: 2, limitEQD2: 120, alphaBeta: 3, complication: "Carotid blowout", description: "Lindvall 2021: D1cc cutoff 119 Gy (AUC 0.92)" },
+    { name: "Temporal lobe", tier: 2, limitEQD2: 120, alphaBeta: 2, complication: "Temporal lobe necrosis", description: "Zurich 2021: brain up to 120 Gy₂ tolerated" },
+    { name: "Mandible", tier: 2, limitEQD2: 120, alphaBeta: 3, complication: "Osteoradionecrosis", description: "Lindvall 2021: D1cc cutoff 119 Gy for ORN (AUC 0.74)" },
+    { name: "Brachial plexus", tier: 2, limitEQD2: 75, alphaBeta: 3, complication: "Brachial plexopathy", description: "QUANTEC + recovery estimate" },
     // Tier 3: Quality of Life
-    { name: "Pharyngeal constrictors", tier: 3, limitEQD2: 55, alphaBeta: 3, complication: "Dysphagia", description: "Mean dose" },
+    { name: "Pharyngeal constrictors", tier: 3, limitEQD2: 50, alphaBeta: 3, complication: "Dysphagia", description: "QUANTEC: Dmean <50 Gy for G2+ dysphagia" },
     { name: "Cranial nerves (IX, X, XI, XII)", tier: 3, limitEQD2: 60, alphaBeta: 3, complication: "Neuropathy", description: "Max dose" },
-    { name: "Parotid gland", tier: 3, limitEQD2: 26, alphaBeta: 3, complication: "Xerostomia", description: "Mean dose" },
-    { name: "Larynx", tier: 3, limitEQD2: 50, alphaBeta: 3, complication: "Voice changes, aspiration", description: "Mean dose" },
-    { name: "Esophagus", tier: 3, limitEQD2: 55, alphaBeta: 3, complication: "Stricture, dysphagia", description: "Mean dose" },
+    { name: "Parotid gland", tier: 3, limitEQD2: 46, alphaBeta: 3, complication: "Xerostomia", description: "QUANTEC cumulative ~46 Gy mean" },
+    { name: "Larynx", tier: 3, limitEQD2: 70, alphaBeta: 3, complication: "Voice changes, aspiration, chondronecrosis", description: "Risk of chondronecrosis at high cumulative doses" },
+    { name: "Esophagus", tier: 3, limitEQD2: 68, alphaBeta: 3, complication: "Stricture, perforation", description: "QUANTEC + RTOG" },
   ],
   doseRegimens: [
     { name: "Full dose", dose: 66, fractions: 33, intent: "curative", description: "Standard definitive re-RT" },
