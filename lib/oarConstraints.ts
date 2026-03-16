@@ -134,6 +134,14 @@ export const OAR_CONSTRAINTS: OARConstraint[] = [
     description: "Max dose to vessel wall; risk increases with prior surgery and high cumulative dose"
   },
   {
+    name: "Lingual artery",
+    tier: 2,
+    limitEQD2: 120,
+    alphaBeta: 3,
+    complication: "Lingual artery bleed",
+    description: "Use carotid constraints. Re-RT course: <5mm from target Dmax <30 Gy no hotspot; >5mm Dmax <20 Gy (5fx), <18 Gy (3fx). Per Diao et al and Phan PD."
+  },
+  {
     name: "Temporal lobe",
     tier: 2,
     limitEQD2: 60,

@@ -720,6 +720,7 @@ export default function MDACCPathway() {
             { id: 'cord', label: 'Spinal Cord', tier: 1, limit: 'Dmax <12 Gy' },
             { id: 'chiasm', label: 'Optic Pathway', tier: 1, limit: 'Dmax <12 Gy' },
             { id: 'carotid', label: 'Carotid', tier: 2, limit: 'Dmax <30 Gy' },
+            { id: 'lingual', label: 'Lingual Art.', tier: 2, limit: 'Dmax <30 Gy' },
             { id: 'cochlea', label: 'Cochlea', tier: 2, limit: 'Dmax <18 Gy' },
             { id: 'larynx', label: 'Larynx', tier: 2, limit: 'Dmax <13 Gy' },
             { id: 'mandible', label: 'Mandible', tier: 2, limit: 'V25 <1cc' },

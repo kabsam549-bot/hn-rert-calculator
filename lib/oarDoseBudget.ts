@@ -146,6 +146,13 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
     specialNote: 'Consider IR consult for prophylactic intervention if bleed risk >5%'
   },
   {
+    name: 'Lingual artery',
+    lifetimeToleranceEQD2: 120,
+    alphaBeta: 3,
+    complication: 'Lingual artery bleed',
+    specialNote: 'Use carotid constraints. <5mm from target: no hotspot; >5mm: Dmax <20 Gy (5fx). No NTCP data yet.'
+  },
+  {
     name: 'Pharyngeal constrictors',
     lifetimeToleranceEQD2: 50,
     alphaBeta: 3,
