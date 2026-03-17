@@ -20,6 +20,7 @@ interface OARInput {
   priorFractions?: number;
   timeSinceRT?: number;
   additionalCourses: { dose?: number; fractions?: number; timeSinceRT?: number }[];
+  customAlphaBeta?: number;
 }
 
 type DoseMode = 'conservative' | 'recovery';
@@ -77,7 +78,7 @@ export default function OARDoseBudget() {
         item.timeSinceRT >= 0
       )
       .map(item => ({
-        oar: item.oar,
+        oar: item.customAlphaBeta !== undefined ? { ...item.oar, alphaBeta: item.customAlphaBeta } : item.oar,
         priorDose: item.priorDose!,
         priorFractions: item.priorFractions!,
         timeSinceRT: item.timeSinceRT!,
@@ -182,7 +183,48 @@ export default function OARDoseBudget() {
             Lifetime tolerance: <span className="font-semibold">{item.oar.lifetimeToleranceEQD2} Gy EQD2</span>
             {' • '}
             Risk: {item.oar.complication}
+            {' • '}
+            <span className="font-semibold">&#945;/&#946; = {item.customAlphaBeta ?? item.oar.alphaBeta} Gy</span>
+            {!item.customAlphaBeta && (
+              <button
+                onClick={() => {
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customAlphaBeta: item.oar.alphaBeta } : o));
+                  setShowResults(false);
+                }}
+                className="ml-1 text-teal-600 hover:text-teal-800 underline"
+              >
+                adjust
+              </button>
+            )}
           </div>
+          {item.customAlphaBeta !== undefined && (
+            <div className="mt-1.5 flex items-center gap-2">
+              <label className="text-xs font-bold text-gray-600">Custom &#945;/&#946;:</label>
+              <input
+                type="number"
+                value={item.customAlphaBeta}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? undefined : Number(e.target.value);
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customAlphaBeta: val } : o));
+                  setShowResults(false);
+                }}
+                className="w-16 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                min="0.1"
+                max="20"
+                step="0.1"
+              />
+              <span className="text-xs text-gray-500">Gy</span>
+              <button
+                onClick={() => {
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customAlphaBeta: undefined } : o));
+                  setShowResults(false);
+                }}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Reset
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Input Fields */}
@@ -457,6 +499,31 @@ export default function OARDoseBudget() {
           </div>
         </div>
 
+        {/* Show Your Work Panel */}
+        <details className="mb-4 bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+          <summary className="cursor-pointer px-4 py-3 text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between hover:bg-slate-100 transition-colors">
+            Show Calculation
+            <svg className="h-4 w-4 text-slate-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <div className="px-4 pb-4 text-sm text-slate-700 space-y-2 border-t border-slate-200 pt-3">
+            <div className="font-mono text-xs space-y-1.5 bg-white rounded-lg p-3 border border-slate-200">
+              <p className="text-slate-500">{/* Prior treatment */}Prior treatment: {result.oar.name}</p>
+              <p>d = D / n = {(result.priorEQD2 > 0 ? (selectedOARs.find(o => o.oar.name === result.oar.name)?.priorDose ?? 0) : 0).toFixed(1)} / {selectedOARs.find(o => o.oar.name === result.oar.name)?.priorFractions ?? 0} = {((selectedOARs.find(o => o.oar.name === result.oar.name)?.priorDose ?? 0) / (selectedOARs.find(o => o.oar.name === result.oar.name)?.priorFractions || 1)).toFixed(2)} Gy/fx</p>
+              <p>BED = D × (1 + d / (&#945;/&#946;)) = {(selectedOARs.find(o => o.oar.name === result.oar.name)?.priorDose ?? 0).toFixed(1)} × (1 + {((selectedOARs.find(o => o.oar.name === result.oar.name)?.priorDose ?? 0) / (selectedOARs.find(o => o.oar.name === result.oar.name)?.priorFractions || 1)).toFixed(2)} / {result.oar.alphaBeta})</p>
+              <p>EQD2 = BED / (1 + 2 / (&#945;/&#946;)) = <span className="font-bold">{result.priorEQD2.toFixed(1)} Gy</span></p>
+              {!isConservative && result.recoveryPercent > 0 && (
+                <>
+                  <p className="text-slate-500 pt-1">Tissue recovery ({result.recoveryPercent.toFixed(0)}% at {selectedOARs.find(o => o.oar.name === result.oar.name)?.timeSinceRT ?? 0} months)</p>
+                  <p>Effective EQD2 = {result.priorEQD2.toFixed(1)} × (1 - {(result.recoveryPercent / 100).toFixed(2)}) = <span className="font-bold">{result.effectivePriorEQD2.toFixed(1)} Gy</span></p>
+                </>
+              )}
+              <p className="text-slate-500 pt-1">Remaining budget:</p>
+              <p>Budget = {result.oar.lifetimeToleranceEQD2} - {displayPrior.toFixed(1)} = <span className="font-bold text-teal-700">{displayRemaining.toFixed(1)} Gy EQD2</span></p>
+            </div>
+            <p className="text-xs text-slate-500">&#945;/&#946; = {result.oar.alphaBeta} Gy</p>
+          </div>
+        </details>
+
         {/* Physical Dose Budgets Table */}
         <div className="mb-4">
           <h5 className="text-xs font-bold text-gray-700 mb-2 uppercase">Physical Dose Budget by Fractionation</h5>
@@ -467,22 +534,16 @@ export default function OARDoseBudget() {
                   <th className="text-left py-2 px-3 font-bold text-gray-700">Fractions</th>
                   <th className="text-left py-2 px-3 font-bold text-gray-700">Total Dose</th>
                   <th className="text-left py-2 px-3 font-bold text-gray-700">Dose/Fx</th>
-                  <th className="text-left py-2 px-3 font-bold text-gray-700">Protocol</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {[
-                  { fx: 3, label: 'Phan 3fx protocol', highlight: false },
-                  { fx: 4, label: 'Phan standard (32-36 Gy)', highlight: true },
-                  { fx: 5, label: 'Phan 5fx protocol', highlight: false },
-                ].map(({ fx, label, highlight }) => {
+                {[3, 4, 5].map((fx) => {
                   const physDose = eqd2ToPhysicalDose(displayRemaining, fx, result.oar.alphaBeta);
                   return (
-                    <tr key={fx} className={highlight ? 'bg-teal-50 bg-opacity-30' : ''}>
+                    <tr key={fx} className={fx === 4 ? 'bg-teal-50 bg-opacity-30' : ''}>
                       <td className="py-2 px-3 font-medium">{fx} fx</td>
-                      <td className={`py-2 px-3 ${highlight ? 'font-semibold' : ''}`}>{physDose.toFixed(1)} Gy</td>
-                      <td className={`py-2 px-3 ${highlight ? 'font-semibold' : ''}`}>{(physDose / fx).toFixed(1)} Gy</td>
-                      <td className={`py-2 px-3 text-xs ${highlight ? 'font-semibold text-teal-700' : 'text-gray-600'}`}>{label}</td>
+                      <td className={`py-2 px-3 ${fx === 4 ? 'font-semibold' : ''}`}>{physDose.toFixed(1)} Gy</td>
+                      <td className={`py-2 px-3 ${fx === 4 ? 'font-semibold' : ''}`}>{(physDose / fx).toFixed(1)} Gy</td>
                     </tr>
                   );
                 })}
@@ -511,7 +572,6 @@ export default function OARDoseBudget() {
                       ? `${(eqd2ToPhysicalDose(displayRemaining, customFractions[result.oar.name]!, result.oar.alphaBeta) / customFractions[result.oar.name]!).toFixed(1)} Gy`
                       : '—'}
                   </td>
-                  <td className="py-2 px-3 text-xs text-gray-500 italic">Custom</td>
                 </tr>
               </tbody>
             </table>
