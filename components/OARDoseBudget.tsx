@@ -22,12 +22,15 @@ interface OARInput {
   additionalCourses: { dose?: number; fractions?: number; timeSinceRT?: number }[];
 }
 
+type DoseMode = 'conservative' | 'recovery';
+
 export default function OARDoseBudget() {
   const { content } = useEditableContent();
   const [selectedOARs, setSelectedOARs] = useState<OARInput[]>([]);
   const [results, setResults] = useState<OARBudgetResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [customFractions, setCustomFractions] = useState<Record<string, number | undefined>>({});
+  const [doseMode, setDoseMode] = useState<DoseMode>('conservative');
 
   const availableOARData = useMemo<OARBudgetData[]>(() => {
     if (!content?.oarConstraints?.length) {
@@ -368,8 +371,14 @@ export default function OARDoseBudget() {
   };
 
   const renderResultCard = (result: OARBudgetResult) => {
-    const colors = getRiskColorClass(result.riskLevel);
-    const riskLabel = result.riskLevel.toUpperCase();
+    // In conservative mode, use raw cumulative EQD2 (no recovery)
+    const isConservative = doseMode === 'conservative';
+    const displayPrior = isConservative ? result.priorEQD2 : result.effectivePriorEQD2;
+    const displayRemaining = Math.max(0, result.oar.lifetimeToleranceEQD2 - displayPrior);
+    const displayPercent = (displayRemaining / result.oar.lifetimeToleranceEQD2) * 100;
+    const displayRisk = displayPercent > 50 ? 'safe' : displayPercent > 25 ? 'caution' : displayPercent > 10 ? 'warning' : 'critical';
+    const colors = getRiskColorClass(isConservative ? displayRisk : result.riskLevel);
+    const riskLabel = (isConservative ? displayRisk : result.riskLevel).toUpperCase();
 
     return (
       <div key={result.oar.name} className={`${colors.bg} border-2 ${colors.border} rounded-lg p-5`}>
@@ -385,26 +394,30 @@ export default function OARDoseBudget() {
         </div>
 
         {/* Calculation Breakdown */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-300">
+        <div className={`grid ${isConservative ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'} gap-4 mb-4 pb-4 border-b border-gray-300`}>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Prior EQD2</div>
+            <div className="text-xs text-gray-600 mb-1">Cumulative EQD2</div>
             <div className="text-lg font-bold text-gray-900">{result.priorEQD2.toFixed(1)} Gy</div>
           </div>
-          <div>
-            <div className="text-xs text-gray-600 mb-1">Recovery Factor</div>
-            <div className="text-lg font-bold text-gray-900">{result.recoveryPercent.toFixed(0)}%</div>
-            <div className="text-xs text-gray-500 mt-0.5">
-              {result.recoveryPercent === 0 && '(<6 months)'}
-              {result.recoveryPercent === 25 && '(6-12 months)'}
-              {result.recoveryPercent === 40 && '(12-24 months)'}
-              {result.recoveryPercent === 50 && '(>24 months)'}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-600 mb-1">Effective Prior</div>
-            <div className="text-lg font-bold text-gray-900">{result.effectivePriorEQD2.toFixed(1)} Gy</div>
-            <div className="text-xs text-gray-500 mt-0.5">(after recovery)</div>
-          </div>
+          {!isConservative && (
+            <>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Recovery Factor</div>
+                <div className="text-lg font-bold text-gray-900">{result.recoveryPercent.toFixed(0)}%</div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  {result.recoveryPercent === 0 && '(<6 months)'}
+                  {result.recoveryPercent === 25 && '(6-12 months)'}
+                  {result.recoveryPercent === 40 && '(12-24 months)'}
+                  {result.recoveryPercent === 50 && '(>24 months)'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Effective Prior</div>
+                <div className="text-lg font-bold text-gray-900">{result.effectivePriorEQD2.toFixed(1)} Gy</div>
+                <div className="text-xs text-gray-500 mt-0.5">(after recovery)</div>
+              </div>
+            </>
+          )}
           <div>
             <div className="text-xs text-gray-600 mb-1">Lifetime Tolerance</div>
             <div className="text-lg font-bold text-gray-900">{result.oar.lifetimeToleranceEQD2} Gy</div>
@@ -414,24 +427,31 @@ export default function OARDoseBudget() {
         {/* Remaining Budget - Prominently Displayed */}
         <div className="bg-white bg-opacity-70 rounded-lg p-4 mb-4">
           <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1 font-semibold">REMAINING DOSE BUDGET</div>
+            <div className="text-sm text-gray-600 mb-1 font-semibold">
+              REMAINING DOSE BUDGET {isConservative ? '(Conservative)' : '(With Recovery)'}
+            </div>
             <div className="text-4xl font-bold text-gray-900 mb-1">
-              {result.remainingBudgetEQD2.toFixed(1)} Gy
+              {displayRemaining.toFixed(1)} Gy
             </div>
             <div className="text-sm text-gray-600">
-              EQD2 ({result.percentRemaining.toFixed(1)}% of lifetime tolerance)
+              EQD2 ({displayPercent.toFixed(1)}% of lifetime tolerance)
             </div>
+            {isConservative && result.recoveryPercent > 0 && (
+              <div className="text-xs text-teal-700 mt-1">
+                With recovery: {result.remainingBudgetEQD2.toFixed(1)} Gy remaining ({result.percentRemaining.toFixed(1)}%)
+              </div>
+            )}
             
             {/* Visual Progress Bar */}
             <div className="w-full bg-gray-200 rounded-full h-3 mt-3 overflow-hidden">
               <div 
                 className={`h-full transition-all ${
-                  result.riskLevel === 'safe' ? 'bg-green-500' :
-                  result.riskLevel === 'caution' ? 'bg-yellow-500' :
-                  result.riskLevel === 'warning' ? 'bg-orange-500' :
+                  displayRisk === 'safe' ? 'bg-green-500' :
+                  displayRisk === 'caution' ? 'bg-yellow-500' :
+                  displayRisk === 'warning' ? 'bg-orange-500' :
                   'bg-red-500'
                 }`}
-                style={{ width: `${Math.min(100, result.percentRemaining)}%` }}
+                style={{ width: `${Math.min(100, displayPercent)}%` }}
               />
             </div>
           </div>
@@ -451,24 +471,21 @@ export default function OARDoseBudget() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="py-2 px-3 font-medium">3 fx</td>
-                  <td className="py-2 px-3">{result.physicalDoseBudgets.threeFractions.toFixed(1)} Gy</td>
-                  <td className="py-2 px-3">{(result.physicalDoseBudgets.threeFractions / 3).toFixed(1)} Gy</td>
-                  <td className="py-2 px-3 text-xs text-gray-600">Phan 3fx protocol</td>
-                </tr>
-                <tr className="bg-teal-50 bg-opacity-30">
-                  <td className="py-2 px-3 font-medium">4 fx</td>
-                  <td className="py-2 px-3 font-semibold">{result.physicalDoseBudgets.fourFractions.toFixed(1)} Gy</td>
-                  <td className="py-2 px-3 font-semibold">{(result.physicalDoseBudgets.fourFractions / 4).toFixed(1)} Gy</td>
-                  <td className="py-2 px-3 text-xs font-semibold text-teal-700">Phan standard (32-36 Gy)</td>
-                </tr>
-                <tr>
-                  <td className="py-2 px-3 font-medium">5 fx</td>
-                  <td className="py-2 px-3">{result.physicalDoseBudgets.fiveFractions.toFixed(1)} Gy</td>
-                  <td className="py-2 px-3">{(result.physicalDoseBudgets.fiveFractions / 5).toFixed(1)} Gy</td>
-                  <td className="py-2 px-3 text-xs text-gray-600">Phan 5fx protocol</td>
-                </tr>
+                {[
+                  { fx: 3, label: 'Phan 3fx protocol', highlight: false },
+                  { fx: 4, label: 'Phan standard (32-36 Gy)', highlight: true },
+                  { fx: 5, label: 'Phan 5fx protocol', highlight: false },
+                ].map(({ fx, label, highlight }) => {
+                  const physDose = eqd2ToPhysicalDose(displayRemaining, fx, result.oar.alphaBeta);
+                  return (
+                    <tr key={fx} className={highlight ? 'bg-teal-50 bg-opacity-30' : ''}>
+                      <td className="py-2 px-3 font-medium">{fx} fx</td>
+                      <td className={`py-2 px-3 ${highlight ? 'font-semibold' : ''}`}>{physDose.toFixed(1)} Gy</td>
+                      <td className={`py-2 px-3 ${highlight ? 'font-semibold' : ''}`}>{(physDose / fx).toFixed(1)} Gy</td>
+                      <td className={`py-2 px-3 text-xs ${highlight ? 'font-semibold text-teal-700' : 'text-gray-600'}`}>{label}</td>
+                    </tr>
+                  );
+                })}
                 <tr className="bg-gray-50">
                   <td className="py-2 px-3">
                     <div className="flex items-center gap-1">
@@ -486,12 +503,12 @@ export default function OARDoseBudget() {
                   </td>
                   <td className="py-2 px-3 text-sm">
                     {customFractions[result.oar.name] && customFractions[result.oar.name]! >= 1
-                      ? `${eqd2ToPhysicalDose(result.remainingBudgetEQD2, customFractions[result.oar.name]!, result.oar.alphaBeta).toFixed(1)} Gy`
+                      ? `${eqd2ToPhysicalDose(displayRemaining, customFractions[result.oar.name]!, result.oar.alphaBeta).toFixed(1)} Gy`
                       : '—'}
                   </td>
                   <td className="py-2 px-3 text-sm">
                     {customFractions[result.oar.name] && customFractions[result.oar.name]! >= 1
-                      ? `${(eqd2ToPhysicalDose(result.remainingBudgetEQD2, customFractions[result.oar.name]!, result.oar.alphaBeta) / customFractions[result.oar.name]!).toFixed(1)} Gy`
+                      ? `${(eqd2ToPhysicalDose(displayRemaining, customFractions[result.oar.name]!, result.oar.alphaBeta) / customFractions[result.oar.name]!).toFixed(1)} Gy`
                       : '—'}
                   </td>
                   <td className="py-2 px-3 text-xs text-gray-500 italic">Custom</td>
@@ -612,6 +629,42 @@ export default function OARDoseBudget() {
             >
               ← Back to Input
             </button>
+          </div>
+
+          {/* Dose Mode Toggle */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-gray-700">Dose Calculation Mode</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {doseMode === 'conservative' 
+                    ? 'Showing raw cumulative EQD2 against lifetime tolerance -- no tissue recovery applied'
+                    : 'Showing effective dose after tissue recovery modeling (25-50% based on time interval)'}
+                </p>
+              </div>
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setDoseMode('conservative')}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                    doseMode === 'conservative'
+                      ? 'bg-teal-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Conservative (EQD2)
+                </button>
+                <button
+                  onClick={() => setDoseMode('recovery')}
+                  className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                    doseMode === 'recovery'
+                      ? 'bg-teal-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  With Recovery
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Summary Alert */}
