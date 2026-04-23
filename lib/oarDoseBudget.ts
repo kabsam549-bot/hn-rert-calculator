@@ -124,17 +124,17 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Optic chiasm',
-    lifetimeToleranceEQD2: 75,
+    lifetimeToleranceEQD2: 55,
     alphaBeta: 2,
     complication: 'Optic neuropathy / blindness',
-    specialNote: 'Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). No optic toxicity reported below this threshold. Single-course QUANTEC: 55 Gy.'
+    specialNote: 'Cumulative EQD2₂ <55 Gy (single-course QUANTEC). 5 fx limit typically ~25 Gy.'
   },
   {
     name: 'Optic nerves',
-    lifetimeToleranceEQD2: 75,
+    lifetimeToleranceEQD2: 55,
     alphaBeta: 2,
     complication: 'Optic neuropathy / blindness',
-    specialNote: 'Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). Single-course QUANTEC: 55 Gy.'
+    specialNote: 'Cumulative EQD2₂ <55 Gy (single-course QUANTEC). 5 fx limit typically ~25 Gy.'
   },
   {
     name: 'Cochlea',

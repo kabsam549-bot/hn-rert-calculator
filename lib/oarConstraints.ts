@@ -108,18 +108,18 @@ export const OAR_CONSTRAINTS: OARConstraint[] = [
   {
     name: "Optic chiasm",
     tier: 1,
-    limitEQD2: 75,
+    limitEQD2: 55,
     alphaBeta: 2,
     complication: "Blindness",
-    description: "Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). Single-course QUANTEC: 55 Gy. Re-RT course: Dmax <12 Gy (1mm PRV) per Diao et al."
+    description: "Cumulative EQD2₂ <55 Gy (single-course QUANTEC). Re-RT course: Dmax <12 Gy (1mm PRV) per Diao et al. 5 fx limit typically ~25 Gy."
   },
   {
     name: "Optic nerves",
     tier: 1,
-    limitEQD2: 75,
+    limitEQD2: 55,
     alphaBeta: 2,
     complication: "Blindness",
-    description: "Cumulative EQD2₂ <75 Gy considered safe (Zurich 2021, Rades 2024). Re-RT course: ipsilateral Dmax <12-15 Gy, contralateral <4 Gy per Phan PD."
+    description: "Cumulative EQD2₂ <55 Gy (single-course QUANTEC). Re-RT course: ipsilateral Dmax <12-15 Gy, contralateral <4 Gy per Phan PD. 5 fx limit typically ~25 Gy."
   },
 
   // ============================================================================

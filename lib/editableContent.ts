@@ -52,8 +52,8 @@ export const defaultContent: EditableContent = {
     // Tier 1: Life-threatening (CNS: α/β = 2)
     { name: "Spinal cord", tier: 1, limitEQD2: 70, alphaBeta: 2, complication: "Myelopathy", description: "Sahgal HyTEC: cumulative thecal sac EQD2₂ Dmax ≤70 Gy" },
     { name: "Brainstem", tier: 1, limitEQD2: 100, alphaBeta: 2, complication: "Brainstem necrosis", description: "Zurich 2021: <100 Gy₂ safe (Rades 2024 confirms)" },
-    { name: "Optic chiasm", tier: 1, limitEQD2: 75, alphaBeta: 2, complication: "Blindness", description: "Zurich 2021: <75 Gy₂ safe (Rades 2024 confirms)" },
-    { name: "Optic nerves", tier: 1, limitEQD2: 75, alphaBeta: 2, complication: "Blindness", description: "Zurich 2021: <75 Gy₂ safe (Rades 2024 confirms)" },
+    { name: "Optic chiasm", tier: 1, limitEQD2: 55, alphaBeta: 2, complication: "Blindness", description: "Single-course QUANTEC 55 Gy; 5 fx limit typically ~25 Gy" },
+    { name: "Optic nerves", tier: 1, limitEQD2: 55, alphaBeta: 2, complication: "Blindness", description: "Single-course QUANTEC 55 Gy; 5 fx limit typically ~25 Gy" },
     // Tier 2: Critical
     { name: "Carotid vessels", tier: 2, limitEQD2: 120, alphaBeta: 3, complication: "Carotid blowout", description: "Lindvall 2021: D1cc cutoff 119 Gy (AUC 0.92)" },
     { name: "Temporal lobe", tier: 2, limitEQD2: 120, alphaBeta: 2, complication: "Temporal lobe necrosis", description: "Zurich 2021: brain up to 120 Gy₂ tolerated" },
