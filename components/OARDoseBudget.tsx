@@ -21,6 +21,7 @@ interface OARInput {
   timeSinceRT?: number;
   additionalCourses: { dose?: number; fractions?: number; timeSinceRT?: number }[];
   customAlphaBeta?: number;
+  customLifetimeTolerance?: number;
 }
 
 type DoseMode = 'conservative' | 'recovery';
@@ -77,15 +78,24 @@ export default function OARDoseBudget() {
         item.priorFractions > 0 &&
         item.timeSinceRT >= 0
       )
-      .map(item => ({
-        oar: item.customAlphaBeta !== undefined ? { ...item.oar, alphaBeta: item.customAlphaBeta } : item.oar,
+      .map(item => {
+        let oar = item.oar;
+        if (item.customAlphaBeta !== undefined) {
+          oar = { ...oar, alphaBeta: item.customAlphaBeta };
+        }
+        if (item.customLifetimeTolerance !== undefined && item.customLifetimeTolerance > 0) {
+          oar = { ...oar, lifetimeToleranceEQD2: item.customLifetimeTolerance };
+        }
+        return ({
+        oar,
         priorDose: item.priorDose!,
         priorFractions: item.priorFractions!,
         timeSinceRT: item.timeSinceRT!,
         additionalCourses: item.additionalCourses
           .filter(c => c.dose !== undefined && c.fractions !== undefined && c.timeSinceRT !== undefined && c.dose > 0 && c.fractions > 0)
           .map(c => ({ dose: c.dose!, fractions: c.fractions!, timeSinceRT: c.timeSinceRT! } as PriorRTCourse)),
-      }));
+        });
+      });
 
     if (inputs.length === 0) {
       alert('Please enter valid dose, fractions, and time for at least one OAR');
@@ -180,7 +190,24 @@ export default function OARDoseBudget() {
             )}
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            Lifetime tolerance: <span className="font-semibold">{item.oar.lifetimeToleranceEQD2} Gy EQD2</span>
+            Lifetime tolerance:{' '}
+            <span className="font-semibold">
+              {item.customLifetimeTolerance ?? item.oar.lifetimeToleranceEQD2} Gy EQD2
+            </span>
+            {item.customLifetimeTolerance === undefined && (
+              <button
+                onClick={() => {
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customLifetimeTolerance: item.oar.lifetimeToleranceEQD2 } : o));
+                  setShowResults(false);
+                }}
+                className="ml-1 text-teal-600 hover:text-teal-800 underline"
+              >
+                adjust
+              </button>
+            )}
+            {item.customLifetimeTolerance !== undefined && (
+              <span className="ml-1 text-gray-400">(default {item.oar.lifetimeToleranceEQD2})</span>
+            )}
             {' • '}
             Risk: {item.oar.complication}
             {' • '}
@@ -222,6 +249,34 @@ export default function OARDoseBudget() {
                 className="text-xs text-red-500 hover:text-red-700"
               >
                 Reset
+              </button>
+            </div>
+          )}
+          {item.customLifetimeTolerance !== undefined && (
+            <div className="mt-1.5 flex items-center gap-2">
+              <label className="text-xs font-bold text-gray-600">Custom lifetime max:</label>
+              <input
+                type="number"
+                value={item.customLifetimeTolerance}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? undefined : Number(e.target.value);
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customLifetimeTolerance: val } : o));
+                  setShowResults(false);
+                }}
+                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                min="1"
+                max="200"
+                step="0.1"
+              />
+              <span className="text-xs text-gray-500">Gy EQD2</span>
+              <button
+                onClick={() => {
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customLifetimeTolerance: undefined } : o));
+                  setShowResults(false);
+                }}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Reset to default ({item.oar.lifetimeToleranceEQD2})
               </button>
             </div>
           )}
