@@ -28,6 +28,46 @@ interface OARInput {
 
 type DoseMode = 'conservative' | 'recovery';
 
+interface PriorCoursePreset {
+  label: string;
+  dose: number;
+  fractions: number;
+}
+
+const PRIOR_COURSE_PRESETS: PriorCoursePreset[] = [
+  { label: '60 / 30', dose: 60, fractions: 30 },
+  { label: '66 / 33', dose: 66, fractions: 33 },
+  { label: '70 / 35', dose: 70, fractions: 35 },
+  { label: '40 / 5', dose: 40, fractions: 5 },
+];
+
+const OAR_GROUPS = [
+  {
+    label: 'Critical set',
+    helper: 'Cord, brainstem, optic, carotid, mandible',
+    names: ['Spinal cord', 'Brainstem', 'Optic chiasm', 'Optic nerves', 'Carotid vessels', 'Mandible'],
+  },
+  {
+    label: 'Skull base set',
+    helper: 'Brainstem, optic, cochlea, temporal lobe',
+    names: ['Brainstem', 'Optic chiasm', 'Optic nerves', 'Cochlea', 'Temporal lobe', 'Carotid vessels'],
+  },
+  {
+    label: 'Mucosal/QOL set',
+    helper: 'Swallowing, saliva, larynx, esophagus',
+    names: ['Pharyngeal constrictors', 'Parotid gland', 'Larynx', 'Esophagus', 'Mandible', 'Carotid vessels'],
+  },
+];
+
+function parseOptionalNumber(value: string): number | undefined {
+  if (value.trim() === '') {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export default function OARDoseBudget() {
   const { content } = useEditableContent();
   const [selectedOARs, setSelectedOARs] = useState<OARInput[]>([]);
@@ -35,6 +75,9 @@ export default function OARDoseBudget() {
   const [showResults, setShowResults] = useState(false);
   const [customFractions, setCustomFractions] = useState<Record<string, number | undefined>>({});
   const [doseMode, setDoseMode] = useState<DoseMode>('conservative');
+  const [fillDose, setFillDose] = useState<number | undefined>(60);
+  const [fillFractions, setFillFractions] = useState<number | undefined>(30);
+  const [fillTimeSinceRT, setFillTimeSinceRT] = useState<number | undefined>(24);
 
   const availableOARData = useMemo<OARBudgetData[]>(() => {
     if (!content?.oarConstraints?.length) {
@@ -57,8 +100,67 @@ export default function OARDoseBudget() {
     if (selectedOARs.some(item => item.oar.name === oar.name)) {
       return; // Already added
     }
-    setSelectedOARs([...selectedOARs, { oar, priorDose: undefined, priorFractions: undefined, timeSinceRT: undefined, additionalCourses: [] }]);
+    setSelectedOARs([...selectedOARs, { oar, priorDose: fillDose, priorFractions: fillFractions, timeSinceRT: fillTimeSinceRT, additionalCourses: [] }]);
     setShowResults(false); // Hide results when adding new OAR
+  };
+
+  const handleAddOARGroup = (names: string[]) => {
+    const existingNames = new Set(selectedOARs.map(item => item.oar.name));
+    const oarsToAdd = availableOARData.filter(
+      oar => names.includes(oar.name) && !existingNames.has(oar.name)
+    );
+
+    if (oarsToAdd.length === 0) {
+      return;
+    }
+
+    setSelectedOARs(prev => [
+      ...prev,
+      ...oarsToAdd.map(oar => ({
+        oar,
+        priorDose: fillDose,
+        priorFractions: fillFractions,
+        timeSinceRT: fillTimeSinceRT,
+        additionalCourses: [],
+      })),
+    ]);
+    setShowResults(false);
+  };
+
+  const handleAddAllOARs = () => {
+    const existingNames = new Set(selectedOARs.map(item => item.oar.name));
+    const oarsToAdd = availableOARData.filter(oar => !existingNames.has(oar.name));
+
+    if (oarsToAdd.length === 0) {
+      return;
+    }
+
+    setSelectedOARs(prev => [
+      ...prev,
+      ...oarsToAdd.map(oar => ({
+        oar,
+        priorDose: fillDose,
+        priorFractions: fillFractions,
+        timeSinceRT: fillTimeSinceRT,
+        additionalCourses: [],
+      })),
+    ]);
+    setShowResults(false);
+  };
+
+  const handleApplyFillToSelected = () => {
+    setSelectedOARs(prev => prev.map(item => ({
+      ...item,
+      priorDose: fillDose,
+      priorFractions: fillFractions,
+      timeSinceRT: fillTimeSinceRT,
+    })));
+    setShowResults(false);
+  };
+
+  const handleUsePreset = (preset: PriorCoursePreset) => {
+    setFillDose(preset.dose);
+    setFillFractions(preset.fractions);
   };
 
   const handleRemoveOAR = (oarName: string) => {
@@ -133,6 +235,15 @@ export default function OARDoseBudget() {
     item.timeSinceRT !== undefined &&
     item.timeSinceRT >= 0
   );
+
+  const completedOARCount = selectedOARs.filter(item =>
+    item.priorDose !== undefined &&
+    item.priorDose > 0 &&
+    item.priorFractions !== undefined &&
+    item.priorFractions > 0 &&
+    item.timeSinceRT !== undefined &&
+    item.timeSinceRT >= 0
+  ).length;
 
   const renderOARSelector = () => {
     const availableOARs = availableOARData.filter(
@@ -694,22 +805,129 @@ export default function OARDoseBudget() {
         </p>
       </div>
 
-      {/* Instructions */}
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-        <div className="flex items-start">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-          <div className="text-sm text-blue-900">
-            <p className="font-semibold mb-1">How to use:</p>
-            <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>Select organs at risk from the list below</li>
-              <li>Enter the <strong>actual prior dose</strong> each organ received (not prescription dose)</li>
-              <li>Enter prior fractions and time since treatment</li>
-              <li>Click Calculate to see remaining dose budgets for common re-RT fractionation schemes</li>
-            </ol>
+      {/* Workflow */}
+      <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-4">
+        <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wide text-teal-700">Step 1</div>
+              <h2 className="text-lg font-bold text-gray-900">Set the prior course once</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                New OARs use this course by default. You can still override each organ below.
+              </p>
+            </div>
+            <div className="rounded-lg bg-teal-50 px-3 py-2 text-right">
+              <div className="text-xs font-bold text-teal-700 uppercase">Selected</div>
+              <div className="text-xl font-bold text-teal-900">{selectedOARs.length}</div>
+            </div>
           </div>
-        </div>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            {PRIOR_COURSE_PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                onClick={() => handleUsePreset(preset)}
+                className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                  fillDose === preset.dose && fillFractions === preset.fractions
+                    ? 'border-teal-600 bg-teal-600 text-white'
+                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-teal-300 hover:bg-teal-50'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Prior dose</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={fillDose ?? ''}
+                  onChange={(e) => setFillDose(parseOptionalNumber(e.target.value))}
+                  className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  min="0"
+                  max="200"
+                  step="0.1"
+                />
+                <span className="absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none">Gy</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Fractions</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={fillFractions ?? ''}
+                  onChange={(e) => setFillFractions(parseOptionalNumber(e.target.value))}
+                  className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  min="1"
+                  max="99"
+                  step="1"
+                />
+                <span className="absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none">fx</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1">Time since RT</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={fillTimeSinceRT ?? ''}
+                  onChange={(e) => setFillTimeSinceRT(parseOptionalNumber(e.target.value))}
+                  className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  min="0"
+                  max="999"
+                  step="1"
+                />
+                <span className="absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none">mo</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleApplyFillToSelected}
+            disabled={selectedOARs.length === 0}
+            className={`mt-4 w-full rounded-lg px-4 py-3 text-sm font-bold transition-colors ${
+              selectedOARs.length > 0
+                ? 'bg-teal-600 text-white hover:bg-teal-700'
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Fill selected OARs with this course
+          </button>
+        </section>
+
+        <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+          <div className="mb-4">
+            <div className="text-xs font-bold uppercase tracking-wide text-teal-700">Step 2</div>
+            <h2 className="text-lg font-bold text-gray-900">Add OARs in groups</h2>
+            <p className="text-sm text-gray-500 mt-1">Use a common set or add individual organs below.</p>
+          </div>
+
+          <div className="space-y-2">
+            {OAR_GROUPS.map((group) => (
+              <button
+                key={group.label}
+                onClick={() => handleAddOARGroup(group.names)}
+                className="w-full text-left rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 hover:border-teal-300 hover:bg-teal-50 transition-colors"
+              >
+                <span className="block text-sm font-bold text-gray-900">{group.label}</span>
+                <span className="block text-xs text-gray-500 mt-0.5">{group.helper}</span>
+              </button>
+            ))}
+            <button
+              onClick={handleAddAllOARs}
+              className="w-full text-left rounded-lg border border-gray-200 bg-white px-4 py-3 hover:border-teal-300 hover:bg-teal-50 transition-colors"
+            >
+              <span className="block text-sm font-bold text-gray-900">Add all OARs</span>
+              <span className="block text-xs text-gray-500 mt-0.5">Use when reviewing a complete composite plan</span>
+            </button>
+          </div>
+        </section>
       </div>
 
       {/* Show Results or Input Mode */}
@@ -718,11 +936,17 @@ export default function OARDoseBudget() {
           {/* OAR Input Section */}
           {selectedOARs.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Selected Organs ({selectedOARs.length})</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wide text-teal-700">Step 3</div>
+                  <h3 className="text-lg font-bold text-gray-900">Review selected OARs</h3>
+                  <p className="text-sm text-gray-500">
+                    {completedOARCount} of {selectedOARs.length} selected organs have complete prior-course inputs.
+                  </p>
+                </div>
                 <button
                   onClick={handleReset}
-                  className="text-sm text-gray-500 hover:text-red-600 transition-colors"
+                  className="self-start sm:self-auto rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
                 >
                   Clear All
                 </button>
@@ -732,10 +956,20 @@ export default function OARDoseBudget() {
           )}
 
           {/* Add More OARs */}
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-3">
-              {selectedOARs.length === 0 ? 'Select Organs at Risk' : 'Add More OARs'}
-            </h3>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {selectedOARs.length === 0 ? 'Select individual OARs' : 'Add individual OARs'}
+                </h3>
+                <p className="text-sm text-gray-500">Click any organ to add it with the prior-course fill values above.</p>
+              </div>
+              {selectedOARs.length > 0 && (
+                <div className="text-xs font-semibold text-gray-500">
+                  {availableOARData.length - selectedOARs.length} remaining
+                </div>
+              )}
+            </div>
             {renderOARSelector()}
           </div>
 
@@ -755,10 +989,10 @@ export default function OARDoseBudget() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  CALCULATE DOSE BUDGETS
+                  CALCULATE {completedOARCount} OAR {completedOARCount === 1 ? 'BUDGET' : 'BUDGETS'}
                 </span>
               ) : (
-                'ENTER DOSE DATA TO CALCULATE'
+                selectedOARs.length === 0 ? 'SELECT OARS TO CALCULATE' : 'FILL AT LEAST ONE OAR TO CALCULATE'
               )}
             </button>
           </div>
