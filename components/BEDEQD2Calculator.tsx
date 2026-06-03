@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import {
   ALPHA_BETA_RATIOS,
   calculateBEDAndEQD2,
@@ -590,20 +590,33 @@ export default function BEDEQD2Calculator() {
         ) : (
           <>
             <div className="hidden md:block">
-              <table className="w-full table-fixed text-xs lg:text-sm">
+              <table className="w-full table-fixed text-[11px] lg:text-xs">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="w-[24%] text-left px-3 py-3 font-bold text-gray-700">Regimen</th>
-                  <th className="w-[13%] text-right px-3 py-3 font-bold text-gray-700">Dose/Fx</th>
+                  <th rowSpan={2} className="w-[20%] text-left px-2 py-3 font-bold text-gray-700 align-bottom">Regimen</th>
+                  <th rowSpan={2} className="w-[9%] text-right px-2 py-3 font-bold text-gray-700 align-bottom">Dose/Fx</th>
                   {alphaBetaComparisons.map((comparison) => (
                     <th
                       key={comparison.id}
-                      className="text-right px-3 py-3 font-bold text-gray-700"
+                      colSpan={2}
+                      className="text-center px-2 py-3 font-bold text-gray-700 border-l border-gray-200"
                     >
                       {comparison.label}
                     </th>
                   ))}
-                  <th className="w-[8%] text-right px-3 py-3 font-bold text-gray-700">Use</th>
+                  <th rowSpan={2} className="w-[6%] text-right px-2 py-3 font-bold text-gray-700 align-bottom">Use</th>
+                </tr>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {alphaBetaComparisons.map((comparison) => (
+                    <Fragment key={`${comparison.id}-headers`}>
+                      <th className="text-right px-2 py-2 text-[10px] font-bold uppercase text-teal-700 border-l border-gray-200">
+                        BED
+                      </th>
+                      <th className="text-right px-2 py-2 text-[10px] font-bold uppercase text-blue-700">
+                        EQD2
+                      </th>
+                    </Fragment>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -615,13 +628,16 @@ export default function BEDEQD2Calculator() {
                     </td>
                     <td className="px-3 py-3 text-right text-gray-700">
                       <div>{formatDose(row.dosePerFraction)} Gy</div>
-                      <div className="text-[11px] text-gray-500">{formatDose(row.dose)} / {row.fractions}</div>
                     </td>
                     {row.comparisons.map((comparison) => (
-                      <td key={`${row.id}-${comparison.alphaBetaId}`} className="px-3 py-3 text-right border-l border-gray-100">
-                        <div className="font-semibold text-blue-800">{formatDose(comparison.eqd2)} Gy</div>
-                        <div className="text-[11px] text-teal-700">BED {formatDose(comparison.bed)}</div>
-                      </td>
+                      <Fragment key={`${row.id}-${comparison.alphaBetaId}`}>
+                        <td className="px-2 py-3 text-right font-semibold text-teal-800 border-l border-gray-100">
+                          {formatDose(comparison.bed)}
+                        </td>
+                        <td className="px-2 py-3 text-right font-semibold text-blue-800">
+                          {formatDose(comparison.eqd2)}
+                        </td>
+                      </Fragment>
                     ))}
                     <td className="px-3 py-3 text-right">
                       <button
@@ -635,7 +651,7 @@ export default function BEDEQD2Calculator() {
                 ))}
                 {matrixRows.length === 0 && (
                   <tr>
-                    <td colSpan={3 + alphaBetaComparisons.length} className="px-4 py-10 text-center text-gray-500">
+                    <td colSpan={3 + alphaBetaComparisons.length * 2} className="px-4 py-10 text-center text-gray-500">
                       Add a custom regimen from the calculator.
                     </td>
                   </tr>
@@ -650,7 +666,7 @@ export default function BEDEQD2Calculator() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="font-semibold text-gray-900">{row.label}</div>
-                      <div className="text-xs text-gray-500">{formatDose(row.dose)} Gy / {row.fractions} fx</div>
+                      <div className="text-xs text-gray-500">{row.note}</div>
                     </div>
                     <button
                       onClick={() => applyRegimenToCalculator(row)}
@@ -665,8 +681,16 @@ export default function BEDEQD2Calculator() {
                       return (
                         <div key={`${row.id}-${comparison.alphaBetaId}`} className="rounded-md bg-gray-50 p-2">
                           <div className="font-bold text-gray-700">{ratio}</div>
-                          <div className="text-blue-800 font-semibold">EQD2 {formatDose(comparison.eqd2)} Gy</div>
-                          <div className="text-teal-700">BED {formatDose(comparison.bed)} Gy</div>
+                          <div className="mt-1 grid grid-cols-2 gap-1">
+                            <div>
+                              <div className="text-[10px] text-teal-700">BED</div>
+                              <div className="font-semibold text-teal-900">{formatDose(comparison.bed)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-blue-700">EQD2</div>
+                              <div className="font-semibold text-blue-900">{formatDose(comparison.eqd2)}</div>
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
