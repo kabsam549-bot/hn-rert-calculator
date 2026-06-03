@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import {
   ALPHA_BETA_RATIOS,
   calculateBEDAndEQD2,
@@ -10,6 +10,7 @@ import {
 type RegimenCategory = 'sbrt' | 'conventional' | 'palliative' | 'custom';
 type RegimenFilter = RegimenCategory | 'all';
 type AlphaBetaPreset = 'tumor' | 'late' | 'cns' | 'custom';
+type ComparisonView = 'selected' | 'matrix';
 
 interface Regimen {
   id: string;
@@ -26,6 +27,22 @@ interface CalculatedRegimen extends Regimen {
   eqd2: number;
 }
 
+interface AlphaBetaComparison {
+  id: string;
+  label: string;
+  value: number;
+  helper: string;
+}
+
+interface RegimenMatrixRow extends Regimen {
+  dosePerFraction: number;
+  comparisons: {
+    alphaBetaId: string;
+    bed: number;
+    eqd2: number;
+  }[];
+}
+
 const CATEGORY_LABELS: Record<RegimenFilter, string> = {
   all: 'All',
   sbrt: 'SBRT',
@@ -39,6 +56,11 @@ const CATEGORY_STYLES: Record<RegimenCategory, string> = {
   conventional: 'bg-blue-50 text-blue-700 border-blue-200',
   palliative: 'bg-amber-50 text-amber-700 border-amber-200',
   custom: 'bg-purple-50 text-purple-700 border-purple-200',
+};
+
+const COMPARISON_VIEW_LABELS: Record<ComparisonView, string> = {
+  selected: 'Selected alpha/beta',
+  matrix: 'Multi alpha/beta',
 };
 
 const STANDARD_REGIMENS: Regimen[] = [
@@ -164,6 +186,27 @@ const ALPHA_BETA_OPTIONS: {
   },
 ];
 
+const BASE_ALPHA_BETA_COMPARISONS: AlphaBetaComparison[] = [
+  {
+    id: 'tumor-10',
+    label: 'Tumor / early',
+    value: ALPHA_BETA_RATIOS.TUMOR_EARLY,
+    helper: 'alpha/beta 10 Gy',
+  },
+  {
+    id: 'late-3',
+    label: 'Late normal',
+    value: ALPHA_BETA_RATIOS.LATE_GENERAL,
+    helper: 'alpha/beta 3 Gy',
+  },
+  {
+    id: 'cns-2',
+    label: 'CNS / optic',
+    value: ALPHA_BETA_RATIOS.CNS_LATE,
+    helper: 'alpha/beta 2 Gy',
+  },
+];
+
 function parsePositiveNumber(value: string): number | undefined {
   if (value.trim() === '') {
     return undefined;
@@ -187,8 +230,46 @@ function calculateRegimen(regimen: Regimen, alphaBeta: number): CalculatedRegime
   };
 }
 
+function calculateMatrixRow(regimen: Regimen, alphaBetaComparisons: AlphaBetaComparison[]): RegimenMatrixRow {
+  return {
+    ...regimen,
+    dosePerFraction: getDosePerFraction(regimen.dose, regimen.fractions),
+    comparisons: alphaBetaComparisons.map((comparison) => {
+      const { bed, eqd2 } = calculateBEDAndEQD2(regimen.dose, regimen.fractions, comparison.value);
+      return {
+        alphaBetaId: comparison.id,
+        bed,
+        eqd2,
+      };
+    }),
+  };
+}
+
 function formatDose(value: number): string {
   return value.toFixed(value >= 10 ? 1 : 2);
+}
+
+function formatAlphaBeta(value: number): string {
+  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
+}
+
+function isSameAlphaBeta(first: number, second: number): boolean {
+  return Math.abs(first - second) < 0.001;
+}
+
+function getAlphaBetaComparisons(alphaBeta: number): AlphaBetaComparison[] {
+  const comparisons = [...BASE_ALPHA_BETA_COMPARISONS];
+
+  if (alphaBeta > 0 && !comparisons.some((comparison) => isSameAlphaBeta(comparison.value, alphaBeta))) {
+    comparisons.push({
+      id: 'selected-custom',
+      label: 'Selected custom',
+      value: alphaBeta,
+      helper: `alpha/beta ${formatAlphaBeta(alphaBeta)} Gy`,
+    });
+  }
+
+  return comparisons;
 }
 
 export default function BEDEQD2Calculator() {
@@ -197,6 +278,7 @@ export default function BEDEQD2Calculator() {
   const [alphaBeta, setAlphaBeta] = useState<number>(ALPHA_BETA_RATIOS.TUMOR_EARLY);
   const [alphaBetaPreset, setAlphaBetaPreset] = useState<AlphaBetaPreset>('tumor');
   const [activeFilter, setActiveFilter] = useState<RegimenFilter>('all');
+  const [comparisonView, setComparisonView] = useState<ComparisonView>('selected');
   const [customRows, setCustomRows] = useState<Regimen[]>([]);
 
   const currentRegimen = useMemo<Regimen | undefined>(() => {
@@ -226,14 +308,26 @@ export default function BEDEQD2Calculator() {
     }
   }, [alphaBeta, currentRegimen]);
 
-  const tableRows = useMemo(() => {
+  const filteredRegimens = useMemo(() => {
     const rows = [...STANDARD_REGIMENS, ...customRows];
-    const filteredRows = activeFilter === 'all'
+    return activeFilter === 'all'
       ? rows
       : rows.filter((row) => row.category === activeFilter);
+  }, [activeFilter, customRows]);
 
-    return filteredRows.map((row) => calculateRegimen(row, alphaBeta));
-  }, [activeFilter, alphaBeta, customRows]);
+  const tableRows = useMemo(() => {
+    if (alphaBeta <= 0) {
+      return [];
+    }
+
+    return filteredRegimens.map((row) => calculateRegimen(row, alphaBeta));
+  }, [alphaBeta, filteredRegimens]);
+
+  const alphaBetaComparisons = useMemo(() => getAlphaBetaComparisons(alphaBeta), [alphaBeta]);
+
+  const matrixRows = useMemo(() => {
+    return filteredRegimens.map((row) => calculateMatrixRow(row, alphaBetaComparisons));
+  }, [alphaBetaComparisons, filteredRegimens]);
 
   const counts = useMemo(() => {
     const rows = [...STANDARD_REGIMENS, ...customRows];
@@ -424,22 +518,24 @@ export default function BEDEQD2Calculator() {
         <section className="bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="border-b border-gray-200 p-5">
             <h2 className="text-lg font-bold text-gray-900">Quick Interpretation</h2>
-            <p className="text-sm text-gray-500 mt-1">Use the same alpha/beta setting to compare common schedules.</p>
+            <p className="text-sm text-gray-500 mt-1">Compare the selected alpha/beta value or switch to the multi-ratio matrix.</p>
           </div>
 
           <div className="p-5 space-y-4">
             <div className="grid sm:grid-cols-3 gap-3">
               <div className="rounded-lg border border-gray-200 p-4">
                 <div className="text-xs text-gray-500 uppercase font-bold">Current Alpha/Beta</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">{alphaBeta || '-'} Gy</div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">
+                  {alphaBeta > 0 ? `${formatAlphaBeta(alphaBeta)} Gy` : '-'}
+                </div>
               </div>
               <div className="rounded-lg border border-gray-200 p-4">
                 <div className="text-xs text-gray-500 uppercase font-bold">Visible Rows</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">{tableRows.length}</div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">{filteredRegimens.length}</div>
               </div>
               <div className="rounded-lg border border-gray-200 p-4">
-                <div className="text-xs text-gray-500 uppercase font-bold">Custom Rows</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">{customRows.length}</div>
+                <div className="text-xs text-gray-500 uppercase font-bold">Matrix Ratios</div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">{alphaBetaComparisons.length}</div>
               </div>
             </div>
 
@@ -455,10 +551,27 @@ export default function BEDEQD2Calculator() {
         <div className="p-5 border-b border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Regimen Comparison Table</h2>
-              <p className="text-sm text-gray-500 mt-1">Rows recalculate when alpha/beta changes.</p>
+              <h2 className="text-lg font-bold text-gray-900">Regimen Comparison</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Review one alpha/beta ratio or compare common ratios side by side.
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                {(Object.keys(COMPARISON_VIEW_LABELS) as ComparisonView[]).map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => setComparisonView(view)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                      comparisonView === view
+                        ? 'bg-teal-600 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {COMPARISON_VIEW_LABELS[view]}
+                  </button>
+                ))}
+              </div>
               {(Object.keys(CATEGORY_LABELS) as RegimenFilter[]).map((filter) => (
                 <button
                   key={filter}
@@ -487,56 +600,154 @@ export default function BEDEQD2Calculator() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[860px]">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-bold text-gray-700">Regimen</th>
-                <th className="text-left px-4 py-3 font-bold text-gray-700">Type</th>
-                <th className="text-right px-4 py-3 font-bold text-gray-700">Total Dose</th>
-                <th className="text-right px-4 py-3 font-bold text-gray-700">Fractions</th>
-                <th className="text-right px-4 py-3 font-bold text-gray-700">Dose/Fx</th>
-                <th className="text-right px-4 py-3 font-bold text-gray-700">BED</th>
-                <th className="text-right px-4 py-3 font-bold text-gray-700">EQD2</th>
-                <th className="text-left px-4 py-3 font-bold text-gray-700">Context</th>
-                <th className="text-right px-4 py-3 font-bold text-gray-700">Use</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {tableRows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-semibold text-gray-900">{row.label}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex border rounded-full px-2.5 py-1 text-xs font-bold ${CATEGORY_STYLES[row.category]}`}>
-                      {CATEGORY_LABELS[row.category]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dose)} Gy</td>
-                  <td className="px-4 py-3 text-right text-gray-700">{row.fractions}</td>
-                  <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dosePerFraction)} Gy</td>
-                  <td className="px-4 py-3 text-right font-semibold text-teal-800">{formatDose(row.bed)} Gy</td>
-                  <td className="px-4 py-3 text-right font-semibold text-blue-800">{formatDose(row.eqd2)} Gy</td>
-                  <td className="px-4 py-3 text-gray-600">{row.note}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => applyRegimenToCalculator(row)}
-                      className="text-xs font-bold text-teal-700 hover:text-teal-900"
+        {comparisonView === 'selected' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[860px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-4 py-3 font-bold text-gray-700">Regimen</th>
+                  <th className="text-left px-4 py-3 font-bold text-gray-700">Type</th>
+                  <th className="text-right px-4 py-3 font-bold text-gray-700">Total Dose</th>
+                  <th className="text-right px-4 py-3 font-bold text-gray-700">Fractions</th>
+                  <th className="text-right px-4 py-3 font-bold text-gray-700">Dose/Fx</th>
+                  <th className="text-right px-4 py-3 font-bold text-gray-700">BED</th>
+                  <th className="text-right px-4 py-3 font-bold text-gray-700">EQD2</th>
+                  <th className="text-left px-4 py-3 font-bold text-gray-700">Context</th>
+                  <th className="text-right px-4 py-3 font-bold text-gray-700">Use</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {alphaBeta <= 0 && (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-10 text-center text-amber-700">
+                      Enter an alpha/beta value above 0 to calculate the selected-ratio table.
+                    </td>
+                  </tr>
+                )}
+                {alphaBeta > 0 && tableRows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-semibold text-gray-900">{row.label}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex border rounded-full px-2.5 py-1 text-xs font-bold ${CATEGORY_STYLES[row.category]}`}>
+                        {CATEGORY_LABELS[row.category]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dose)} Gy</td>
+                    <td className="px-4 py-3 text-right text-gray-700">{row.fractions}</td>
+                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dosePerFraction)} Gy</td>
+                    <td className="px-4 py-3 text-right font-semibold text-teal-800">{formatDose(row.bed)} Gy</td>
+                    <td className="px-4 py-3 text-right font-semibold text-blue-800">{formatDose(row.eqd2)} Gy</td>
+                    <td className="px-4 py-3 text-gray-600">{row.note}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => applyRegimenToCalculator(row)}
+                        className="text-xs font-bold text-teal-700 hover:text-teal-900"
+                      >
+                        Load
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {alphaBeta > 0 && tableRows.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-10 text-center text-gray-500">
+                      No regimens in this category yet. Add a custom regimen from the calculator.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[1120px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th rowSpan={2} className="text-left px-4 py-3 font-bold text-gray-700 align-bottom">Regimen</th>
+                  <th rowSpan={2} className="text-left px-4 py-3 font-bold text-gray-700 align-bottom">Type</th>
+                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Total Dose</th>
+                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Fractions</th>
+                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Dose/Fx</th>
+                  {alphaBetaComparisons.map((comparison) => (
+                    <th
+                      key={comparison.id}
+                      colSpan={2}
+                      className="text-center px-4 py-3 font-bold text-gray-700 border-l border-gray-200"
                     >
-                      Load
-                    </button>
-                  </td>
+                      <span className="block">{comparison.label}</span>
+                      <span className="block text-xs font-medium text-gray-500">{comparison.helper}</span>
+                    </th>
+                  ))}
+                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Use</th>
                 </tr>
-              ))}
-              {tableRows.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-gray-500">
-                    No regimens in this category yet. Add a custom regimen from the calculator.
-                  </td>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {alphaBetaComparisons.map((comparison) => (
+                    <Fragment key={comparison.id}>
+                      <th
+                        key={`${comparison.id}-bed`}
+                        className="text-right px-4 py-2 text-xs font-bold uppercase text-teal-700 border-l border-gray-200"
+                      >
+                        BED
+                      </th>
+                      <th
+                        key={`${comparison.id}-eqd2`}
+                        className="text-right px-4 py-2 text-xs font-bold uppercase text-blue-700"
+                      >
+                        EQD2
+                      </th>
+                    </Fragment>
+                  ))}
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {matrixRows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-semibold text-gray-900">{row.label}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex border rounded-full px-2.5 py-1 text-xs font-bold ${CATEGORY_STYLES[row.category]}`}>
+                        {CATEGORY_LABELS[row.category]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dose)} Gy</td>
+                    <td className="px-4 py-3 text-right text-gray-700">{row.fractions}</td>
+                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dosePerFraction)} Gy</td>
+                    {row.comparisons.map((comparison) => (
+                      <Fragment key={`${row.id}-${comparison.alphaBetaId}`}>
+                        <td
+                          key={`${row.id}-${comparison.alphaBetaId}-bed`}
+                          className="px-4 py-3 text-right font-semibold text-teal-800 border-l border-gray-100"
+                        >
+                          {formatDose(comparison.bed)} Gy
+                        </td>
+                        <td
+                          key={`${row.id}-${comparison.alphaBetaId}-eqd2`}
+                          className="px-4 py-3 text-right font-semibold text-blue-800"
+                        >
+                          {formatDose(comparison.eqd2)} Gy
+                        </td>
+                      </Fragment>
+                    ))}
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => applyRegimenToCalculator(row)}
+                        className="text-xs font-bold text-teal-700 hover:text-teal-900"
+                      >
+                        Load
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {matrixRows.length === 0 && (
+                  <tr>
+                    <td colSpan={6 + alphaBetaComparisons.length * 2} className="px-4 py-10 text-center text-gray-500">
+                      No regimens in this category yet. Add a custom regimen from the calculator.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 text-xs text-gray-600">
