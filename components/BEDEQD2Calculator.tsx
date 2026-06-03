@@ -384,8 +384,7 @@ export default function BEDEQD2Calculator() {
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-6 items-start">
-        <section className="bg-white border border-gray-200 rounded-lg shadow-sm">
+      <section className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="border-b border-gray-200 p-5">
             <h2 className="text-lg font-bold text-gray-900">Single Regimen</h2>
             <p className="text-sm text-gray-500 mt-1">Enter a dose schedule and select the tissue alpha/beta ratio.</p>
@@ -433,7 +432,7 @@ export default function BEDEQD2Calculator() {
                 <label className="block text-xs font-bold text-gray-600 uppercase">Alpha/Beta</label>
                 <div className="text-xs text-gray-500">Gy</div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 {ALPHA_BETA_OPTIONS.map((option) => (
                   <button
                     key={option.key}
@@ -513,39 +512,7 @@ export default function BEDEQD2Calculator() {
               Add Current Regimen to Table
             </button>
           </div>
-        </section>
-
-        <section className="bg-white border border-gray-200 rounded-lg shadow-sm">
-          <div className="border-b border-gray-200 p-5">
-            <h2 className="text-lg font-bold text-gray-900">Quick Interpretation</h2>
-            <p className="text-sm text-gray-500 mt-1">Compare the selected alpha/beta value or switch to the multi-ratio matrix.</p>
-          </div>
-
-          <div className="p-5 space-y-4">
-            <div className="grid sm:grid-cols-3 gap-3">
-              <div className="rounded-lg border border-gray-200 p-4">
-                <div className="text-xs text-gray-500 uppercase font-bold">Current Alpha/Beta</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">
-                  {alphaBeta > 0 ? `${formatAlphaBeta(alphaBeta)} Gy` : '-'}
-                </div>
-              </div>
-              <div className="rounded-lg border border-gray-200 p-4">
-                <div className="text-xs text-gray-500 uppercase font-bold">Visible Rows</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">{filteredRegimens.length}</div>
-              </div>
-              <div className="rounded-lg border border-gray-200 p-4">
-                <div className="text-xs text-gray-500 uppercase font-bold">Matrix Ratios</div>
-                <div className="text-2xl font-bold text-gray-900 mt-1">{alphaBetaComparisons.length}</div>
-              </div>
-            </div>
-
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-sm text-teal-900">
-              Standard 2 Gy fractions return EQD2 equal to physical dose. Larger dose per fraction increases BED and EQD2,
-              especially when the selected alpha/beta ratio is low.
-            </div>
-          </div>
-        </section>
-      </div>
+      </section>
 
       <section className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-200">
