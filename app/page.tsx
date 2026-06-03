@@ -6,6 +6,7 @@ import Calculator from '@/components/Calculator';
 import GuidelinesTab from '@/components/GuidelinesTab';
 import SalvagePathway from '@/components/SalvagePathway';
 import OARDoseBudget from '@/components/OARDoseBudget';
+import BEDEQD2Calculator from '@/components/BEDEQD2Calculator';
 
 function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
   return (
@@ -66,7 +67,7 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
 
           {/* Footer */}
           <p className="text-xs text-gray-400 text-center mt-4">
-            v2.4.0 - Educational Release
+            v2.5.0 - Educational Release
           </p>
         </div>
       </div>
@@ -206,7 +207,7 @@ function HowToUseModal({ onClose }: { onClose: () => void }) {
 }
 
 type ViewMode = 'landing' | 'radonc' | 'radonc-landing' | 'salvage';
-type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'guidelines';
+type RadOncTab = 'pathway' | 'calculator' | 'dosebudget' | 'bedeqd2' | 'guidelines';
 type LandingTab = 'home' | 'about' | 'dosebudget' | 'guidelines';
 
 export default function Home() {
@@ -553,7 +554,7 @@ export default function Home() {
               <strong>DISCLAIMER:</strong> For educational and research purposes only. Not validated for clinical use. 
               This tool aids in risk assessment but does not replace multidisciplinary review.
             </p>
-            <p className="text-xs text-gray-400 text-center mt-2">v2.4.0</p>
+            <p className="text-xs text-gray-400 text-center mt-2">v2.5.0</p>
             <a href="/admin" className="absolute bottom-2 right-4 text-[10px] text-gray-300 hover:text-gray-400 transition-colors">admin</a>
           </div>
         </footer>
@@ -681,6 +682,34 @@ export default function Home() {
                 </ul>
               </button>
 
+              {/* BED / EQD2 Calculator Card */}
+              <button
+                onClick={() => { setRadOncTab('bedeqd2'); setViewMode('radonc'); }}
+                className="bg-white border-2 border-gray-200 hover:border-emerald-500 rounded-2xl p-8 text-left transition-all group shadow-sm hover:shadow-xl"
+              >
+                <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-emerald-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-emerald-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 19h16M7 16l3-8 3 8m-5-3h4m4 3V8m0 8h4m-4-4h3" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors">BED / EQD2 Calculator</h3>
+                <p className="text-gray-600 text-sm mb-4">Convert dose schedules and compare biological dose across fractionation schemes</p>
+                <ul className="space-y-2 text-sm text-gray-500">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                    Single-regimen BED and EQD2 conversion
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                    Alpha/beta presets for tumor, late tissue, and CNS
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                    Filterable all-regimen comparison table
+                  </li>
+                </ul>
+              </button>
+
               {/* Guidelines Card */}
               <button
                 onClick={() => { setRadOncTab('guidelines'); setViewMode('radonc'); }}
@@ -800,6 +829,21 @@ export default function Home() {
                 </span>
               </button>
               <button
+                onClick={() => setRadOncTab('bedeqd2')}
+                className={`px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                  radOncTab === 'bedeqd2'
+                    ? 'border-teal-600 text-teal-700 bg-teal-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 19h16M7 16l3-8 3 8m-5-3h4m4 3V8m0 8h4m-4-4h3" />
+                  </svg>
+                  BED / EQD2
+                </span>
+              </button>
+              <button
                 onClick={() => setRadOncTab('guidelines')}
                 className={`px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                   radOncTab === 'guidelines'
@@ -830,6 +874,10 @@ export default function Home() {
             <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
               <OARDoseBudget />
             </div>
+          ) : radOncTab === 'bedeqd2' ? (
+            <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
+              <BEDEQD2Calculator />
+            </div>
           ) : (
             <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
               <GuidelinesTab />
@@ -846,7 +894,7 @@ export default function Home() {
                 This tool aids in risk assessment but does not replace multidisciplinary review.
               </p>
               <div className="text-xs text-gray-400 flex items-center gap-3">
-                <span>v2.4.0</span>
+                <span>v2.5.0</span>
                 <a href="/admin" className="text-[10px] text-gray-300 hover:text-gray-400 transition-colors ml-2">admin</a>
               </div>
             </div>
@@ -900,7 +948,7 @@ export default function Home() {
               This tool aids in risk assessment but does not replace multidisciplinary review.
             </p>
             <div className="text-xs text-gray-400 flex items-center gap-3">
-              <span>v2.4.0</span>
+              <span>v2.5.0</span>
               <a href="/admin" className="text-[10px] text-gray-300 hover:text-gray-400 transition-colors ml-2">admin</a>
             </div>
           </div>

@@ -111,9 +111,9 @@ describe('Cumulative Dose Calculations', () => {
   test('calculates cumulative dose from prior and planned RT', () => {
     // Prior: 70 Gy in 35 fx (α/β = 10)
     // Planned: 40 Gy in 5 fx (α/β = 10)
-    const result = calculateCumulativeDose(70, 35, 40, 5, 10);
+    const result = calculateCumulativeDose([{ dose: 70, fractions: 35 }], 40, 5, 10);
     
-    expect(result.priorEQD2).toBeCloseTo(70, 1);
+    expect(result.totalPriorEQD2).toBeCloseTo(70, 1);
     expect(result.plannedEQD2).toBeCloseTo(60, 1);
     expect(result.cumulativeEQD2).toBeCloseTo(130, 1);
   });
@@ -122,11 +122,11 @@ describe('Cumulative Dose Calculations', () => {
     // Prior: 50 Gy in 25 fx
     // Planned: 30 Gy in 15 fx
     // α/β = 2 (late-responding tissue)
-    const result = calculateCumulativeDose(50, 25, 30, 15, 2);
+    const result = calculateCumulativeDose([{ dose: 50, fractions: 25 }], 30, 15, 2);
     
     // Prior BED = 25 * 2 * (1 + 2/2) = 100 Gy
     // Prior EQD2 = 100 / (1 + 2/2) = 50 Gy
-    expect(result.priorEQD2).toBeCloseTo(50, 1);
+    expect(result.totalPriorEQD2).toBeCloseTo(50, 1);
     
     // Planned BED = 15 * 2 * (1 + 2/2) = 60 Gy
     // Planned EQD2 = 60 / 2 = 30 Gy
@@ -137,9 +137,9 @@ describe('Cumulative Dose Calculations', () => {
   });
 
   test('throws error for invalid inputs', () => {
-    expect(() => calculateCumulativeDose(-70, 35, 40, 5, 10)).toThrow();
-    expect(() => calculateCumulativeDose(70, 35, -40, 5, 10)).toThrow();
-    expect(() => calculateCumulativeDose(70, 0, 40, 5, 10)).toThrow();
+    expect(() => calculateCumulativeDose([{ dose: -70, fractions: 35 }], 40, 5, 10)).toThrow();
+    expect(() => calculateCumulativeDose([{ dose: 70, fractions: 35 }], -40, 5, 10)).toThrow();
+    expect(() => calculateCumulativeDose([{ dose: 70, fractions: 0 }], 40, 5, 10)).toThrow();
   });
 });
 
@@ -221,13 +221,13 @@ describe('OAR Constraint Checking', () => {
     const spinalCord = getOARConstraint('Spinal cord');
     if (!spinalCord) throw new Error('Spinal cord not found');
 
-    // Prior: 50 Gy in 25 fx, Planned: 20 Gy in 10 fx (α/β = 2)
-    // Prior EQD2 = 50 Gy, Planned EQD2 = 20 Gy, Total = 70 Gy
-    // Limit is 50 Gy → exceeds
-    const result = checkOARConstraint(spinalCord, 50, 25, 20, 10, 12);
+    // Prior: 50 Gy in 25 fx, Planned: 30 Gy in 15 fx (α/β = 2)
+    // Prior EQD2 = 50 Gy, Planned EQD2 = 30 Gy, Total = 80 Gy
+    // Limit is 70 Gy, so this exceeds the current evidence-based cord limit.
+    const result = checkOARConstraint(spinalCord, [{ dose: 50, fractions: 25 }], 30, 15, 12);
     
-    expect(result.cumulativeEQD2).toBeCloseTo(70, 1);
-    expect(result.percentOfLimit).toBeCloseTo(140, 1);
+    expect(result.cumulativeEQD2).toBeCloseTo(80, 1);
+    expect(result.percentOfLimit).toBeCloseTo(114.3, 1);
     expect(result.warningLevel).toBe('exceeds');
     expect(result.message).toContain('EXCEEDS');
   });
@@ -236,9 +236,9 @@ describe('OAR Constraint Checking', () => {
     const spinalCord = getOARConstraint('Spinal cord');
     if (!spinalCord) throw new Error('Spinal cord not found');
 
-    // Prior: 30 Gy in 15 fx, Planned: 15 Gy in 15 fx
-    // Total EQD2 ≈ 45 Gy (90% of 50 Gy limit)
-    const result = checkOARConstraint(spinalCord, 30, 15, 15, 15, 24);
+    // Prior: 40 Gy in 20 fx, Planned: 20 Gy in 10 fx
+    // Total EQD2 = 60 Gy (86% of current 70 Gy limit)
+    const result = checkOARConstraint(spinalCord, [{ dose: 40, fractions: 20 }], 20, 10, 24);
     
     expect(result.percentOfLimit).toBeGreaterThan(80);
     expect(result.percentOfLimit).toBeLessThanOrEqual(100);
@@ -251,10 +251,10 @@ describe('OAR Constraint Checking', () => {
 
     // Prior: 20 Gy in 10 fx, Planned: 10 Gy in 5 fx
     // Total EQD2 = 30 Gy (60% of limit)
-    const result = checkOARConstraint(spinalCord, 20, 10, 10, 5, 12);
+    const result = checkOARConstraint(spinalCord, [{ dose: 20, fractions: 10 }], 10, 5, 12);
     
     expect(result.cumulativeEQD2).toBeCloseTo(30, 1);
-    expect(result.percentOfLimit).toBeCloseTo(60, 1);
+    expect(result.percentOfLimit).toBeCloseTo(42.9, 1);
     expect(result.warningLevel).toBe('safe');
     expect(result.message).toContain('SAFE');
   });
@@ -263,10 +263,11 @@ describe('OAR Constraint Checking', () => {
     const brainstem = getOARConstraint('Brainstem');
     if (!brainstem) throw new Error('Brainstem not found');
 
-    const result = checkOARConstraint(brainstem, 50, 25, 20, 10, 12);
+    const result = checkOARConstraint(brainstem, [{ dose: 50, fractions: 25 }], 20, 10, 12);
     
     expect(result.doseBreakdown).toBeDefined();
-    expect(result.doseBreakdown.priorEQD2).toBeCloseTo(50, 1);
+    expect(result.doseBreakdown.totalPriorEQD2).toBeCloseTo(50, 1);
+    expect(result.doseBreakdown.priorEQD2s[0]).toBeCloseTo(50, 1);
     expect(result.doseBreakdown.plannedEQD2).toBeCloseTo(20, 1);
     expect(result.doseBreakdown.cumulativeEQD2).toBeCloseTo(70, 1);
   });
@@ -275,7 +276,7 @@ describe('OAR Constraint Checking', () => {
 describe('Check All OAR Constraints', () => {
   test('evaluates all OARs and returns sorted results', () => {
     // Scenario: Prior 60 Gy/30fx, Planned 40 Gy/10fx, 18 months interval
-    const results = checkAllOARConstraints(60, 30, 40, 10, 18);
+    const results = checkAllOARConstraints([{ dose: 60, fractions: 30 }], 40, 10, 18);
     
     expect(results.length).toBe(OAR_CONSTRAINTS.length);
     
@@ -288,7 +289,7 @@ describe('Check All OAR Constraints', () => {
   });
 
   test('OAR summary provides correct counts', () => {
-    const results = checkAllOARConstraints(30, 15, 20, 10, 24);
+    const results = checkAllOARConstraints([{ dose: 30, fractions: 15 }], 20, 10, 24);
     const summary = getOARSummary(results);
     
     expect(summary.total).toBe(results.length);
