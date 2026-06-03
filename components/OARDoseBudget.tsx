@@ -5,12 +5,14 @@ import {
   OAR_BUDGET_DATA,
   calculateOARBudget,
   eqd2ToPhysicalDose,
+  getOARBudgetData,
   getRiskColorClass,
   type OARBudgetInput,
   type OARBudgetResult,
   type OARBudgetData,
   type PriorRTCourse,
 } from '@/lib/oarDoseBudget';
+import { getConstraintReference } from '@/lib/constraintReferences';
 import { useEditableContent } from '@/lib/hooks/useEditableContent';
 import Tooltip from './Tooltip';
 
@@ -38,12 +40,17 @@ export default function OARDoseBudget() {
     if (!content?.oarConstraints?.length) {
       return OAR_BUDGET_DATA;
     }
-    return content.oarConstraints.map((oar) => ({
-      name: oar.name,
-      lifetimeToleranceEQD2: oar.limitEQD2,
-      alphaBeta: oar.alphaBeta,
-      complication: oar.complication,
-    }));
+    return content.oarConstraints.map((oar) => {
+      const staticOAR = getOARBudgetData(oar.name);
+
+      return {
+        name: oar.name,
+        lifetimeToleranceEQD2: oar.limitEQD2,
+        alphaBeta: oar.alphaBeta,
+        complication: oar.complication,
+        specialNote: staticOAR?.specialNote,
+      };
+    });
   }, [content]);
 
   const handleAddOAR = (oar: OARBudgetData) => {
@@ -476,6 +483,11 @@ export default function OARDoseBudget() {
     const displayRisk = displayPercent > 50 ? 'safe' : displayPercent > 25 ? 'caution' : displayPercent > 10 ? 'warning' : 'critical';
     const colors = getRiskColorClass(isConservative ? displayRisk : result.riskLevel);
     const riskLabel = (isConservative ? displayRisk : result.riskLevel).toUpperCase();
+    const sourceReference = getConstraintReference(
+      result.oar.name,
+      result.oar.lifetimeToleranceEQD2,
+      result.oar.alphaBeta
+    );
 
     return (
       <div key={result.oar.name} className={`${colors.bg} border-2 ${colors.border} rounded-lg p-5`}>
@@ -648,6 +660,24 @@ export default function OARDoseBudget() {
         {result.oar.specialNote && (
           <div className="mt-3 bg-blue-50 border border-blue-300 rounded-lg p-3 text-xs text-blue-800">
             <strong>Note:</strong> {result.oar.specialNote}
+          </div>
+        )}
+
+        {sourceReference && (
+          <div className="mt-3 flex justify-end">
+            <a
+              href={sourceReference.url}
+              target="_blank"
+              rel="noreferrer"
+              title={sourceReference.note}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-900"
+            >
+              Source: {sourceReference.sourceLabel}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+              </svg>
+            </a>
           </div>
         )}
       </div>

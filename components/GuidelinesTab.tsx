@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { VERIFIED_CONSTRAINT_REFERENCES } from '@/lib/constraintReferences';
 import { useEditableContent } from '@/lib/hooks/useEditableContent';
 
-type Section = 'overview' | 'constraints' | 'outcomes' | 'cbs' | 'references';
+type Section = 'overview' | 'constraints' | 'constraintSources' | 'outcomes' | 'cbs' | 'references';
 
 export default function GuidelinesTab() {
   const [activeSection, setActiveSection] = useState<Section>('overview');
@@ -13,6 +14,7 @@ export default function GuidelinesTab() {
   const sections: { id: Section; label: string }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'constraints', label: 'OAR Constraints' },
+    { id: 'constraintSources', label: 'Constraint Sources' },
     { id: 'outcomes', label: 'Outcomes by Site' },
     { id: 'cbs', label: 'CBS/BE Risk' },
     { id: 'references', label: 'References' },
@@ -423,6 +425,67 @@ export default function GuidelinesTab() {
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Constraint Sources */}
+      {activeSection === 'constraintSources' && (
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Verified Constraint Sources</h2>
+            <p className="text-sm text-gray-600">
+              Source links are shown only for calculator thresholds that match a published value closely enough. Estimated, institutional, or surrogate-only cumulative limits remain unlinked until reviewed.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="p-3 text-left font-semibold min-w-[180px]">Structure</th>
+                  <th className="p-3 text-left font-semibold min-w-[140px]">Constraint</th>
+                  <th className="p-3 text-left font-semibold min-w-[210px]">Evidence</th>
+                  <th className="p-3 text-left font-semibold min-w-[260px]">Source</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {VERIFIED_CONSTRAINT_REFERENCES.map((reference) => (
+                  <tr key={reference.id} className="align-top">
+                    <td className="p-3">
+                      <div className="font-semibold text-gray-900">{reference.structure}</div>
+                      <div className="text-xs text-gray-500 mt-1">{reference.metric}</div>
+                    </td>
+                    <td className="p-3">
+                      <span className="inline-flex rounded-md bg-teal-50 px-2 py-1 text-xs font-bold text-teal-800 ring-1 ring-teal-200">
+                        {reference.constraint}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <div className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ring-1 ${
+                        reference.evidenceType === 'Cumulative re-irradiation'
+                          ? 'bg-green-50 text-green-800 ring-green-200'
+                          : 'bg-amber-50 text-amber-800 ring-amber-200'
+                      }`}>
+                        {reference.evidenceType}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-2">{reference.note}</div>
+                    </td>
+                    <td className="p-3">
+                      <a
+                        href={reference.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-900"
+                      >
+                        {reference.sourceLabel}
+                      </a>
+                      <div className="text-xs text-gray-500 mt-1">{reference.citation}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
