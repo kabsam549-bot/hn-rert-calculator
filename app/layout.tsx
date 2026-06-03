@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: "Educational decision support tool for head and neck cancer re-irradiation assessment",
   keywords: ["head and neck cancer", "re-irradiation", "radiation oncology", "medical calculator"],
   authors: [{ name: "Medical Education Team" }],
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({

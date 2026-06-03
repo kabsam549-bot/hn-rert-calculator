@@ -714,7 +714,8 @@ export default function Home() {
               >
                 <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-emerald-600 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-emerald-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 19h16M7 16l3-8 3 8m-5-3h4m4 3V8m0 8h4m-4-4h3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8M8 11h2m3 0h3M8 15h2m3 0h3" />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors">BED / EQD2 Calculator</h3>
@@ -868,7 +869,8 @@ export default function Home() {
               >
                 <span className="flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 19h16M7 16l3-8 3 8m-5-3h4m4 3V8m0 8h4m-4-4h3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8M8 11h2m3 0h3M8 15h2m3 0h3" />
                   </svg>
                   BED / EQD2
                 </span>

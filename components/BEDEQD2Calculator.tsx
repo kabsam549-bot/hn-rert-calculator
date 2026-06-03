@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ALPHA_BETA_RATIOS,
   calculateBEDAndEQD2,
@@ -8,7 +8,6 @@ import {
 } from '@/lib/bedCalculations';
 
 type RegimenCategory = 'sbrt' | 'conventional' | 'palliative' | 'custom';
-type RegimenFilter = RegimenCategory | 'all';
 type AlphaBetaPreset = 'tumor' | 'late' | 'cns' | 'custom';
 type ComparisonView = 'selected' | 'matrix';
 
@@ -43,24 +42,9 @@ interface RegimenMatrixRow extends Regimen {
   }[];
 }
 
-const CATEGORY_LABELS: Record<RegimenFilter, string> = {
-  all: 'All',
-  sbrt: 'SBRT',
-  conventional: 'Conventional',
-  palliative: 'Palliative',
-  custom: 'Custom',
-};
-
-const CATEGORY_STYLES: Record<RegimenCategory, string> = {
-  sbrt: 'bg-teal-50 text-teal-700 border-teal-200',
-  conventional: 'bg-blue-50 text-blue-700 border-blue-200',
-  palliative: 'bg-amber-50 text-amber-700 border-amber-200',
-  custom: 'bg-purple-50 text-purple-700 border-purple-200',
-};
-
 const COMPARISON_VIEW_LABELS: Record<ComparisonView, string> = {
-  selected: 'Selected alpha/beta',
-  matrix: 'Multi alpha/beta',
+  selected: 'Single',
+  matrix: 'Multiple',
 };
 
 const STANDARD_REGIMENS: Regimen[] = [
@@ -189,21 +173,21 @@ const ALPHA_BETA_OPTIONS: {
 const BASE_ALPHA_BETA_COMPARISONS: AlphaBetaComparison[] = [
   {
     id: 'tumor-10',
-    label: 'Tumor / early',
+    label: 'a/b 10',
     value: ALPHA_BETA_RATIOS.TUMOR_EARLY,
-    helper: 'alpha/beta 10 Gy',
+    helper: '10 Gy',
   },
   {
     id: 'late-3',
-    label: 'Late normal',
+    label: 'a/b 3',
     value: ALPHA_BETA_RATIOS.LATE_GENERAL,
-    helper: 'alpha/beta 3 Gy',
+    helper: '3 Gy',
   },
   {
     id: 'cns-2',
-    label: 'CNS / optic',
+    label: 'a/b 2',
     value: ALPHA_BETA_RATIOS.CNS_LATE,
-    helper: 'alpha/beta 2 Gy',
+    helper: '2 Gy',
   },
 ];
 
@@ -263,9 +247,9 @@ function getAlphaBetaComparisons(alphaBeta: number): AlphaBetaComparison[] {
   if (alphaBeta > 0 && !comparisons.some((comparison) => isSameAlphaBeta(comparison.value, alphaBeta))) {
     comparisons.push({
       id: 'selected-custom',
-      label: 'Selected custom',
+      label: `a/b ${formatAlphaBeta(alphaBeta)}`,
       value: alphaBeta,
-      helper: `alpha/beta ${formatAlphaBeta(alphaBeta)} Gy`,
+      helper: `${formatAlphaBeta(alphaBeta)} Gy`,
     });
   }
 
@@ -277,9 +261,9 @@ export default function BEDEQD2Calculator() {
   const [fractions, setFractions] = useState<number | undefined>(4);
   const [alphaBeta, setAlphaBeta] = useState<number>(ALPHA_BETA_RATIOS.TUMOR_EARLY);
   const [alphaBetaPreset, setAlphaBetaPreset] = useState<AlphaBetaPreset>('tumor');
-  const [activeFilter, setActiveFilter] = useState<RegimenFilter>('all');
   const [comparisonView, setComparisonView] = useState<ComparisonView>('selected');
   const [customRows, setCustomRows] = useState<Regimen[]>([]);
+  const [showFormula, setShowFormula] = useState(false);
 
   const currentRegimen = useMemo<Regimen | undefined>(() => {
     if (!isValidRegimen(dose, fractions) || alphaBeta <= 0 || dose === undefined || fractions === undefined) {
@@ -308,41 +292,21 @@ export default function BEDEQD2Calculator() {
     }
   }, [alphaBeta, currentRegimen]);
 
-  const filteredRegimens = useMemo(() => {
-    const rows = [...STANDARD_REGIMENS, ...customRows];
-    return activeFilter === 'all'
-      ? rows
-      : rows.filter((row) => row.category === activeFilter);
-  }, [activeFilter, customRows]);
+  const allRegimens = useMemo(() => [...STANDARD_REGIMENS, ...customRows], [customRows]);
 
   const tableRows = useMemo(() => {
     if (alphaBeta <= 0) {
       return [];
     }
 
-    return filteredRegimens.map((row) => calculateRegimen(row, alphaBeta));
-  }, [alphaBeta, filteredRegimens]);
+    return allRegimens.map((row) => calculateRegimen(row, alphaBeta));
+  }, [allRegimens, alphaBeta]);
 
   const alphaBetaComparisons = useMemo(() => getAlphaBetaComparisons(alphaBeta), [alphaBeta]);
 
   const matrixRows = useMemo(() => {
-    return filteredRegimens.map((row) => calculateMatrixRow(row, alphaBetaComparisons));
-  }, [alphaBetaComparisons, filteredRegimens]);
-
-  const counts = useMemo(() => {
-    const rows = [...STANDARD_REGIMENS, ...customRows];
-    return rows.reduce<Record<RegimenFilter, number>>((acc, row) => {
-      acc.all += 1;
-      acc[row.category] += 1;
-      return acc;
-    }, {
-      all: 0,
-      sbrt: 0,
-      conventional: 0,
-      palliative: 0,
-      custom: 0,
-    });
-  }, [customRows]);
+    return allRegimens.map((row) => calculateMatrixRow(row, alphaBetaComparisons));
+  }, [allRegimens, alphaBetaComparisons]);
 
   const handleAlphaBetaPreset = (preset: AlphaBetaPreset) => {
     setAlphaBetaPreset(preset);
@@ -367,7 +331,6 @@ export default function BEDEQD2Calculator() {
         note: 'Added from calculator',
       },
     ]);
-    setActiveFilter('all');
   };
 
   const applyRegimenToCalculator = (regimen: Regimen) => {
@@ -384,72 +347,46 @@ export default function BEDEQD2Calculator() {
         </p>
       </div>
 
-      <section className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-          <div className="border-b border-gray-200 p-5">
-            <h2 className="text-lg font-bold text-gray-900">Single Regimen</h2>
-            <p className="text-sm text-gray-500 mt-1">Enter a dose schedule and select the tissue alpha/beta ratio.</p>
-          </div>
-
-          <div className="p-5 space-y-5">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Total Dose</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={dose ?? ''}
-                    onChange={(event) => setDose(parsePositiveNumber(event.target.value))}
-                    className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                    min="0"
-                    max="200"
-                    step="0.1"
-                    inputMode="decimal"
-                  />
-                  <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">Gy</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Fractions</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={fractions ?? ''}
-                    onChange={(event) => setFractions(parsePositiveNumber(event.target.value))}
-                    className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                    min="1"
-                    max="99"
-                    step="1"
-                    inputMode="numeric"
-                  />
-                  <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">fx</span>
-                </div>
+      <section className="bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="p-5 space-y-5">
+          <div className="grid lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Total Dose</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={dose ?? ''}
+                  onChange={(event) => setDose(parsePositiveNumber(event.target.value))}
+                  className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  min="0"
+                  max="200"
+                  step="0.1"
+                  inputMode="decimal"
+                />
+                <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">Gy</span>
               </div>
             </div>
 
             <div>
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <label className="block text-xs font-bold text-gray-600 uppercase">Alpha/Beta</label>
-                <div className="text-xs text-gray-500">Gy</div>
+              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Fractions</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={fractions ?? ''}
+                  onChange={(event) => setFractions(parsePositiveNumber(event.target.value))}
+                  className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  min="1"
+                  max="99"
+                  step="1"
+                  inputMode="numeric"
+                />
+                <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">fx</span>
               </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                {ALPHA_BETA_OPTIONS.map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => handleAlphaBetaPreset(option.key)}
-                    className={`rounded-lg border px-3 py-2 text-left transition-colors ${
-                      alphaBetaPreset === option.key
-                        ? 'border-teal-600 bg-teal-50 text-teal-800'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold">{option.label}</span>
-                    <span className="block text-xs">{option.helper}</span>
-                  </button>
-                ))}
-              </div>
+            </div>
 
-              <div className="mt-3 relative max-w-[180px]">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Alpha/Beta</label>
+              <div className="relative">
                 <input
                   type="number"
                   value={alphaBeta}
@@ -457,155 +394,146 @@ export default function BEDEQD2Calculator() {
                     setAlphaBetaPreset('custom');
                     setAlphaBeta(parsePositiveNumber(event.target.value) ?? 0);
                   }}
-                  className="w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   min="0.1"
                   max="30"
                   step="0.1"
                   inputMode="decimal"
                 />
-                <span className="absolute right-3 top-2.5 text-xs text-gray-500 pointer-events-none">Gy</span>
+                <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">Gy</span>
               </div>
             </div>
+          </div>
 
-            {currentResult ? (
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="text-xs text-gray-500 mb-1">Dose/Fx</div>
-                  <div className="text-xl font-bold text-gray-900">{formatDose(currentResult.dosePerFraction)}</div>
-                  <div className="text-xs text-gray-500">Gy</div>
-                </div>
-                <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                  <div className="text-xs text-teal-700 mb-1">BED</div>
-                  <div className="text-xl font-bold text-teal-900">{formatDose(currentResult.bed)}</div>
-                  <div className="text-xs text-teal-700">Gy</div>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <div className="text-xs text-blue-700 mb-1">EQD2</div>
-                  <div className="text-xl font-bold text-blue-900">{formatDose(currentResult.eqd2)}</div>
-                  <div className="text-xs text-blue-700">Gy</div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                Enter a positive dose, whole-number fractions, and alpha/beta above 0.
-              </div>
-            )}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {ALPHA_BETA_OPTIONS.map((option) => (
+              <button
+                key={option.key}
+                onClick={() => handleAlphaBetaPreset(option.key)}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  alphaBetaPreset === option.key
+                    ? 'border-teal-600 bg-teal-50 text-teal-800'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <span className="block text-sm font-semibold">{option.label}</span>
+                <span className="block text-xs">{option.helper}</span>
+              </button>
+            ))}
+          </div>
 
+          {currentResult ? (
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="text-xs text-gray-500 mb-1">Dose/Fx</div>
+                <div className="text-2xl font-bold text-gray-900">{formatDose(currentResult.dosePerFraction)}</div>
+                <div className="text-xs text-gray-500">Gy</div>
+              </div>
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                <div className="text-xs text-teal-700 mb-1">BED</div>
+                <div className="text-2xl font-bold text-teal-900">{formatDose(currentResult.bed)}</div>
+                <div className="text-xs text-teal-700">Gy</div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="text-xs text-blue-700 mb-1">EQD2</div>
+                <div className="text-2xl font-bold text-blue-900">{formatDose(currentResult.eqd2)}</div>
+                <div className="text-xs text-blue-700">Gy</div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+              Enter a positive dose, whole-number fractions, and alpha/beta above 0.
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={addCurrentToTable}
+              disabled={!currentResult}
+              className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors ${
+                currentResult
+                  ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Add Current Regimen
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFormula((value) => !value)}
+              className="sm:w-36 py-3 px-4 rounded-lg border border-gray-200 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              {showFormula ? 'Hide Formula' : 'Formula'}
+            </button>
+          </div>
+
+          {showFormula && (
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700">
-              <div className="font-bold text-slate-900 mb-2">Formula</div>
               <div className="space-y-1 font-mono text-xs">
                 <div>d = total dose / fractions</div>
                 <div>BED = D x (1 + d / (alpha/beta))</div>
                 <div>EQD2 = BED / (1 + 2 / (alpha/beta))</div>
               </div>
             </div>
-
-            <button
-              onClick={addCurrentToTable}
-              disabled={!currentResult}
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors ${
-                currentResult
-                  ? 'bg-teal-600 hover:bg-teal-700 text-white'
-                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Add Current Regimen to Table
-            </button>
-          </div>
+          )}
+        </div>
       </section>
 
       <section className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Regimen Comparison</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Review one alpha/beta ratio or compare common ratios side by side.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                {(Object.keys(COMPARISON_VIEW_LABELS) as ComparisonView[]).map((view) => (
-                  <button
-                    key={view}
-                    onClick={() => setComparisonView(view)}
-                    className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                      comparisonView === view
-                        ? 'bg-teal-600 text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {COMPARISON_VIEW_LABELS[view]}
-                  </button>
-                ))}
-              </div>
-              {(Object.keys(CATEGORY_LABELS) as RegimenFilter[]).map((filter) => (
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+              {(Object.keys(COMPARISON_VIEW_LABELS) as ComparisonView[]).map((view) => (
                 <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
-                    activeFilter === filter
-                      ? 'border-teal-600 bg-teal-600 text-white'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  key={view}
+                  onClick={() => setComparisonView(view)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                    comparisonView === view
+                      ? 'bg-teal-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  {CATEGORY_LABELS[filter]}
-                  <span className={`ml-2 text-xs ${activeFilter === filter ? 'text-teal-100' : 'text-gray-400'}`}>
-                    {counts[filter]}
-                  </span>
+                  {COMPARISON_VIEW_LABELS[view]}
                 </button>
               ))}
-              {customRows.length > 0 && (
-                <button
-                  onClick={() => setCustomRows([])}
-                  className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors"
-                >
-                  Clear Custom
-                </button>
-              )}
             </div>
           </div>
         </div>
 
         {comparisonView === 'selected' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[860px]">
+          <>
+            <div className="hidden md:block">
+              <table className="w-full table-fixed text-xs lg:text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 font-bold text-gray-700">Regimen</th>
-                  <th className="text-left px-4 py-3 font-bold text-gray-700">Type</th>
-                  <th className="text-right px-4 py-3 font-bold text-gray-700">Total Dose</th>
-                  <th className="text-right px-4 py-3 font-bold text-gray-700">Fractions</th>
-                  <th className="text-right px-4 py-3 font-bold text-gray-700">Dose/Fx</th>
-                  <th className="text-right px-4 py-3 font-bold text-gray-700">BED</th>
-                  <th className="text-right px-4 py-3 font-bold text-gray-700">EQD2</th>
-                  <th className="text-left px-4 py-3 font-bold text-gray-700">Context</th>
-                  <th className="text-right px-4 py-3 font-bold text-gray-700">Use</th>
+                  <th className="w-[24%] text-left px-3 py-3 font-bold text-gray-700">Regimen</th>
+                  <th className="w-[12%] text-right px-3 py-3 font-bold text-gray-700">Dose</th>
+                  <th className="w-[9%] text-right px-3 py-3 font-bold text-gray-700">Fx</th>
+                  <th className="w-[12%] text-right px-3 py-3 font-bold text-gray-700">Dose/Fx</th>
+                  <th className="w-[13%] text-right px-3 py-3 font-bold text-gray-700">BED</th>
+                  <th className="w-[13%] text-right px-3 py-3 font-bold text-gray-700">EQD2</th>
+                  <th className="hidden lg:table-cell text-left px-3 py-3 font-bold text-gray-700">Context</th>
+                  <th className="w-[8%] text-right px-3 py-3 font-bold text-gray-700">Use</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {alphaBeta <= 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-amber-700">
+                    <td colSpan={8} className="px-4 py-10 text-center text-amber-700">
                       Enter an alpha/beta value above 0 to calculate the selected-ratio table.
                     </td>
                   </tr>
                 )}
                 {alphaBeta > 0 && tableRows.map((row) => (
                   <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-semibold text-gray-900">{row.label}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex border rounded-full px-2.5 py-1 text-xs font-bold ${CATEGORY_STYLES[row.category]}`}>
-                        {CATEGORY_LABELS[row.category]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dose)} Gy</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{row.fractions}</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dosePerFraction)} Gy</td>
-                    <td className="px-4 py-3 text-right font-semibold text-teal-800">{formatDose(row.bed)} Gy</td>
-                    <td className="px-4 py-3 text-right font-semibold text-blue-800">{formatDose(row.eqd2)} Gy</td>
-                    <td className="px-4 py-3 text-gray-600">{row.note}</td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-3 font-semibold text-gray-900 truncate">{row.label}</td>
+                    <td className="px-3 py-3 text-right text-gray-700">{formatDose(row.dose)} Gy</td>
+                    <td className="px-3 py-3 text-right text-gray-700">{row.fractions}</td>
+                    <td className="px-3 py-3 text-right text-gray-700">{formatDose(row.dosePerFraction)} Gy</td>
+                    <td className="px-3 py-3 text-right font-semibold text-teal-800">{formatDose(row.bed)} Gy</td>
+                    <td className="px-3 py-3 text-right font-semibold text-blue-800">{formatDose(row.eqd2)} Gy</td>
+                    <td className="hidden lg:table-cell px-3 py-3 text-gray-600 truncate">{row.note}</td>
+                    <td className="px-3 py-3 text-right">
                       <button
                         onClick={() => applyRegimenToCalculator(row)}
                         className="text-xs font-bold text-teal-700 hover:text-teal-900"
@@ -617,84 +545,85 @@ export default function BEDEQD2Calculator() {
                 ))}
                 {alphaBeta > 0 && tableRows.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-gray-500">
-                      No regimens in this category yet. Add a custom regimen from the calculator.
+                    <td colSpan={8} className="px-4 py-10 text-center text-gray-500">
+                      Add a custom regimen from the calculator.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
-          </div>
+            </div>
+
+            <div className="md:hidden p-3 space-y-3">
+              {tableRows.map((row) => (
+                <div key={row.id} className="rounded-lg border border-gray-200 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-gray-900">{row.label}</div>
+                      <div className="text-xs text-gray-500">{row.note}</div>
+                    </div>
+                    <button
+                      onClick={() => applyRegimenToCalculator(row)}
+                      className="text-xs font-bold text-teal-700 hover:text-teal-900"
+                    >
+                      Load
+                    </button>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <div className="rounded-md bg-gray-50 p-2">
+                      <div className="text-gray-500">Dose/Fx</div>
+                      <div className="font-bold text-gray-900">{formatDose(row.dosePerFraction)} Gy</div>
+                    </div>
+                    <div className="rounded-md bg-teal-50 p-2">
+                      <div className="text-teal-700">BED</div>
+                      <div className="font-bold text-teal-900">{formatDose(row.bed)} Gy</div>
+                    </div>
+                    <div className="rounded-md bg-blue-50 p-2">
+                      <div className="text-blue-700">EQD2</div>
+                      <div className="font-bold text-blue-900">{formatDose(row.eqd2)} Gy</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[1120px]">
+          <>
+            <div className="hidden md:block">
+              <table className="w-full table-fixed text-xs lg:text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th rowSpan={2} className="text-left px-4 py-3 font-bold text-gray-700 align-bottom">Regimen</th>
-                  <th rowSpan={2} className="text-left px-4 py-3 font-bold text-gray-700 align-bottom">Type</th>
-                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Total Dose</th>
-                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Fractions</th>
-                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Dose/Fx</th>
+                  <th className="w-[24%] text-left px-3 py-3 font-bold text-gray-700">Regimen</th>
+                  <th className="w-[13%] text-right px-3 py-3 font-bold text-gray-700">Dose/Fx</th>
                   {alphaBetaComparisons.map((comparison) => (
                     <th
                       key={comparison.id}
-                      colSpan={2}
-                      className="text-center px-4 py-3 font-bold text-gray-700 border-l border-gray-200"
+                      className="text-right px-3 py-3 font-bold text-gray-700"
                     >
-                      <span className="block">{comparison.label}</span>
-                      <span className="block text-xs font-medium text-gray-500">{comparison.helper}</span>
+                      {comparison.label}
                     </th>
                   ))}
-                  <th rowSpan={2} className="text-right px-4 py-3 font-bold text-gray-700 align-bottom">Use</th>
-                </tr>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  {alphaBetaComparisons.map((comparison) => (
-                    <Fragment key={comparison.id}>
-                      <th
-                        key={`${comparison.id}-bed`}
-                        className="text-right px-4 py-2 text-xs font-bold uppercase text-teal-700 border-l border-gray-200"
-                      >
-                        BED
-                      </th>
-                      <th
-                        key={`${comparison.id}-eqd2`}
-                        className="text-right px-4 py-2 text-xs font-bold uppercase text-blue-700"
-                      >
-                        EQD2
-                      </th>
-                    </Fragment>
-                  ))}
+                  <th className="w-[8%] text-right px-3 py-3 font-bold text-gray-700">Use</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {matrixRows.map((row) => (
                   <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-semibold text-gray-900">{row.label}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex border rounded-full px-2.5 py-1 text-xs font-bold ${CATEGORY_STYLES[row.category]}`}>
-                        {CATEGORY_LABELS[row.category]}
-                      </span>
+                    <td className="px-3 py-3">
+                      <div className="font-semibold text-gray-900 truncate">{row.label}</div>
+                      <div className="text-[11px] text-gray-500 truncate">{row.note}</div>
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dose)} Gy</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{row.fractions}</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{formatDose(row.dosePerFraction)} Gy</td>
+                    <td className="px-3 py-3 text-right text-gray-700">
+                      <div>{formatDose(row.dosePerFraction)} Gy</div>
+                      <div className="text-[11px] text-gray-500">{formatDose(row.dose)} / {row.fractions}</div>
+                    </td>
                     {row.comparisons.map((comparison) => (
-                      <Fragment key={`${row.id}-${comparison.alphaBetaId}`}>
-                        <td
-                          key={`${row.id}-${comparison.alphaBetaId}-bed`}
-                          className="px-4 py-3 text-right font-semibold text-teal-800 border-l border-gray-100"
-                        >
-                          {formatDose(comparison.bed)} Gy
-                        </td>
-                        <td
-                          key={`${row.id}-${comparison.alphaBetaId}-eqd2`}
-                          className="px-4 py-3 text-right font-semibold text-blue-800"
-                        >
-                          {formatDose(comparison.eqd2)} Gy
-                        </td>
-                      </Fragment>
+                      <td key={`${row.id}-${comparison.alphaBetaId}`} className="px-3 py-3 text-right border-l border-gray-100">
+                        <div className="font-semibold text-blue-800">{formatDose(comparison.eqd2)} Gy</div>
+                        <div className="text-[11px] text-teal-700">BED {formatDose(comparison.bed)}</div>
+                      </td>
                     ))}
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-3 text-right">
                       <button
                         onClick={() => applyRegimenToCalculator(row)}
                         className="text-xs font-bold text-teal-700 hover:text-teal-900"
@@ -706,14 +635,46 @@ export default function BEDEQD2Calculator() {
                 ))}
                 {matrixRows.length === 0 && (
                   <tr>
-                    <td colSpan={6 + alphaBetaComparisons.length * 2} className="px-4 py-10 text-center text-gray-500">
-                      No regimens in this category yet. Add a custom regimen from the calculator.
+                    <td colSpan={3 + alphaBetaComparisons.length} className="px-4 py-10 text-center text-gray-500">
+                      Add a custom regimen from the calculator.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
-          </div>
+            </div>
+
+            <div className="md:hidden p-3 space-y-3">
+              {matrixRows.map((row) => (
+                <div key={row.id} className="rounded-lg border border-gray-200 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-gray-900">{row.label}</div>
+                      <div className="text-xs text-gray-500">{formatDose(row.dose)} Gy / {row.fractions} fx</div>
+                    </div>
+                    <button
+                      onClick={() => applyRegimenToCalculator(row)}
+                      className="text-xs font-bold text-teal-700 hover:text-teal-900"
+                    >
+                      Load
+                    </button>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    {row.comparisons.map((comparison) => {
+                      const ratio = alphaBetaComparisons.find((item) => item.id === comparison.alphaBetaId)?.label ?? 'a/b';
+                      return (
+                        <div key={`${row.id}-${comparison.alphaBetaId}`} className="rounded-md bg-gray-50 p-2">
+                          <div className="font-bold text-gray-700">{ratio}</div>
+                          <div className="text-blue-800 font-semibold">EQD2 {formatDose(comparison.eqd2)} Gy</div>
+                          <div className="text-teal-700">BED {formatDose(comparison.bed)} Gy</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </section>
 
