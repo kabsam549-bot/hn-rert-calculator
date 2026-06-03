@@ -264,7 +264,7 @@ export default function Home() {
         {/* Subtle Tab Navigation */}
         <div className="bg-white border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 md:px-6 py-3">
-            <nav className="flex justify-center gap-6" aria-label="Landing tabs">
+            <nav className="flex justify-start sm:justify-center gap-5 sm:gap-6 overflow-x-auto" aria-label="Landing tabs">
               <button
                 onClick={() => setLandingTab('home')}
                 className={`text-sm transition-colors ${
@@ -287,9 +287,15 @@ export default function Home() {
               </button>
               <button
                 onClick={() => { setRadOncTab('dosebudget'); setViewMode('radonc'); }}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-sm text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap"
               >
                 Dose Budget
+              </button>
+              <button
+                onClick={() => { setRadOncTab('bedeqd2'); setViewMode('radonc'); }}
+                className="text-sm text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap"
+              >
+                BED / EQD2
               </button>
               <button
                 onClick={() => setLandingTab('guidelines')}
