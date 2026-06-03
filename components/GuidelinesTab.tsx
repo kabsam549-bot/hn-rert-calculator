@@ -6,6 +6,58 @@ import { useEditableContent } from '@/lib/hooks/useEditableContent';
 
 type Section = 'overview' | 'constraints' | 'constraintSources' | 'outcomes' | 'cbs' | 'references';
 
+const KEY_REFERENCES = [
+  {
+    authors: 'Phan J, Spiotto MT, Goodman CD, et al.',
+    title: 'Reirradiation for Locally Recurrent Head and Neck Cancer: State-of-the-Art and Future Directions.',
+    journal: 'Semin Radiat Oncol. 2025;35(2):243-258.',
+    note: 'Primary reference for MDACC pathway',
+    url: 'https://doi.org/10.1016/j.semradonc.2025.02.009',
+  },
+  {
+    authors: 'Diao K, Nguyen TP, Moreno AC, et al.',
+    title: 'Stereotactic Body Ablative Radiotherapy for Reirradiation of Small Volume Head and Neck Cancers is Associated with Prolonged Survival.',
+    journal: 'Head Neck. 2021;43(11):3331-3344.',
+    note: 'SBRT outcomes, volume thresholds',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8511054/',
+  },
+  {
+    authors: 'Takiar V, Garden AS, Ma D, et al.',
+    title: 'Reirradiation of Head and Neck Cancers With IMRT: Outcomes and Analyses.',
+    journal: 'Int J Radiat Oncol Biol Phys. 2016;95(4):1117-1131.',
+    note: 'IMRT outcomes, volume >50cc toxicity',
+    url: 'https://doi.org/10.1016/j.ijrobp.2016.03.015',
+  },
+  {
+    authors: 'Bagley AF, Garden AS, Reddy JP, et al.',
+    title: 'Highly conformal reirradiation in patients with prior oropharyngeal radiation: Clinical efficacy and toxicity outcomes.',
+    journal: 'Head Neck. 2020;42(11):3326-3335.',
+    note: 'Prior oropharynx reRT outcomes',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7722120/',
+  },
+  {
+    authors: 'Ng SP, Wang H, Pollard C, et al.',
+    title: 'Patient Outcomes after Reirradiation of Small Skull Base Tumors using Stereotactic Body Radiotherapy, Intensity Modulated Radiotherapy, or Proton Therapy.',
+    journal: 'J Neurol Surg B Skull Base. 2020;81(6):638-644.',
+    note: 'Skull base <60cc outcomes',
+    url: 'https://doi.org/10.1055/s-0039-1694052',
+  },
+  {
+    authors: 'Grimm J, Vargo JA, Mavroidis P, et al.',
+    title: 'Initial Data Pooling for Radiation Dose-Volume Tolerance for Carotid Artery Blowout and Other Bleeding Events in Hypofractionated Head and Neck Retreatments.',
+    journal: 'Int J Radiat Oncol Biol Phys. 2021;110(1):147-159.',
+    note: 'CBS/BE risk reduction data',
+    url: 'https://doi.org/10.1016/j.ijrobp.2020.12.037',
+  },
+  {
+    authors: 'Ward MC, Riaz N, Caudell JJ, et al.',
+    title: 'Refining Patient Selection for Reirradiation of Head and Neck Squamous Carcinoma in the IMRT Era: A Multi-institution Cohort Study by the MIRI Collaborative.',
+    journal: 'Int J Radiat Oncol Biol Phys. 2018;100(3):586-594.',
+    note: 'RPA classification system',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9131594/',
+  },
+];
+
 export default function GuidelinesTab() {
   const [activeSection, setActiveSection] = useState<Section>('overview');
   const { content } = useEditableContent();
@@ -780,21 +832,27 @@ export default function GuidelinesTab() {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Key References</h2>
           <div className="space-y-4 text-sm">
-            {[
-              { authors: 'Phan J, Spiotto MT, Goodman CD, et al.', title: 'Reirradiation for Locally Recurrent Head and Neck Cancer: State-of-the-Art and Future Directions.', journal: 'Semin Radiat Oncol. 2025;35(2):243-258.', note: 'Primary reference for MDACC pathway' },
-              { authors: 'Diao K, Nguyen TP, Moreno AC, et al.', title: 'SBRT for reirradiation of small volume head and neck cancers is associated with prolonged survival.', journal: 'Head Neck. 2021;43(11):3331-3344.', note: 'SBRT outcomes, volume thresholds' },
-              { authors: 'Takiar V, Garden AS, Ma D, et al.', title: 'Reirradiation of Head and Neck Cancers With IMRT: Outcomes and Analyses.', journal: 'Int J Radiat Oncol Biol Phys. 2016;95(4):1117-1131.', note: 'IMRT outcomes, volume >50cc toxicity' },
-              { authors: 'Bagley AF, Garden AS, Reddy JP, et al.', title: 'Highly conformal reirradiation in patients with prior oropharyngeal radiation.', journal: 'Head Neck. 2020;42(11):3326-3335.', note: 'Prior oropharynx reRT outcomes' },
-              { authors: 'Ng SP, Wang H, Pollard C, et al.', title: 'Patient Outcomes after Reirradiation of Small Skull Base Tumors using SBRT, IMRT, or Proton Therapy.', journal: 'J Neurol Surg B Skull Base. 2020;81(6):638-644.', note: 'Skull base <60cc outcomes' },
-              { authors: 'Grimm J, et al.', title: 'HYTEC: High-dose hypofractionated radiation therapy for head and neck cancer.', journal: 'IJROBP. 2020.', note: 'CBS/BE risk reduction data' },
-              { authors: 'Ward MC, Riaz N, Caudell JJ, et al.', title: 'MIRI Collaborative: Refining Patient Selection for Reirradiation.', journal: 'Int J Radiat Oncol Biol Phys. 2018;100(1):37-43.', note: 'RPA Classification system' },
-            ].map((ref, i) => (
-              <div key={i} className="p-4 bg-gray-50 rounded-lg border-l-4 border-teal-500">
+            {KEY_REFERENCES.map((ref) => (
+              <a
+                key={ref.url}
+                href={ref.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group block p-4 bg-gray-50 rounded-lg border-l-4 border-teal-500 transition-colors hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+              >
                 <div className="font-medium text-gray-900">{ref.authors}</div>
-                <div className="text-gray-700 italic">{ref.title}</div>
+                <div className="text-gray-700 italic group-hover:text-teal-800">{ref.title}</div>
                 <div className="text-gray-500">{ref.journal}</div>
-                {ref.note && <div className="text-teal-600 text-xs mt-1">→ {ref.note}</div>}
-              </div>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  {ref.note && <div className="text-teal-600 text-xs">{ref.note}</div>}
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 group-hover:text-blue-900">
+                    Open paper
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h4m0 0v4m0-4L10 14m-3 3h10a2 2 0 002-2v-3M5 19h10a2 2 0 002-2V7" />
+                    </svg>
+                  </span>
+                </div>
+              </a>
             ))}
           </div>
         </div>

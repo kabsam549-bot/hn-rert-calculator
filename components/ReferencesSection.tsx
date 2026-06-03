@@ -11,7 +11,7 @@ export default function ReferencesSection() {
           <p>
             Phan J, Spiotto MT, Goodman CD, et al. Reirradiation for Locally Recurrent Head and Neck Cancer: State-of-the-Art and Future Directions. 
             <em className="text-secondary"> Semin Radiat Oncol.</em> 2025.
-            <a href="https://doi.org/10.1016/j.semradonc.2025.01.001" target="_blank" rel="noopener noreferrer" className="ml-1 text-teal-600 hover:underline">[DOI]</a>
+            <a href="https://doi.org/10.1016/j.semradonc.2025.02.009" target="_blank" rel="noopener noreferrer" className="ml-1 text-teal-600 hover:underline">[DOI]</a>
           </p>
         </div>
 

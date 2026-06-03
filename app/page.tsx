@@ -230,6 +230,13 @@ export default function Home() {
     setShowDisclaimer(false);
   };
 
+  const goHome = () => {
+    setViewMode('landing');
+    setLandingTab('home');
+    setRadOncTab('pathway');
+    setShowHowToUse(false);
+  };
+
   // Landing Page View
   if (viewMode === 'landing') {
     return (
@@ -241,12 +248,19 @@ export default function Home() {
         <header className="bg-header text-white shadow-md">
           <div className="max-w-7xl mx-auto px-4 py-6 md:px-6">
             <div className="text-center relative">
-              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight text-white">
-                HEAD & NECK RE-IRRADIATION <span className="font-light opacity-80">TOOL</span>
-              </h1>
-              <p className="text-sm md:text-base text-teal-100 mt-2 font-light tracking-wide">
-                Evidence-Based Decision Support for Recurrent Head & Neck Cancer
-              </p>
+              <button
+                type="button"
+                onClick={goHome}
+                className="mx-auto block rounded-md text-center focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-teal-900"
+                aria-label="Go to home"
+              >
+                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight text-white">
+                  HEAD & NECK RE-IRRADIATION <span className="font-light opacity-80">TOOL</span>
+                </h1>
+                <p className="text-sm md:text-base text-teal-100 mt-2 font-light tracking-wide">
+                  Evidence-Based Decision Support for Recurrent Head & Neck Cancer
+                </p>
+              </button>
               {/* Help Button */}
               <button
                 onClick={() => setShowHowToUse(true)}
@@ -266,7 +280,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 md:px-6 py-3">
             <nav className="flex justify-start sm:justify-center gap-5 sm:gap-6 overflow-x-auto" aria-label="Landing tabs">
               <button
-                onClick={() => setLandingTab('home')}
+                onClick={goHome}
                 className={`text-sm transition-colors ${
                   landingTab === 'home'
                     ? 'text-teal-700 font-medium border-b-2 border-teal-600 pb-1'
@@ -578,16 +592,21 @@ export default function Home() {
         <header className="bg-header text-white shadow-md">
           <div className="max-w-[1600px] mx-auto px-4 py-4 md:px-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
+              <button
+                type="button"
+                onClick={goHome}
+                className="rounded-md text-left focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-teal-900"
+                aria-label="Go to home"
+              >
                 <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight text-white">
                   HEAD & NECK RE-IRRADIATION <span className="font-light opacity-80">TOOL</span>
                 </h1>
                 <p className="text-sm text-teal-100 mt-1 font-light tracking-wide">
                   Radiation Oncology Decision Support & Dosimetric Assessment
                 </p>
-              </div>
+              </button>
               <button
-                onClick={() => setViewMode('landing')}
+                onClick={goHome}
                 className="text-xs text-teal-100 hover:text-white transition-colors flex items-center gap-1"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -764,14 +783,19 @@ export default function Home() {
         <header className="bg-header text-white shadow-md z-50">
           <div className="max-w-[1600px] mx-auto px-4 py-4 md:px-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
+              <button
+                type="button"
+                onClick={goHome}
+                className="rounded-md text-left focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-teal-900"
+                aria-label="Go to home"
+              >
                 <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight text-white">
                   HEAD & NECK RE-IRRADIATION <span className="font-light opacity-80">TOOL</span>
                 </h1>
                 <p className="text-sm text-teal-100 mt-1 font-light tracking-wide">
                   Radiation Oncology Decision Support & Dosimetric Assessment
                 </p>
-              </div>
+              </button>
               <button
                 onClick={() => setViewMode('radonc-landing')}
                 className="text-xs text-teal-100 hover:text-white transition-colors flex items-center gap-1"
@@ -919,16 +943,21 @@ export default function Home() {
       <header className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white shadow-md z-50">
         <div className="max-w-[1600px] mx-auto px-4 py-4 md:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
+            <button
+              type="button"
+              onClick={goHome}
+              className="rounded-md text-left focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-purple-900"
+              aria-label="Go to home"
+            >
               <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight text-white">
                 REIRRADIATION DECISION <span className="font-light opacity-80">TOOL</span>
               </h1>
               <p className="text-sm text-purple-100 mt-1 font-light tracking-wide">
                 Quick Assessment for Surgeons & Medical Oncologists
               </p>
-            </div>
+            </button>
             <button
-              onClick={() => setViewMode('landing')}
+              onClick={goHome}
               className="text-xs text-purple-100 hover:text-white transition-colors flex items-center gap-1"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

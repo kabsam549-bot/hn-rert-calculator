@@ -74,7 +74,7 @@ const defaultContent = {
     {
       id: "phan-2025",
       citation: "Phan J, Spiotto MT, Goodman CD, et al. Reirradiation for Locally Recurrent Head and Neck Cancer: State-of-the-Art and Future Directions. Semin Radiat Oncol. 2025.",
-      doi: "10.1016/j.semradonc.2025.01.001",
+      doi: "10.1016/j.semradonc.2025.02.009",
       category: "primary"
     },
     {
