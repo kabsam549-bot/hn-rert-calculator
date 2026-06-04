@@ -29,6 +29,8 @@ interface OARInput {
   customLifetimeTolerance?: number;
 }
 
+type DoseMode = 'conservative' | 'recovery';
+
 function buildBudgetInput(item: OARInput): OARBudgetInput | undefined {
   if (
     item.priorDose === undefined ||
@@ -77,9 +79,50 @@ function buildBudgetInput(item: OARInput): OARBudgetInput | undefined {
   };
 }
 
+function getBudgetTone(percentRemaining: number, remainingEQD2: number) {
+  if (remainingEQD2 <= 0) {
+    return {
+      dot: 'bg-red-500',
+      bg: 'bg-red-50/80',
+      border: 'border-red-200',
+      centerBg: 'bg-white/80',
+      softText: 'text-red-700',
+    };
+  }
+
+  if (percentRemaining <= 15) {
+    return {
+      dot: 'bg-orange-500',
+      bg: 'bg-orange-50/80',
+      border: 'border-orange-200',
+      centerBg: 'bg-white/80',
+      softText: 'text-orange-700',
+    };
+  }
+
+  if (percentRemaining <= 35) {
+    return {
+      dot: 'bg-amber-500',
+      bg: 'bg-amber-50/80',
+      border: 'border-amber-200',
+      centerBg: 'bg-white/80',
+      softText: 'text-amber-700',
+    };
+  }
+
+  return {
+    dot: 'bg-teal-500',
+    bg: 'bg-teal-50/70',
+    border: 'border-teal-200',
+    centerBg: 'bg-white/80',
+    softText: 'text-teal-700',
+  };
+}
+
 export default function OARDoseBudget() {
   const { content } = useEditableContent();
   const [selectedOARs, setSelectedOARs] = useState<OARInput[]>([]);
+  const [doseMode, setDoseMode] = useState<DoseMode>('conservative');
   const [customFractions, setCustomFractions] = useState<
     Record<string, number | undefined>
   >({});
@@ -619,7 +662,7 @@ export default function OARDoseBudget() {
           renderInlineBudget(budgetResult)
         ) : (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-            Enter dose, fractions, and months to show the live budget.
+            Enter dose, fractions, and months to show the budget.
           </div>
         )}
       </div>
@@ -627,15 +670,21 @@ export default function OARDoseBudget() {
   };
 
   const renderInlineBudget = (result: OARBudgetResult) => {
-    const displayPrior = result.priorEQD2;
+    const isConservative = doseMode === 'conservative';
+    const displayPrior = isConservative
+      ? result.priorEQD2
+      : result.effectivePriorEQD2;
     const displayRemaining = Math.max(
       0,
       result.oar.lifetimeToleranceEQD2 - displayPrior,
     );
+    const displayPercent =
+      (displayRemaining / result.oar.lifetimeToleranceEQD2) * 100;
     const overage = Math.max(
       0,
       displayPrior - result.oar.lifetimeToleranceEQD2,
     );
+    const tone = getBudgetTone(displayPercent, displayRemaining);
     const sourceReference = getConstraintReference(
       result.oar.name,
       result.oar.lifetimeToleranceEQD2,
@@ -660,14 +709,17 @@ export default function OARDoseBudget() {
         : undefined;
 
     return (
-      <div className="rounded-2xl border border-teal-100 bg-teal-50/40 p-3 sm:p-4">
-        <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="text-sm font-bold text-gray-900">
-              Live dose budget
+      <div
+        className={`rounded-2xl border ${tone.border} ${tone.bg} p-3 shadow-sm sm:p-4`}
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full ${tone.dot}`} />
+              <div className="text-sm font-bold text-gray-900">Dose budget</div>
             </div>
-            <div className="text-xs text-gray-500">
-              Updates as the inputs change.
+            <div className="mt-1 text-xs text-gray-600">
+              Remaining EQD2 and physical dose estimate.
             </div>
           </div>
           {overage > 0 && (
@@ -677,8 +729,36 @@ export default function OARDoseBudget() {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-gray-50 p-3">
+        <div
+          className={`rounded-2xl border ${tone.border} ${tone.centerBg} px-4 py-5 text-center`}
+        >
+          <div
+            className={`text-[11px] font-bold uppercase tracking-wide ${tone.softText}`}
+          >
+            Remaining Dose Budget{' '}
+            {isConservative ? '(EQD2)' : '(With Recovery)'}
+          </div>
+          <div
+            className={`mt-1 text-4xl font-bold leading-none ${overage > 0 ? 'text-red-800' : 'text-gray-950'}`}
+          >
+            {displayRemaining.toFixed(1)}
+          </div>
+          <div className="mt-1 text-sm font-semibold text-gray-600">
+            Gy EQD2
+          </div>
+          <div className="mt-1 text-xs text-gray-500">
+            {displayPercent.toFixed(0)}% of lifetime tolerance
+          </div>
+          {isConservative && result.recoveryPercent > 0 && (
+            <div className="mt-2 text-xs font-semibold text-teal-700">
+              With recovery: {result.remainingBudgetEQD2.toFixed(1)} Gy EQD2
+              remaining
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="rounded-xl bg-white/80 p-3">
             <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
               Prior EQD2
             </div>
@@ -687,7 +767,28 @@ export default function OARDoseBudget() {
             </div>
             <div className="text-[11px] text-gray-500">Gy</div>
           </div>
-          <div className="rounded-xl bg-gray-50 p-3">
+          {!isConservative ? (
+            <div className="rounded-xl bg-white/80 p-3">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                Effective Prior
+              </div>
+              <div className="mt-1 text-base font-bold text-gray-900">
+                {result.effectivePriorEQD2.toFixed(1)}
+              </div>
+              <div className="text-[11px] text-gray-500">Gy</div>
+            </div>
+          ) : (
+            <div className="rounded-xl bg-white/80 p-3">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                α/β
+              </div>
+              <div className="mt-1 text-base font-bold text-gray-900">
+                {result.oar.alphaBeta}
+              </div>
+              <div className="text-[11px] text-gray-500">Gy</div>
+            </div>
+          )}
+          <div className="rounded-xl bg-white/80 p-3">
             <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
               Tolerance
             </div>
@@ -696,23 +797,11 @@ export default function OARDoseBudget() {
             </div>
             <div className="text-[11px] text-gray-500">Gy</div>
           </div>
-          <div className="rounded-xl bg-teal-50 p-3">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-teal-700">
-              Remaining EQD2
-            </div>
-            <div
-              className={`mt-1 text-xl font-bold ${overage > 0 ? 'text-red-700' : 'text-teal-950'}`}
-            >
-              {displayRemaining.toFixed(1)}
-            </div>
-            <div className="text-[11px] text-teal-700">Gy EQD2</div>
-          </div>
         </div>
 
-        {result.recoveryPercent > 0 && (
+        {!isConservative && result.recoveryPercent > 0 && (
           <div className="mt-3 rounded-xl bg-white/80 px-3 py-2 text-xs text-gray-700">
-            Recovery model estimate: {result.remainingBudgetEQD2.toFixed(1)} Gy
-            EQD2 remaining after {result.recoveryPercent.toFixed(0)}% recovery.
+            Recovery factor: {result.recoveryPercent.toFixed(0)}%
           </div>
         )}
 
@@ -720,54 +809,66 @@ export default function OARDoseBudget() {
           <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-500">
             Physical dose budget
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {fractionBudgets.map((budget) => (
-              <div
-                key={budget.fractions}
-                className="rounded-xl border border-gray-200 bg-gray-50 p-3"
-              >
-                <div className="text-xs font-bold text-gray-700">
-                  {budget.fractions} fx
-                </div>
-                <div className="mt-1 text-sm font-bold text-gray-900">
-                  {budget.totalDose.toFixed(1)} Gy
-                </div>
-                <div className="text-[11px] text-gray-500">
-                  {budget.dosePerFraction.toFixed(1)} Gy/fx
-                </div>
-              </div>
-            ))}
-            <div className="rounded-xl border border-gray-200 bg-white p-3">
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  value={customFx ?? ''}
-                  onChange={(e) =>
-                    setCustomFractions((prev) => ({
-                      ...prev,
-                      [result.oar.name]: e.target.value
-                        ? Number(e.target.value)
-                        : undefined,
-                    }))
-                  }
-                  className="w-12 rounded-md border border-gray-300 px-1.5 py-1 text-center text-xs focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                  placeholder="#"
-                  min="1"
-                  max="50"
-                />
-                <span className="text-xs font-bold text-gray-700">fx</span>
-              </div>
-              <div className="mt-1 text-sm font-bold text-gray-900">
-                {customPhysicalDose !== undefined
-                  ? `${customPhysicalDose.toFixed(1)} Gy`
-                  : '-'}
-              </div>
-              <div className="text-[11px] text-gray-500">
-                {customPhysicalDose !== undefined && customFx
-                  ? `${(customPhysicalDose / customFx).toFixed(1)} Gy/fx`
-                  : 'custom'}
-              </div>
-            </div>
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white/80">
+            <table className="w-full table-fixed text-sm">
+              <thead>
+                <tr className="bg-white/90 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                  <th className="px-3 py-2 text-left">Fractions</th>
+                  <th className="px-3 py-2 text-left">Total Dose</th>
+                  <th className="px-3 py-2 text-left">Dose/Fx</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {fractionBudgets.map((budget) => (
+                  <tr key={budget.fractions}>
+                    <td className="px-3 py-2 font-bold text-gray-800">
+                      {budget.fractions} fx
+                    </td>
+                    <td className="px-3 py-2 font-bold text-gray-900">
+                      {budget.totalDose.toFixed(1)} Gy
+                    </td>
+                    <td className="px-3 py-2 text-gray-600">
+                      {budget.dosePerFraction.toFixed(1)} Gy/fx
+                    </td>
+                  </tr>
+                ))}
+                <tr>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={customFx ?? ''}
+                        onChange={(e) =>
+                          setCustomFractions((prev) => ({
+                            ...prev,
+                            [result.oar.name]: e.target.value
+                              ? Number(e.target.value)
+                              : undefined,
+                          }))
+                        }
+                        className="w-12 rounded-md border border-gray-300 px-1.5 py-1 text-center text-xs focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                        placeholder="#"
+                        min="1"
+                        max="50"
+                      />
+                      <span className="text-xs font-bold text-gray-700">
+                        fx
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 font-bold text-gray-900">
+                    {customPhysicalDose !== undefined
+                      ? `${customPhysicalDose.toFixed(1)} Gy`
+                      : '-'}
+                  </td>
+                  <td className="px-3 py-2 text-gray-600">
+                    {customPhysicalDose !== undefined && customFx
+                      ? `${(customPhysicalDose / customFx).toFixed(1)} Gy/fx`
+                      : 'custom'}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -783,7 +884,7 @@ export default function OARDoseBudget() {
             )}
             <div className="rounded-lg bg-white p-3 font-mono">
               <p>Prior EQD2 = {result.priorEQD2.toFixed(1)} Gy</p>
-              {result.recoveryPercent > 0 && (
+              {!isConservative && result.recoveryPercent > 0 && (
                 <p>
                   Effective EQD2 = {result.effectivePriorEQD2.toFixed(1)} Gy
                   after {result.recoveryPercent.toFixed(0)}% recovery
@@ -842,9 +943,26 @@ export default function OARDoseBudget() {
               fractions, and months are filled.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {completedOARCount > 0 && (
+              <div className="flex rounded-full border border-gray-200 bg-white p-1 shadow-sm">
+                {(['conservative', 'recovery'] as DoseMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setDoseMode(mode)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                      doseMode === mode
+                        ? 'bg-teal-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    {mode === 'conservative' ? 'EQD2' : 'Recovery'}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="text-xs font-semibold text-gray-500">
-              {selectedOARs.length} open · {completedOARCount} with live budget
+              {selectedOARs.length} open · {completedOARCount} with budget
             </div>
             {selectedOARs.length > 0 && (
               <button
