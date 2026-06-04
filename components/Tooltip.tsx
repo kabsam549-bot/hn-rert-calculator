@@ -17,7 +17,7 @@ export default function Tooltip({ content }: TooltipProps) {
         onMouseLeave={() => setIsVisible(false)}
         onFocus={() => setIsVisible(true)}
         onBlur={() => setIsVisible(false)}
-        onClick={() => setIsVisible(!isVisible)}
+        onClick={() => setIsVisible(true)}
         className="flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 text-gray-400 hover:text-teal-600 hover:border-teal-600 hover:bg-teal-50 bg-transparent transition-all focus:outline-none"
         aria-label="More information"
       >

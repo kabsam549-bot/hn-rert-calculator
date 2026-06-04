@@ -9,6 +9,7 @@ import {
   type OARBudgetInput,
   type OARBudgetResult,
   type OARBudgetData,
+  type OARBudgetTier,
   type PriorRTCourse,
 } from '@/lib/oarDoseBudget';
 import { getConstraintReference } from '@/lib/constraintReferences';
@@ -30,6 +31,31 @@ interface OARInput {
 }
 
 type DoseMode = 'conservative' | 'recovery';
+
+const TIER_CONFIG: Record<
+  OARBudgetTier,
+  {
+    title: string;
+    helper: string;
+    textClass: string;
+  }
+> = {
+  1: {
+    title: 'Tier 1 Organs',
+    helper: 'Life-threatening structures',
+    textClass: 'text-red-700',
+  },
+  2: {
+    title: 'Tier 2 Organs',
+    helper: 'Critical toxicity structures',
+    textClass: 'text-amber-700',
+  },
+  3: {
+    title: 'Tier 3 Organs',
+    helper: 'Quality-of-life structures',
+    textClass: 'text-teal-700',
+  },
+};
 
 function buildBudgetInput(item: OARInput): OARBudgetInput | undefined {
   if (
@@ -136,6 +162,7 @@ export default function OARDoseBudget() {
 
       return {
         name: oar.name,
+        tier: oar.tier,
         lifetimeToleranceEQD2: oar.limitEQD2,
         alphaBeta: oar.alphaBeta,
         complication: oar.complication,
@@ -143,6 +170,17 @@ export default function OARDoseBudget() {
       };
     });
   }, [content]);
+
+  const groupedOARData = useMemo(
+    () =>
+      ([1, 2, 3] as OARBudgetTier[])
+        .map((tier) => ({
+          tier,
+          items: availableOARData.filter((oar) => (oar.tier ?? 3) === tier),
+        }))
+        .filter((group) => group.items.length > 0),
+    [availableOARData],
+  );
 
   const handleAddOAR = (oar: OARBudgetData) => {
     if (selectedOARs.some((item) => item.oar.name === oar.name)) {
@@ -186,90 +224,116 @@ export default function OARDoseBudget() {
     }
 
     return (
-      <div className="space-y-2">
-        {availableOARData.map((oar) => {
-          const selectedItem = selectedOARs.find(
-            (item) => item.oar.name === oar.name,
-          );
-          const isSelected = selectedItem !== undefined;
-          const displayedTolerance =
-            selectedItem?.customLifetimeTolerance ?? oar.lifetimeToleranceEQD2;
-          const displayedAlphaBeta =
-            selectedItem?.customAlphaBeta ?? oar.alphaBeta;
+      <div className="space-y-5">
+        {groupedOARData.map(({ tier, items }) => {
+          const tierConfig = TIER_CONFIG[tier];
 
           return (
-            <div
-              key={oar.name}
-              className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-colors ${
-                isSelected
-                  ? 'border-teal-300'
-                  : 'border-gray-200 hover:border-teal-200'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  isSelected ? handleRemoveOAR(oar.name) : handleAddOAR(oar)
-                }
-                aria-expanded={isSelected}
-                className={`flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors sm:px-4 ${
-                  isSelected ? 'bg-teal-50/70' : 'bg-white hover:bg-gray-50'
-                }`}
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${isSelected ? 'bg-teal-600' : 'bg-gray-300'}`}
-                    />
-                    <span className="truncate text-sm font-bold text-gray-900 sm:text-base">
-                      {oar.name}
-                    </span>
-                  </span>
-                  <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-                    <span>Tolerance {displayedTolerance} Gy</span>
-                    <span>α/β {displayedAlphaBeta}</span>
-                    <span className="min-w-0 truncate">{oar.complication}</span>
-                  </span>
-                </span>
-                <span
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
-                    isSelected
-                      ? 'bg-teal-600 text-white'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}
-                  aria-hidden="true"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    {isSelected ? (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20 12H4"
-                      />
-                    ) : (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    )}
-                  </svg>
-                </span>
-              </button>
-
-              {selectedItem && (
-                <div className="border-t border-teal-100 bg-white p-3 sm:p-4">
-                  {renderOARInputCard(selectedItem)}
+            <div key={tier} className="space-y-2">
+              <div className="px-1 pt-2">
+                <div className={`text-lg font-bold ${tierConfig.textClass}`}>
+                  {tierConfig.title}
                 </div>
-              )}
+                <div className="mt-0.5 text-xs font-semibold text-gray-500">
+                  {tierConfig.helper}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {items.map((oar) => {
+                  const selectedItem = selectedOARs.find(
+                    (item) => item.oar.name === oar.name,
+                  );
+                  const isSelected = selectedItem !== undefined;
+                  const displayedTolerance =
+                    selectedItem?.customLifetimeTolerance ??
+                    oar.lifetimeToleranceEQD2;
+                  const displayedAlphaBeta =
+                    selectedItem?.customAlphaBeta ?? oar.alphaBeta;
+
+                  return (
+                    <div
+                      key={oar.name}
+                      className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-colors ${
+                        isSelected
+                          ? 'border-teal-300'
+                          : 'border-gray-200 hover:border-teal-200'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          isSelected
+                            ? handleRemoveOAR(oar.name)
+                            : handleAddOAR(oar)
+                        }
+                        aria-expanded={isSelected}
+                        className={`flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors sm:px-4 ${
+                          isSelected
+                            ? 'bg-teal-50/70'
+                            : 'bg-white hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span
+                              className={`h-2.5 w-2.5 rounded-full ${isSelected ? 'bg-teal-600' : 'bg-gray-300'}`}
+                            />
+                            <span className="truncate text-sm font-bold text-gray-900 sm:text-base">
+                              {oar.name}
+                            </span>
+                          </span>
+                          <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+                            <span>Tolerance {displayedTolerance} Gy</span>
+                            <span>α/β {displayedAlphaBeta}</span>
+                            <span className="min-w-0 truncate">
+                              {oar.complication}
+                            </span>
+                          </span>
+                        </span>
+                        <span
+                          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
+                            isSelected
+                              ? 'bg-teal-600 text-white'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            {isSelected ? (
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M20 12H4"
+                              />
+                            ) : (
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8H4"
+                              />
+                            )}
+                          </svg>
+                        </span>
+                      </button>
+
+                      {selectedItem && (
+                        <div className="border-t border-teal-100 bg-white p-3 sm:p-4">
+                          {renderOARInputCard(selectedItem)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
@@ -373,7 +437,7 @@ export default function OARDoseBudget() {
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-1">
-              Dose
+              Prior Dose
               <Tooltip content="Actual dose THIS organ received (not prescription dose)" />
             </label>
             <div className="relative">
@@ -463,7 +527,7 @@ export default function OARDoseBudget() {
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-bold text-amber-800">
-                Prior course {idx + 2}
+                Additional prior dose {idx + 1}
               </span>
               <button
                 onClick={() => {
@@ -631,7 +695,7 @@ export default function OARDoseBudget() {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Prior course
+            Additional prior dose
           </button>
 
           {hasCustomSettings && (
@@ -870,7 +934,7 @@ export default function OARDoseBudget() {
 
         <details className="mt-4 rounded-xl border border-gray-200 bg-white/80">
           <summary className="cursor-pointer px-3 py-2 text-xs font-bold text-gray-600">
-            Calculation
+            Detailed Information
           </summary>
           <div className="space-y-3 border-t border-gray-200 px-3 py-3 text-xs text-gray-600">
             {result.oar.specialNote && (
@@ -952,7 +1016,9 @@ export default function OARDoseBudget() {
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
-                    {mode === 'conservative' ? 'EQD2' : 'Recovery'}
+                    {mode === 'conservative'
+                      ? 'Without recovery'
+                      : 'With recovery'}
                   </button>
                 ))}
               </div>

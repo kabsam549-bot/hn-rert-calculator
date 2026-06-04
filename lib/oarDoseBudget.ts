@@ -12,11 +12,15 @@
 
 import { calculateBED, calculateEQD2 } from './bedCalculations';
 
+export type OARBudgetTier = 1 | 2 | 3;
+
 /**
  * OAR-specific data for dose budget calculations
  */
 export interface OARBudgetData {
   name: string;
+  /** Toxicity tier used for display grouping */
+  tier?: OARBudgetTier;
   /** Lifetime cumulative tolerance in EQD2 (Gy) */
   lifetimeToleranceEQD2: number;
   /** Alpha/beta ratio for this tissue */
@@ -103,6 +107,7 @@ export interface OARBudgetResult {
 export const OAR_BUDGET_DATA: OARBudgetData[] = [
   {
     name: 'Brainstem',
+    tier: 1,
     lifetimeToleranceEQD2: 100,
     alphaBeta: 2,
     complication: 'Brainstem necrosis',
@@ -110,6 +115,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Spinal cord',
+    tier: 1,
     lifetimeToleranceEQD2: 70,
     alphaBeta: 2,
     complication: 'Myelopathy',
@@ -117,6 +123,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Brachial plexus',
+    tier: 2,
     lifetimeToleranceEQD2: 75,
     alphaBeta: 3,
     complication: 'Brachial plexopathy',
@@ -124,6 +131,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Optic chiasm',
+    tier: 1,
     lifetimeToleranceEQD2: 55,
     alphaBeta: 2,
     complication: 'Optic neuropathy / blindness',
@@ -131,6 +139,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Optic nerves',
+    tier: 1,
     lifetimeToleranceEQD2: 55,
     alphaBeta: 2,
     complication: 'Optic neuropathy / blindness',
@@ -138,6 +147,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Cochlea',
+    tier: 3,
     lifetimeToleranceEQD2: 45,
     alphaBeta: 3,
     complication: 'Hearing loss',
@@ -145,6 +155,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Mandible',
+    tier: 2,
     lifetimeToleranceEQD2: 120,
     alphaBeta: 3,
     complication: 'Osteoradionecrosis',
@@ -152,6 +163,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Temporal lobe',
+    tier: 2,
     lifetimeToleranceEQD2: 120,
     alphaBeta: 2,
     complication: 'Temporal lobe necrosis',
@@ -159,6 +171,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Carotid vessels',
+    tier: 2,
     lifetimeToleranceEQD2: 120,
     alphaBeta: 3,
     complication: 'Carotid blowout',
@@ -166,6 +179,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Lingual artery',
+    tier: 2,
     lifetimeToleranceEQD2: 120,
     alphaBeta: 3,
     complication: 'Lingual artery bleed',
@@ -173,6 +187,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Pharyngeal constrictors',
+    tier: 3,
     lifetimeToleranceEQD2: 50,
     alphaBeta: 3,
     complication: 'Severe dysphagia',
@@ -180,6 +195,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Parotid gland',
+    tier: 3,
     lifetimeToleranceEQD2: 46,
     alphaBeta: 3,
     complication: 'Xerostomia',
@@ -187,6 +203,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Larynx',
+    tier: 3,
     lifetimeToleranceEQD2: 70,
     alphaBeta: 3,
     complication: 'Voice changes / aspiration / necrosis',
@@ -194,6 +211,7 @@ export const OAR_BUDGET_DATA: OARBudgetData[] = [
   },
   {
     name: 'Esophagus',
+    tier: 3,
     lifetimeToleranceEQD2: 68,
     alphaBeta: 3,
     complication: 'Stricture / perforation',

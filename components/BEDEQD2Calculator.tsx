@@ -1,15 +1,14 @@
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ALPHA_BETA_RATIOS,
   calculateBEDAndEQD2,
   getDosePerFraction,
 } from '@/lib/bedCalculations';
+import Tooltip from './Tooltip';
 
 type RegimenCategory = 'sbrt' | 'conventional' | 'palliative' | 'custom';
-type AlphaBetaPreset = 'tumor' | 'late' | 'cns' | 'custom';
-type ComparisonView = 'selected' | 'matrix';
 
 interface Regimen {
   id: string;
@@ -20,32 +19,15 @@ interface Regimen {
   note: string;
 }
 
-interface CalculatedRegimen extends Regimen {
+interface CalculationCard extends Regimen {
+  alphaBeta: number;
+}
+
+interface CalculatedCard extends CalculationCard {
   dosePerFraction: number;
   bed: number;
   eqd2: number;
 }
-
-interface AlphaBetaComparison {
-  id: string;
-  label: string;
-  value: number;
-  helper: string;
-}
-
-interface RegimenMatrixRow extends Regimen {
-  dosePerFraction: number;
-  comparisons: {
-    alphaBetaId: string;
-    bed: number;
-    eqd2: number;
-  }[];
-}
-
-const COMPARISON_VIEW_LABELS: Record<ComparisonView, string> = {
-  selected: 'Single',
-  matrix: 'Multiple',
-};
 
 const STANDARD_REGIMENS: Regimen[] = [
   {
@@ -138,58 +120,49 @@ const STANDARD_REGIMENS: Regimen[] = [
   },
 ];
 
-const ALPHA_BETA_OPTIONS: {
-  key: AlphaBetaPreset;
-  label: string;
-  value: number;
-  helper: string;
-}[] = [
+const CATEGORY_STYLES: Record<
+  RegimenCategory,
   {
-    key: 'tumor',
-    label: 'Tumor / early',
-    value: ALPHA_BETA_RATIOS.TUMOR_EARLY,
-    helper: '10 Gy',
+    dot: string;
+  }
+> = {
+  sbrt: {
+    dot: 'bg-teal-500',
   },
-  {
-    key: 'late',
-    label: 'Late normal',
-    value: ALPHA_BETA_RATIOS.LATE_GENERAL,
-    helper: '3 Gy',
+  conventional: {
+    dot: 'bg-blue-500',
   },
-  {
-    key: 'cns',
-    label: 'CNS / optic',
-    value: ALPHA_BETA_RATIOS.CNS_LATE,
-    helper: '2 Gy',
+  palliative: {
+    dot: 'bg-amber-500',
   },
-  {
-    key: 'custom',
-    label: 'Custom',
-    value: ALPHA_BETA_RATIOS.TUMOR_EARLY,
-    helper: 'Manual',
+  custom: {
+    dot: 'bg-gray-400',
   },
-];
+};
 
-const BASE_ALPHA_BETA_COMPARISONS: AlphaBetaComparison[] = [
-  {
-    id: 'tumor-10',
-    label: 'α/β 10',
-    value: ALPHA_BETA_RATIOS.TUMOR_EARLY,
-    helper: '10 Gy',
-  },
-  {
-    id: 'late-3',
-    label: 'α/β 3',
-    value: ALPHA_BETA_RATIOS.LATE_GENERAL,
-    helper: '3 Gy',
-  },
-  {
-    id: 'cns-2',
-    label: 'α/β 2',
-    value: ALPHA_BETA_RATIOS.CNS_LATE,
-    helper: '2 Gy',
-  },
-];
+const ALPHA_BETA_REFERENCE = (
+  <div className="space-y-2">
+    <div className="font-semibold text-white">Common alpha/beta values</div>
+    <div className="space-y-1.5 text-gray-100">
+      <div className="flex justify-between gap-4">
+        <span>Tumor / early tissue</span>
+        <span className="font-semibold text-white">10 Gy</span>
+      </div>
+      <div className="flex justify-between gap-4">
+        <span>CNS / optic / cord</span>
+        <span className="font-semibold text-white">2 Gy</span>
+      </div>
+      <div className="flex justify-between gap-4">
+        <span>Most late H&N OARs</span>
+        <span className="font-semibold text-white">3 Gy</span>
+      </div>
+      <div className="flex justify-between gap-4">
+        <span>Salivary / larynx / pharynx</span>
+        <span className="font-semibold text-white">~3 Gy</span>
+      </div>
+    </div>
+  </div>
+);
 
 function parsePositiveNumber(value: string): number | undefined {
   if (value.trim() === '') {
@@ -201,31 +174,26 @@ function parsePositiveNumber(value: string): number | undefined {
 }
 
 function isValidRegimen(dose?: number, fractions?: number): boolean {
-  return dose !== undefined && dose > 0 && fractions !== undefined && Number.isInteger(fractions) && fractions > 0;
+  return (
+    dose !== undefined &&
+    dose > 0 &&
+    fractions !== undefined &&
+    Number.isInteger(fractions) &&
+    fractions > 0
+  );
 }
 
-function calculateRegimen(regimen: Regimen, alphaBeta: number): CalculatedRegimen {
-  const { bed, eqd2 } = calculateBEDAndEQD2(regimen.dose, regimen.fractions, alphaBeta);
+function calculateCard(card: CalculationCard): CalculatedCard {
+  const { bed, eqd2 } = calculateBEDAndEQD2(
+    card.dose,
+    card.fractions,
+    card.alphaBeta,
+  );
   return {
-    ...regimen,
-    dosePerFraction: getDosePerFraction(regimen.dose, regimen.fractions),
+    ...card,
+    dosePerFraction: getDosePerFraction(card.dose, card.fractions),
     bed,
     eqd2,
-  };
-}
-
-function calculateMatrixRow(regimen: Regimen, alphaBetaComparisons: AlphaBetaComparison[]): RegimenMatrixRow {
-  return {
-    ...regimen,
-    dosePerFraction: getDosePerFraction(regimen.dose, regimen.fractions),
-    comparisons: alphaBetaComparisons.map((comparison) => {
-      const { bed, eqd2 } = calculateBEDAndEQD2(regimen.dose, regimen.fractions, comparison.value);
-      return {
-        alphaBetaId: comparison.id,
-        bed,
-        eqd2,
-      };
-    }),
   };
 }
 
@@ -237,476 +205,479 @@ function formatAlphaBeta(value: number): string {
   return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
 }
 
-function isSameAlphaBeta(first: number, second: number): boolean {
-  return Math.abs(first - second) < 0.001;
-}
-
-function getAlphaBetaComparisons(alphaBeta: number): AlphaBetaComparison[] {
-  const comparisons = [...BASE_ALPHA_BETA_COMPARISONS];
-
-  if (alphaBeta > 0 && !comparisons.some((comparison) => isSameAlphaBeta(comparison.value, alphaBeta))) {
-    comparisons.push({
-      id: 'selected-custom',
-      label: `α/β ${formatAlphaBeta(alphaBeta)}`,
-      value: alphaBeta,
-      helper: `${formatAlphaBeta(alphaBeta)} Gy`,
-    });
-  }
-
-  return comparisons;
+function createCardId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export default function BEDEQD2Calculator() {
   const [dose, setDose] = useState<number | undefined>(36);
   const [fractions, setFractions] = useState<number | undefined>(4);
-  const [alphaBeta, setAlphaBeta] = useState<number>(ALPHA_BETA_RATIOS.TUMOR_EARLY);
-  const [alphaBetaPreset, setAlphaBetaPreset] = useState<AlphaBetaPreset>('tumor');
-  const [comparisonView, setComparisonView] = useState<ComparisonView>('selected');
-  const [customRows, setCustomRows] = useState<Regimen[]>([]);
+  const [alphaBeta, setAlphaBeta] = useState<number>(
+    ALPHA_BETA_RATIOS.TUMOR_EARLY,
+  );
+  const [cards, setCards] = useState<CalculationCard[]>([]);
+  const [selectedPresetId, setSelectedPresetId] = useState(
+    STANDARD_REGIMENS[2].id,
+  );
   const [showFormula, setShowFormula] = useState(false);
 
-  const currentRegimen = useMemo<Regimen | undefined>(() => {
-    if (!isValidRegimen(dose, fractions) || alphaBeta <= 0 || dose === undefined || fractions === undefined) {
+  const currentCard = useMemo<CalculationCard | undefined>(() => {
+    if (
+      !isValidRegimen(dose, fractions) ||
+      alphaBeta <= 0 ||
+      dose === undefined ||
+      fractions === undefined
+    ) {
       return undefined;
     }
 
     return {
       id: 'current-regimen',
-      label: `${dose} Gy / ${fractions} fx`,
+      label: `${formatDose(dose)} Gy / ${fractions} fx`,
       dose,
       fractions,
       category: 'custom',
-      note: 'Working calculation',
+      note: 'Live Calculator',
+      alphaBeta,
     };
   }, [alphaBeta, dose, fractions]);
 
   const currentResult = useMemo(() => {
-    if (!currentRegimen) {
+    if (!currentCard) {
       return undefined;
     }
 
     try {
-      return calculateRegimen(currentRegimen, alphaBeta);
+      return calculateCard(currentCard);
     } catch {
       return undefined;
     }
-  }, [alphaBeta, currentRegimen]);
+  }, [currentCard]);
 
-  const allRegimens = useMemo(() => [...STANDARD_REGIMENS, ...customRows], [customRows]);
+  const calculatedCards = useMemo(
+    () => cards.map((card) => calculateCard(card)),
+    [cards],
+  );
 
-  const tableRows = useMemo(() => {
-    if (alphaBeta <= 0) {
-      return [];
-    }
+  const selectedPreset = useMemo(
+    () =>
+      STANDARD_REGIMENS.find((regimen) => regimen.id === selectedPresetId) ??
+      STANDARD_REGIMENS[0],
+    [selectedPresetId],
+  );
 
-    return allRegimens.map((row) => calculateRegimen(row, alphaBeta));
-  }, [allRegimens, alphaBeta]);
-
-  const alphaBetaComparisons = useMemo(() => getAlphaBetaComparisons(alphaBeta), [alphaBeta]);
-
-  const matrixRows = useMemo(() => {
-    return allRegimens.map((row) => calculateMatrixRow(row, alphaBetaComparisons));
-  }, [allRegimens, alphaBetaComparisons]);
-
-  const handleAlphaBetaPreset = (preset: AlphaBetaPreset) => {
-    setAlphaBetaPreset(preset);
-    const option = ALPHA_BETA_OPTIONS.find((item) => item.key === preset);
-    if (option && preset !== 'custom') {
-      setAlphaBeta(option.value);
-    }
-  };
-
-  const addCurrentToTable = () => {
-    if (!currentRegimen) {
+  const addCurrentCard = () => {
+    if (!currentCard) {
       return;
     }
 
-    const nextIndex = customRows.length + 1;
-    setCustomRows((prev) => [
-      ...prev,
+    setCards((prev) => [
       {
-        ...currentRegimen,
-        id: `custom-${Date.now()}`,
-        label: `Custom ${nextIndex}: ${currentRegimen.label}`,
+        ...currentCard,
+        id: createCardId('custom'),
         note: 'Added from calculator',
       },
+      ...prev,
     ]);
   };
 
-  const applyRegimenToCalculator = (regimen: Regimen) => {
-    setDose(regimen.dose);
-    setFractions(regimen.fractions);
+  const addPresetCard = () => {
+    if (alphaBeta <= 0) {
+      return;
+    }
+
+    setCards((prev) => [
+      {
+        ...selectedPreset,
+        id: createCardId(selectedPreset.id),
+        alphaBeta,
+      },
+      ...prev,
+    ]);
+  };
+
+  const removeCard = (cardId: string) => {
+    setCards((prev) => prev.filter((card) => card.id !== cardId));
+  };
+
+  const renderMetric = (
+    label: string,
+    value: string,
+    unit: string,
+    tone: 'gray' | 'teal' | 'blue',
+  ) => {
+    const toneClass =
+      tone === 'teal'
+        ? 'bg-teal-50 text-teal-900 border-teal-200'
+        : tone === 'blue'
+          ? 'bg-blue-50 text-blue-900 border-blue-200'
+          : 'bg-gray-50 text-gray-900 border-gray-200';
+    const labelClass =
+      tone === 'teal'
+        ? 'text-teal-700'
+        : tone === 'blue'
+          ? 'text-blue-700'
+          : 'text-gray-500';
+
+    return (
+      <div className={`rounded-xl border p-3 text-center ${toneClass}`}>
+        <div className={`text-[11px] font-bold uppercase ${labelClass}`}>
+          {label}
+        </div>
+        <div className="mt-1 text-xl font-bold leading-none">{value}</div>
+        <div className={`mt-1 text-[11px] font-semibold ${labelClass}`}>
+          {unit}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCalculationCard = (card: CalculatedCard) => {
+    const categoryStyle = CATEGORY_STYLES[card.category];
+
+    return (
+      <article
+        key={card.id}
+        className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-gray-100 bg-white px-4 py-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${categoryStyle.dot}`}
+              />
+              <h4 className="truncate text-sm font-bold text-gray-900">
+                {card.label}
+              </h4>
+            </div>
+            <div className="mt-1 min-w-0 truncate text-xs text-gray-500">
+              {card.note}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => removeCard(card.id)}
+            aria-label={`Remove ${card.label}`}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 12H4"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-3 p-4">
+          <div className="grid grid-cols-3 gap-2">
+            {renderMetric(
+              'Dose/Fx',
+              formatDose(card.dosePerFraction),
+              'Gy',
+              'gray',
+            )}
+            {renderMetric('BED', formatDose(card.bed), 'Gy', 'teal')}
+            {renderMetric('EQD2', formatDose(card.eqd2), 'Gy', 'blue')}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 rounded-xl bg-gray-50 p-3 text-center text-xs">
+            <div>
+              <div className="font-bold text-gray-900">
+                {formatDose(card.dose)}
+              </div>
+              <div className="text-gray-500">Gy</div>
+            </div>
+            <div>
+              <div className="font-bold text-gray-900">{card.fractions}</div>
+              <div className="text-gray-500">fractions</div>
+            </div>
+            <div>
+              <div className="font-bold text-gray-900">
+                {formatAlphaBeta(card.alphaBeta)}
+              </div>
+              <div className="text-gray-500">alpha/beta</div>
+            </div>
+          </div>
+        </div>
+      </article>
+    );
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg p-6 shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">BED / EQD2 Calculator</h1>
+    <div className="mx-auto max-w-6xl space-y-6 p-6">
+      <div className="rounded-lg bg-gradient-to-r from-teal-600 to-teal-700 p-6 text-white shadow-lg">
+        <h1 className="mb-2 text-3xl font-bold">BED / EQD2 Calculator</h1>
         <p className="text-teal-100">
-          Convert dose and fractionation into biologically effective dose and equivalent 2 Gy dose.
+          Convert dose and fractionation into biologically effective dose and
+          equivalent 2 Gy dose.
         </p>
       </div>
 
-      <section className="bg-white border border-gray-200 rounded-lg shadow-sm">
-        <div className="p-5 space-y-5">
-          <div className="grid lg:grid-cols-3 gap-4">
+      <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">
+              Live Calculator
+            </h3>
+            <p className="text-sm text-gray-500">
+              Enter dose, fractions, and alpha/beta. Save the current
+              calculation as a card when needed.
+            </p>
+          </div>
+          <div className="text-xs font-semibold text-gray-500">
+            {cards.length} saved
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <div className="grid gap-3 lg:grid-cols-3">
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Total Dose</label>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                Total Dose
+              </label>
               <div className="relative">
                 <input
                   type="number"
                   value={dose ?? ''}
-                  onChange={(event) => setDose(parsePositiveNumber(event.target.value))}
-                  className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  onChange={(event) =>
+                    setDose(parsePositiveNumber(event.target.value))
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-3 pr-12 text-base focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                   min="0"
                   max="200"
                   step="0.1"
                   inputMode="decimal"
                 />
-                <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">Gy</span>
+                <span className="pointer-events-none absolute right-3 top-3.5 text-sm text-gray-500">
+                  Gy
+                </span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Fractions</label>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                Fractions
+              </label>
               <div className="relative">
                 <input
                   type="number"
                   value={fractions ?? ''}
-                  onChange={(event) => setFractions(parsePositiveNumber(event.target.value))}
-                  className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  onChange={(event) =>
+                    setFractions(parsePositiveNumber(event.target.value))
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-3 pr-12 text-base focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                   min="1"
                   max="99"
                   step="1"
                   inputMode="numeric"
                 />
-                <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">fx</span>
+                <span className="pointer-events-none absolute right-3 top-3.5 text-sm text-gray-500">
+                  fx
+                </span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">α/β</label>
+              <label className="mb-1 flex items-center text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                alpha/beta
+                <Tooltip content={ALPHA_BETA_REFERENCE} />
+              </label>
               <div className="relative">
                 <input
                   type="number"
-                  value={alphaBeta}
+                  value={alphaBeta > 0 ? alphaBeta : ''}
                   onChange={(event) => {
-                    setAlphaBetaPreset('custom');
                     setAlphaBeta(parsePositiveNumber(event.target.value) ?? 0);
                   }}
-                  className="w-full px-3 py-3 pr-12 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-3 pr-12 text-base focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                   min="0.1"
                   max="30"
                   step="0.1"
                   inputMode="decimal"
                 />
-                <span className="absolute right-3 top-3.5 text-sm text-gray-500 pointer-events-none">Gy</span>
+                <span className="pointer-events-none absolute right-3 top-3.5 text-sm text-gray-500">
+                  Gy
+                </span>
               </div>
             </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-            {ALPHA_BETA_OPTIONS.map((option) => (
-              <button
-                key={option.key}
-                onClick={() => handleAlphaBetaPreset(option.key)}
-                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
-                  alphaBetaPreset === option.key
-                    ? 'border-teal-600 bg-teal-50 text-teal-800'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                <span className="block text-sm font-semibold">{option.label}</span>
-                <span className="block text-xs">{option.helper}</span>
-              </button>
-            ))}
           </div>
 
           {currentResult ? (
-            <div className="grid sm:grid-cols-3 gap-3">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="text-xs text-gray-500 mb-1">Dose/Fx</div>
-                <div className="text-2xl font-bold text-gray-900">{formatDose(currentResult.dosePerFraction)}</div>
-                <div className="text-xs text-gray-500">Gy</div>
-              </div>
-              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                <div className="text-xs text-teal-700 mb-1">BED</div>
-                <div className="text-2xl font-bold text-teal-900">{formatDose(currentResult.bed)}</div>
-                <div className="text-xs text-teal-700">Gy</div>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="text-xs text-blue-700 mb-1">EQD2</div>
-                <div className="text-2xl font-bold text-blue-900">{formatDose(currentResult.eqd2)}</div>
-                <div className="text-xs text-blue-700">Gy</div>
+            <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-3 shadow-sm sm:p-4">
+              <div className="grid gap-2 sm:grid-cols-3">
+                {renderMetric(
+                  'Dose/Fx',
+                  formatDose(currentResult.dosePerFraction),
+                  'Gy',
+                  'gray',
+                )}
+                {renderMetric('BED', formatDose(currentResult.bed), 'Gy', 'teal')}
+                {renderMetric(
+                  'EQD2',
+                  formatDose(currentResult.eqd2),
+                  'Gy',
+                  'blue',
+                )}
               </div>
             </div>
           ) : (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-              Enter a positive dose, whole-number fractions, and α/β above 0.
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Enter a positive dose, whole-number fractions, and alpha/beta
+              above 0.
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <button
-              onClick={addCurrentToTable}
+              type="button"
+              onClick={addCurrentCard}
               disabled={!currentResult}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors ${
+              className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold transition-colors ${
                 currentResult
-                  ? 'bg-teal-600 hover:bg-teal-700 text-white'
-                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  ? 'bg-teal-600 text-white hover:bg-teal-700'
+                  : 'cursor-not-allowed bg-gray-200 text-gray-500'
               }`}
             >
-              Add Current Regimen
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add current calculation
             </button>
             <button
               type="button"
               onClick={() => setShowFormula((value) => !value)}
-              className="sm:w-36 py-3 px-4 rounded-lg border border-gray-200 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:w-48"
             >
-              {showFormula ? 'Hide Formula' : 'Formula'}
+              Detailed Information
             </button>
           </div>
 
           {showFormula && (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
               <div className="space-y-1 font-mono text-xs">
                 <div>d = total dose / fractions</div>
-                <div>BED = D x (1 + d / (α/β))</div>
-                <div>EQD2 = BED / (1 + 2 / (α/β))</div>
+                <div>BED = D x (1 + d / (alpha/beta))</div>
+                <div>EQD2 = BED / (1 + 2 / (alpha/beta))</div>
               </div>
             </div>
           )}
         </div>
       </section>
 
-      <section className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-              {(Object.keys(COMPARISON_VIEW_LABELS) as ComparisonView[]).map((view) => (
-                <button
-                  key={view}
-                  onClick={() => setComparisonView(view)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                    comparisonView === view
-                      ? 'bg-teal-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {COMPARISON_VIEW_LABELS[view]}
-                </button>
-              ))}
+      <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">
+              Calculation cards
+            </h3>
+            <p className="text-sm text-gray-500">
+              Add predefined or custom calculations, then use the cards to scan
+              BED and EQD2 values.
+            </p>
+          </div>
+          {cards.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setCards([])}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+              Clear cards
+            </button>
+          )}
+        </div>
+
+        <div className="mb-4 rounded-2xl border border-gray-200 bg-gray-50 p-3">
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                Predefined dose
+              </label>
+              <select
+                value={selectedPresetId}
+                onChange={(event) => setSelectedPresetId(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm font-semibold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+              >
+                {STANDARD_REGIMENS.map((regimen) => (
+                  <option key={regimen.id} value={regimen.id}>
+                    {regimen.label} - {regimen.note}
+                  </option>
+                ))}
+              </select>
             </div>
+            <button
+              type="button"
+              onClick={addPresetCard}
+              disabled={alphaBeta <= 0}
+              className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold transition-colors ${
+                alphaBeta > 0
+                  ? 'bg-teal-600 text-white hover:bg-teal-700'
+                  : 'cursor-not-allowed bg-gray-200 text-gray-500'
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add preset
+            </button>
+          </div>
+          <div className="mt-2 text-xs text-gray-500">
+            Presets use the current alpha/beta value:{' '}
+            {alphaBeta > 0 ? `${formatAlphaBeta(alphaBeta)} Gy` : 'enter a value above 0'}.
           </div>
         </div>
 
-        {comparisonView === 'selected' ? (
-          <>
-            <div className="hidden md:block">
-              <table className="w-full table-fixed text-xs lg:text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="w-[24%] text-left px-3 py-3 font-bold text-gray-700">Regimen</th>
-                  <th className="w-[12%] text-right px-3 py-3 font-bold text-gray-700">Dose</th>
-                  <th className="w-[9%] text-right px-3 py-3 font-bold text-gray-700">Fx</th>
-                  <th className="w-[12%] text-right px-3 py-3 font-bold text-gray-700">Dose/Fx</th>
-                  <th className="w-[13%] text-right px-3 py-3 font-bold text-gray-700">BED</th>
-                  <th className="w-[13%] text-right px-3 py-3 font-bold text-gray-700">EQD2</th>
-                  <th className="hidden lg:table-cell text-left px-3 py-3 font-bold text-gray-700">Context</th>
-                  <th className="w-[8%] text-right px-3 py-3 font-bold text-gray-700">Use</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {alphaBeta <= 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-amber-700">
-                      Enter an α/β value above 0 to calculate the selected-ratio table.
-                    </td>
-                  </tr>
-                )}
-                {alphaBeta > 0 && tableRows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-3 font-semibold text-gray-900 truncate">{row.label}</td>
-                    <td className="px-3 py-3 text-right text-gray-700">{formatDose(row.dose)} Gy</td>
-                    <td className="px-3 py-3 text-right text-gray-700">{row.fractions}</td>
-                    <td className="px-3 py-3 text-right text-gray-700">{formatDose(row.dosePerFraction)} Gy</td>
-                    <td className="px-3 py-3 text-right font-semibold text-teal-800">{formatDose(row.bed)} Gy</td>
-                    <td className="px-3 py-3 text-right font-semibold text-blue-800">{formatDose(row.eqd2)} Gy</td>
-                    <td className="hidden lg:table-cell px-3 py-3 text-gray-600 truncate">{row.note}</td>
-                    <td className="px-3 py-3 text-right">
-                      <button
-                        onClick={() => applyRegimenToCalculator(row)}
-                        className="text-xs font-bold text-teal-700 hover:text-teal-900"
-                      >
-                        Load
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {alphaBeta > 0 && tableRows.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-gray-500">
-                      Add a custom regimen from the calculator.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            </div>
-
-            <div className="md:hidden p-3 space-y-3">
-              {tableRows.map((row) => (
-                <div key={row.id} className="rounded-lg border border-gray-200 p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-gray-900">{row.label}</div>
-                      <div className="text-xs text-gray-500">{row.note}</div>
-                    </div>
-                    <button
-                      onClick={() => applyRegimenToCalculator(row)}
-                      className="text-xs font-bold text-teal-700 hover:text-teal-900"
-                    >
-                      Load
-                    </button>
-                  </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    <div className="rounded-md bg-gray-50 p-2">
-                      <div className="text-gray-500">Dose/Fx</div>
-                      <div className="font-bold text-gray-900">{formatDose(row.dosePerFraction)} Gy</div>
-                    </div>
-                    <div className="rounded-md bg-teal-50 p-2">
-                      <div className="text-teal-700">BED</div>
-                      <div className="font-bold text-teal-900">{formatDose(row.bed)} Gy</div>
-                    </div>
-                    <div className="rounded-md bg-blue-50 p-2">
-                      <div className="text-blue-700">EQD2</div>
-                      <div className="font-bold text-blue-900">{formatDose(row.eqd2)} Gy</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
+        {calculatedCards.length > 0 ? (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {calculatedCards.map((card) => renderCalculationCard(card))}
+          </div>
         ) : (
-          <>
-            <div className="hidden md:block">
-              <table className="w-full table-fixed text-[11px] lg:text-xs">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th rowSpan={2} className="w-[20%] text-left px-2 py-3 font-bold text-gray-700 align-bottom">Regimen</th>
-                  <th rowSpan={2} className="w-[9%] text-right px-2 py-3 font-bold text-gray-700 align-bottom">Dose/Fx</th>
-                  {alphaBetaComparisons.map((comparison) => (
-                    <th
-                      key={comparison.id}
-                      colSpan={2}
-                      className="text-center px-2 py-3 font-bold text-gray-700 border-l border-gray-200"
-                    >
-                      {comparison.label}
-                    </th>
-                  ))}
-                  <th rowSpan={2} className="w-[6%] text-right px-2 py-3 font-bold text-gray-700 align-bottom">Use</th>
-                </tr>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  {alphaBetaComparisons.map((comparison) => (
-                    <Fragment key={`${comparison.id}-headers`}>
-                      <th className="text-right px-2 py-2 text-[10px] font-bold uppercase text-teal-700 border-l border-gray-200">
-                        BED
-                      </th>
-                      <th className="text-right px-2 py-2 text-[10px] font-bold uppercase text-blue-700">
-                        EQD2
-                      </th>
-                    </Fragment>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {matrixRows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-3">
-                      <div className="font-semibold text-gray-900 truncate">{row.label}</div>
-                      <div className="text-[11px] text-gray-500 truncate">{row.note}</div>
-                    </td>
-                    <td className="px-3 py-3 text-right text-gray-700">
-                      <div>{formatDose(row.dosePerFraction)} Gy</div>
-                    </td>
-                    {row.comparisons.map((comparison) => (
-                      <Fragment key={`${row.id}-${comparison.alphaBetaId}`}>
-                        <td className="px-2 py-3 text-right font-semibold text-teal-800 border-l border-gray-100">
-                          {formatDose(comparison.bed)}
-                        </td>
-                        <td className="px-2 py-3 text-right font-semibold text-blue-800">
-                          {formatDose(comparison.eqd2)}
-                        </td>
-                      </Fragment>
-                    ))}
-                    <td className="px-3 py-3 text-right">
-                      <button
-                        onClick={() => applyRegimenToCalculator(row)}
-                        className="text-xs font-bold text-teal-700 hover:text-teal-900"
-                      >
-                        Load
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {matrixRows.length === 0 && (
-                  <tr>
-                    <td colSpan={3 + alphaBetaComparisons.length * 2} className="px-4 py-10 text-center text-gray-500">
-                      Add a custom regimen from the calculator.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            </div>
-
-            <div className="md:hidden p-3 space-y-3">
-              {matrixRows.map((row) => (
-                <div key={row.id} className="rounded-lg border border-gray-200 p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-gray-900">{row.label}</div>
-                      <div className="text-xs text-gray-500">{row.note}</div>
-                    </div>
-                    <button
-                      onClick={() => applyRegimenToCalculator(row)}
-                      className="text-xs font-bold text-teal-700 hover:text-teal-900"
-                    >
-                      Load
-                    </button>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    {row.comparisons.map((comparison) => {
-                      const ratio = alphaBetaComparisons.find((item) => item.id === comparison.alphaBetaId)?.label ?? 'α/β';
-                      return (
-                        <div key={`${row.id}-${comparison.alphaBetaId}`} className="rounded-md bg-gray-50 p-2">
-                          <div className="font-bold text-gray-700">{ratio}</div>
-                          <div className="mt-1 grid grid-cols-2 gap-1">
-                            <div>
-                              <div className="text-[10px] text-teal-700">BED</div>
-                              <div className="font-semibold text-teal-900">{formatDose(comparison.bed)}</div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] text-blue-700">EQD2</div>
-                              <div className="font-semibold text-blue-900">{formatDose(comparison.eqd2)}</div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+            No calculation cards yet. Add the working calculation or choose a
+            predefined dose from the dropdown.
+          </div>
         )}
       </section>
 
-      <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 text-xs text-gray-600">
-        <p className="font-semibold mb-2">Clinical Disclaimer</p>
+      <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 text-xs text-gray-600">
+        <p className="mb-2 font-semibold">Clinical Disclaimer</p>
         <p>
-          BED and EQD2 are linear-quadratic model estimates. They do not account for dose heterogeneity, volume,
-          retreatment interval, tissue recovery, concurrent systemic therapy, or patient-specific risk. Use alongside
+          BED and EQD2 are linear-quadratic model estimates. They do not account
+          for dose heterogeneity, volume, retreatment interval, tissue recovery,
+          concurrent systemic therapy, or patient-specific risk. Use alongside
           anatomy-specific OAR review and multidisciplinary clinical judgment.
         </p>
       </div>
