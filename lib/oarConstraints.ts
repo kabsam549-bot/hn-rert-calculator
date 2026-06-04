@@ -296,11 +296,11 @@ export function checkOARConstraint(
                     oar.tier === 2 ? "CRITICAL" : "QUALITY OF LIFE";
 
   if (warningLevel === "exceeds") {
-    message = `⚠️ EXCEEDS LIMIT: ${oar.name} dose of ${cumulativeEQD2.toFixed(1)} Gy exceeds ` +
+    message = `EXCEEDS LIMIT: ${oar.name} dose of ${cumulativeEQD2.toFixed(1)} Gy exceeds ` +
               `the ${oar.limitEQD2} Gy constraint by ${(percentOfLimit - 100).toFixed(0)}%. ` +
               `Risk of ${oar.complication} is significantly elevated. [${tierLabel}]`;
   } else if (warningLevel === "caution") {
-    message = `⚠️ CAUTION: ${oar.name} dose of ${cumulativeEQD2.toFixed(1)} Gy is at ` +
+    message = `CAUTION: ${oar.name} dose of ${cumulativeEQD2.toFixed(1)} Gy is at ` +
               `${percentOfLimit.toFixed(0)}% of the ${oar.limitEQD2} Gy limit. ` +
               `Approaching threshold for ${oar.complication}. [${tierLabel}]`;
   } else {

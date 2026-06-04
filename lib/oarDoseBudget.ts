@@ -297,15 +297,15 @@ export function generateWarningMessage(
   const riskLevel = determineRiskLevel(percentRemaining);
   
   if (riskLevel === 'critical') {
-    return `⚠️ CRITICAL: Only ${percentRemaining.toFixed(1)}% of lifetime tolerance remaining. Risk of ${oar.complication} is substantially elevated. Exercise extreme caution.`;
+    return `Only ${percentRemaining.toFixed(1)}% of lifetime tolerance remaining. Risk of ${oar.complication} is substantially elevated. Exercise extreme caution.`;
   }
   
   if (riskLevel === 'warning') {
-    return `⚠️ WARNING: ${percentRemaining.toFixed(1)}% of lifetime tolerance remaining. Approaching threshold for ${oar.complication}.`;
+    return `${percentRemaining.toFixed(1)}% of lifetime tolerance remaining. Approaching threshold for ${oar.complication}.`;
   }
   
   if (riskLevel === 'caution') {
-    return `⚠️ CAUTION: ${percentRemaining.toFixed(1)}% of lifetime tolerance remaining. Monitor closely for ${oar.complication}.`;
+    return `${percentRemaining.toFixed(1)}% of lifetime tolerance remaining. Monitor closely for ${oar.complication}.`;
   }
   
   // Special warnings for specific OARs
@@ -319,9 +319,9 @@ export function generateWarningMessage(
     const cumulativeBED = bed; // For simplicity, using effective prior
     
     if (cumulativeBED > 150) {
-      return `⚠️ CRITICAL: Cumulative BED >150 Gy₃. Plexopathy risk >10%.`;
+      return `Cumulative BED >150 Gy₃. Plexopathy risk >10%.`;
     } else if (cumulativeBED > 120) {
-      return `⚠️ WARNING: Cumulative BED 120-150 Gy₃. Plexopathy risk 5-10%.`;
+      return `Cumulative BED 120-150 Gy₃. Plexopathy risk 5-10%.`;
     }
   }
   
