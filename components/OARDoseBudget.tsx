@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   OAR_BUDGET_DATA,
   calculateOARBudget,
@@ -117,6 +117,89 @@ function getBudgetTone(percentRemaining: number, remainingEQD2: number) {
     centerBg: 'bg-white/80',
     softText: 'text-teal-700',
   };
+}
+
+function PriorEQD2Icon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3v18" />
+      <path d="M5 8h14" />
+      <path d="M7 13h2" />
+      <path d="M15 13h2" />
+      <path d="M7 18h2" />
+      <path d="M15 18h2" />
+    </svg>
+  );
+}
+
+function AlphaBetaIcon() {
+  return (
+    <span
+      className="flex h-5 w-7 items-center justify-center rounded-full bg-white text-[10px] font-black leading-none text-gray-700 shadow-sm ring-1 ring-gray-200"
+      aria-hidden="true"
+    >
+      α/β
+    </span>
+  );
+}
+
+function ToleranceIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6l7-3z" />
+      <path d="M9 12l2 2 4-5" />
+    </svg>
+  );
+}
+
+function RiskIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 12h4l2-6 4 12 2-6h6" />
+    </svg>
+  );
+}
+
+function MetricLabel({
+  children,
+  icon,
+}: {
+  children: ReactNode;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+      {icon}
+      <span>{children}</span>
+    </div>
+  );
 }
 
 export default function OARDoseBudget() {
@@ -289,10 +372,8 @@ export default function OARDoseBudget() {
     return (
       <div key={item.oar.name} className="space-y-4">
         <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <label className="rounded-xl bg-gray-50 p-2.5">
-            <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-500">
-              Tolerance
-            </span>
+          <label className="rounded-xl bg-gray-50 p-2.5 text-center">
+            <MetricLabel icon={<ToleranceIcon />}>Tolerance</MetricLabel>
             <div className="relative mt-1">
               <input
                 type="number"
@@ -316,7 +397,7 @@ export default function OARDoseBudget() {
                     ),
                   );
                 }}
-                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-2 pr-7 text-sm font-bold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-7 py-2 text-center text-sm font-bold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                 min="1"
                 max="200"
                 step="0.1"
@@ -326,10 +407,11 @@ export default function OARDoseBudget() {
               </span>
             </div>
           </label>
-          <label className="rounded-xl bg-gray-50 p-2.5">
-            <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-500">
-              α/β
-            </span>
+          <label className="rounded-xl bg-gray-50 p-2.5 text-center">
+            <div className="flex justify-center">
+              <AlphaBetaIcon />
+              <span className="sr-only">α/β</span>
+            </div>
             <div className="relative mt-1">
               <input
                 type="number"
@@ -349,7 +431,7 @@ export default function OARDoseBudget() {
                     ),
                   );
                 }}
-                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-2 pr-7 text-sm font-bold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-7 py-2 text-center text-sm font-bold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
                 min="0.1"
                 max="20"
                 step="0.1"
@@ -359,12 +441,10 @@ export default function OARDoseBudget() {
               </span>
             </div>
           </label>
-          <div className="col-span-2 min-w-0 rounded-xl bg-gray-50 p-2.5 sm:col-span-1">
-            <div className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
-              Risk
-            </div>
+          <div className="col-span-2 flex min-w-0 flex-col items-center justify-center rounded-xl bg-gray-50 p-2.5 text-center sm:col-span-1">
+            <MetricLabel icon={<RiskIcon />}>Risk</MetricLabel>
             <div
-              className="mt-0.5 truncate text-xs font-semibold text-gray-800"
+              className="mt-1 max-w-full text-balance text-xs font-semibold leading-snug text-gray-800"
               title={item.oar.complication}
             >
               {item.oar.complication}
@@ -758,29 +838,28 @@ export default function OARDoseBudget() {
         </div>
 
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-white/80 p-3">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
-              Prior EQD2
-            </div>
+          <div className="rounded-xl bg-white/80 p-3 text-center">
+            <MetricLabel icon={<PriorEQD2Icon />}>Prior EQD2</MetricLabel>
             <div className="mt-1 text-base font-bold text-gray-900">
               {displayPrior.toFixed(1)}
             </div>
             <div className="text-[11px] text-gray-500">Gy</div>
           </div>
           {!isConservative ? (
-            <div className="rounded-xl bg-white/80 p-3">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+            <div className="rounded-xl bg-white/80 p-3 text-center">
+              <MetricLabel icon={<PriorEQD2Icon />}>
                 Effective Prior
-              </div>
+              </MetricLabel>
               <div className="mt-1 text-base font-bold text-gray-900">
                 {result.effectivePriorEQD2.toFixed(1)}
               </div>
               <div className="text-[11px] text-gray-500">Gy</div>
             </div>
           ) : (
-            <div className="rounded-xl bg-white/80 p-3">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
-                α/β
+            <div className="rounded-xl bg-white/80 p-3 text-center">
+              <div className="flex justify-center">
+                <AlphaBetaIcon />
+                <span className="sr-only">α/β</span>
               </div>
               <div className="mt-1 text-base font-bold text-gray-900">
                 {result.oar.alphaBeta}
@@ -788,10 +867,8 @@ export default function OARDoseBudget() {
               <div className="text-[11px] text-gray-500">Gy</div>
             </div>
           )}
-          <div className="rounded-xl bg-white/80 p-3">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
-              Tolerance
-            </div>
+          <div className="rounded-xl bg-white/80 p-3 text-center">
+            <MetricLabel icon={<ToleranceIcon />}>Tolerance</MetricLabel>
             <div className="mt-1 text-base font-bold text-gray-900">
               {result.oar.lifetimeToleranceEQD2}
             </div>
