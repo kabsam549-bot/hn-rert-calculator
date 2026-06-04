@@ -727,7 +727,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                    Alpha/beta presets for tumor, late tissue, and CNS
+                    α/β presets for tumor, late tissue, and CNS
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>

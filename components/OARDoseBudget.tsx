@@ -179,80 +179,127 @@ export default function OARDoseBudget() {
   ).length;
 
   const renderOARSelector = () => {
-    const availableOARs = availableOARData.filter(
-      oar => !selectedOARs.some(item => item.oar.name === oar.name)
-    );
-
-    if (availableOARs.length === 0) {
+    if (availableOARData.length === 0) {
       return (
         <div className="text-center py-4 text-sm text-gray-500">
-          All available OARs have been added
+          No OAR constraints are available.
         </div>
       );
     }
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {availableOARs.map(oar => (
-          <button
-            key={oar.name}
-            onClick={() => handleAddOAR(oar)}
-            className="group flex min-h-[52px] items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-all hover:border-teal-300 hover:bg-teal-50"
-          >
-            <span className="font-medium text-gray-900">{oar.name}</span>
-            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors group-hover:bg-teal-600 group-hover:text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </span>
-          </button>
-        ))}
+      <div className="space-y-2">
+        {availableOARData.map(oar => {
+          const selectedItem = selectedOARs.find(item => item.oar.name === oar.name);
+          const isSelected = selectedItem !== undefined;
+          const displayedTolerance = selectedItem?.customLifetimeTolerance ?? oar.lifetimeToleranceEQD2;
+          const displayedAlphaBeta = selectedItem?.customAlphaBeta ?? oar.alphaBeta;
+
+          return (
+            <div
+              key={oar.name}
+              className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-colors ${
+                isSelected ? 'border-teal-300' : 'border-gray-200 hover:border-teal-200'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => isSelected ? handleRemoveOAR(oar.name) : handleAddOAR(oar)}
+                aria-expanded={isSelected}
+                className={`flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors sm:px-4 ${
+                  isSelected ? 'bg-teal-50/70' : 'bg-white hover:bg-gray-50'
+                }`}
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${isSelected ? 'bg-teal-600' : 'bg-gray-300'}`} />
+                    <span className="truncate text-sm font-bold text-gray-900 sm:text-base">{oar.name}</span>
+                  </span>
+                  <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+                    <span>Tolerance {displayedTolerance} Gy</span>
+                    <span>α/β {displayedAlphaBeta}</span>
+                    <span className="min-w-0 truncate">{oar.complication}</span>
+                  </span>
+                </span>
+                <span
+                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
+                    isSelected ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'
+                  }`}
+                  aria-hidden="true"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {isSelected ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    )}
+                  </svg>
+                </span>
+              </button>
+
+              {selectedItem && (
+                <div className="border-t border-teal-100 bg-white p-3 sm:p-4">
+                  {renderOARInputCard(selectedItem)}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
 
   const renderOARInputCard = (item: OARInput) => {
-    const isComplete = 
-      item.priorDose !== undefined && 
-      item.priorFractions !== undefined && 
-      item.timeSinceRT !== undefined;
+    const hasCustomSettings = item.customAlphaBeta !== undefined || item.customLifetimeTolerance !== undefined;
 
     return (
-      <div key={item.oar.name} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 rounded-full ${isComplete ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <h4 className="truncate text-base font-bold text-gray-900">{item.oar.name}</h4>
+      <div key={item.oar.name} className="space-y-4">
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <label className="rounded-xl bg-gray-50 p-2.5">
+            <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-500">Tolerance</span>
+            <div className="relative mt-1">
+              <input
+                type="number"
+                value={item.customLifetimeTolerance ?? item.oar.lifetimeToleranceEQD2}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? undefined : Number(e.target.value);
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? {
+                    ...o,
+                    customLifetimeTolerance: val === item.oar.lifetimeToleranceEQD2 ? undefined : val,
+                  } : o));
+                  setShowResults(false);
+                }}
+                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-2 pr-7 text-sm font-bold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                min="1"
+                max="200"
+                step="0.1"
+              />
+              <span className="absolute right-2 top-2 text-[10px] font-semibold text-gray-500 pointer-events-none">Gy</span>
             </div>
-          </div>
-          <button
-            onClick={() => handleRemoveOAR(item.oar.name)}
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-            title="Remove OAR"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="mb-4 grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-gray-50 p-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Tol</div>
-            <div className="mt-0.5 text-sm font-bold text-gray-900">
-              {item.customLifetimeTolerance ?? item.oar.lifetimeToleranceEQD2}
-              <span className="ml-0.5 text-[10px] font-semibold text-gray-500">Gy</span>
+          </label>
+          <label className="rounded-xl bg-gray-50 p-2.5">
+            <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-500">α/β</span>
+            <div className="relative mt-1">
+              <input
+                type="number"
+                value={item.customAlphaBeta ?? item.oar.alphaBeta}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? undefined : Number(e.target.value);
+                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? {
+                    ...o,
+                    customAlphaBeta: val === item.oar.alphaBeta ? undefined : val,
+                  } : o));
+                  setShowResults(false);
+                }}
+                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-2 pr-7 text-sm font-bold text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
+                min="0.1"
+                max="20"
+                step="0.1"
+              />
+              <span className="absolute right-2 top-2 text-[10px] font-semibold text-gray-500 pointer-events-none">Gy</span>
             </div>
-          </div>
-          <div className="rounded-xl bg-gray-50 p-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wide text-gray-500">&#945;/&#946;</div>
-            <div className="mt-0.5 text-sm font-bold text-gray-900">
-              {item.customAlphaBeta ?? item.oar.alphaBeta}
-              <span className="ml-0.5 text-[10px] font-semibold text-gray-500">Gy</span>
-            </div>
-          </div>
-          <div className="min-w-0 rounded-xl bg-gray-50 p-2.5">
+          </label>
+          <div className="col-span-2 min-w-0 rounded-xl bg-gray-50 p-2.5 sm:col-span-1">
             <div className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Risk</div>
             <div className="mt-0.5 truncate text-xs font-semibold text-gray-800" title={item.oar.complication}>
               {item.oar.complication}
@@ -437,56 +484,17 @@ export default function OARDoseBudget() {
             Prior course
           </button>
 
-          <details className="text-right">
-            <summary className="cursor-pointer list-none rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-200">
-              Advanced
-            </summary>
-            <div className="mt-3 w-[260px] max-w-[calc(100vw-3rem)] rounded-xl border border-gray-200 bg-white p-3 text-left shadow-lg">
-              <div className="grid grid-cols-2 gap-3">
-                <label className="text-xs font-bold text-gray-600">
-                  <span className="block mb-1">&#945;/&#946;</span>
-                  <input
-                    type="number"
-                    value={item.customAlphaBeta ?? item.oar.alphaBeta}
-                    onChange={(e) => {
-                      const val = e.target.value === '' ? undefined : Number(e.target.value);
-                      setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customAlphaBeta: val } : o));
-                      setShowResults(false);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
-                    min="0.1"
-                    max="20"
-                    step="0.1"
-                  />
-                </label>
-                <label className="text-xs font-bold text-gray-600">
-                  <span className="block mb-1">Tolerance</span>
-                  <input
-                    type="number"
-                    value={item.customLifetimeTolerance ?? item.oar.lifetimeToleranceEQD2}
-                    onChange={(e) => {
-                      const val = e.target.value === '' ? undefined : Number(e.target.value);
-                      setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customLifetimeTolerance: val } : o));
-                      setShowResults(false);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
-                    min="1"
-                    max="200"
-                    step="0.1"
-                  />
-                </label>
-              </div>
-              <button
-                onClick={() => {
-                  setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customAlphaBeta: undefined, customLifetimeTolerance: undefined } : o));
-                  setShowResults(false);
-                }}
-                className="mt-3 text-xs font-semibold text-red-500 hover:text-red-700"
-              >
-                Reset advanced values
-              </button>
-            </div>
-          </details>
+          {hasCustomSettings && (
+            <button
+              onClick={() => {
+                setSelectedOARs(prev => prev.map(o => o.oar.name === item.oar.name ? { ...o, customAlphaBeta: undefined, customLifetimeTolerance: undefined } : o));
+                setShowResults(false);
+              }}
+              className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-200"
+            >
+              Reset defaults
+            </button>
+          )}
         </div>
       </div>
     );
@@ -620,7 +628,7 @@ export default function OARDoseBudget() {
                 <p>Effective EQD2 = {result.effectivePriorEQD2.toFixed(1)} Gy after {result.recoveryPercent.toFixed(0)}% recovery</p>
               )}
               <p>Remaining = {result.oar.lifetimeToleranceEQD2} - {displayPrior.toFixed(1)} = {displayRemaining.toFixed(1)} Gy</p>
-              <p>&#945;/&#946; = {result.oar.alphaBeta} Gy</p>
+              <p>α/β = {result.oar.alphaBeta} Gy</p>
             </div>
             {sourceReference && (
               <a
@@ -657,43 +665,29 @@ export default function OARDoseBudget() {
       {!showResults ? (
         <>
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  {selectedOARs.length === 0 ? 'Select organs' : 'Add organs'}
-                </h3>
-                <p className="text-sm text-gray-500">Choose the OARs to compare. Each selected organ gets its own dose-budget card.</p>
+                <h3 className="text-lg font-bold text-gray-900">Organs at risk</h3>
+                <p className="text-sm text-gray-500">
+                  Tap plus to open an organ card. Tap minus to close it.
+                </p>
               </div>
-              {selectedOARs.length > 0 && (
+              <div className="flex items-center gap-3">
                 <div className="text-xs font-semibold text-gray-500">
-                  {selectedOARs.length} selected
+                  {selectedOARs.length} open · {completedOARCount} ready
                 </div>
-              )}
+                {selectedOARs.length > 0 && (
+                  <button
+                    onClick={handleReset}
+                    className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
             </div>
             {renderOARSelector()}
           </section>
-
-          {selectedOARs.length > 0 && (
-            <section className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Dose budget cards</h3>
-                  <p className="text-sm text-gray-500">
-                    {completedOARCount} of {selectedOARs.length} organs are ready to calculate.
-                  </p>
-                </div>
-                <button
-                  onClick={handleReset}
-                  className="self-start sm:self-auto rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                >
-                  Clear All
-                </button>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                {selectedOARs.map(item => renderOARInputCard(item))}
-              </div>
-            </section>
-          )}
 
           {/* Calculate Button */}
           <div className="sticky bottom-6 z-10">
@@ -714,7 +708,7 @@ export default function OARDoseBudget() {
                   Calculate {completedOARCount} OAR {completedOARCount === 1 ? 'budget' : 'budgets'}
                 </span>
               ) : (
-                selectedOARs.length === 0 ? 'Select OARs to calculate' : 'Fill at least one OAR to calculate'
+                selectedOARs.length === 0 ? 'Tap plus to open an OAR' : 'Fill at least one OAR to calculate'
               )}
             </button>
           </div>

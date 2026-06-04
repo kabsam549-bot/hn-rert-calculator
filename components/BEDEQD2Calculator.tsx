@@ -173,19 +173,19 @@ const ALPHA_BETA_OPTIONS: {
 const BASE_ALPHA_BETA_COMPARISONS: AlphaBetaComparison[] = [
   {
     id: 'tumor-10',
-    label: 'a/b 10',
+    label: 'α/β 10',
     value: ALPHA_BETA_RATIOS.TUMOR_EARLY,
     helper: '10 Gy',
   },
   {
     id: 'late-3',
-    label: 'a/b 3',
+    label: 'α/β 3',
     value: ALPHA_BETA_RATIOS.LATE_GENERAL,
     helper: '3 Gy',
   },
   {
     id: 'cns-2',
-    label: 'a/b 2',
+    label: 'α/β 2',
     value: ALPHA_BETA_RATIOS.CNS_LATE,
     helper: '2 Gy',
   },
@@ -247,7 +247,7 @@ function getAlphaBetaComparisons(alphaBeta: number): AlphaBetaComparison[] {
   if (alphaBeta > 0 && !comparisons.some((comparison) => isSameAlphaBeta(comparison.value, alphaBeta))) {
     comparisons.push({
       id: 'selected-custom',
-      label: `a/b ${formatAlphaBeta(alphaBeta)}`,
+      label: `α/β ${formatAlphaBeta(alphaBeta)}`,
       value: alphaBeta,
       helper: `${formatAlphaBeta(alphaBeta)} Gy`,
     });
@@ -385,7 +385,7 @@ export default function BEDEQD2Calculator() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Alpha/Beta</label>
+              <label className="block text-xs font-bold text-gray-600 mb-1 uppercase">α/β</label>
               <div className="relative">
                 <input
                   type="number"
@@ -442,7 +442,7 @@ export default function BEDEQD2Calculator() {
             </div>
           ) : (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-              Enter a positive dose, whole-number fractions, and alpha/beta above 0.
+              Enter a positive dose, whole-number fractions, and α/β above 0.
             </div>
           )}
 
@@ -471,8 +471,8 @@ export default function BEDEQD2Calculator() {
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700">
               <div className="space-y-1 font-mono text-xs">
                 <div>d = total dose / fractions</div>
-                <div>BED = D x (1 + d / (alpha/beta))</div>
-                <div>EQD2 = BED / (1 + 2 / (alpha/beta))</div>
+                <div>BED = D x (1 + d / (α/β))</div>
+                <div>EQD2 = BED / (1 + 2 / (α/β))</div>
               </div>
             </div>
           )}
@@ -520,7 +520,7 @@ export default function BEDEQD2Calculator() {
                 {alphaBeta <= 0 && (
                   <tr>
                     <td colSpan={8} className="px-4 py-10 text-center text-amber-700">
-                      Enter an alpha/beta value above 0 to calculate the selected-ratio table.
+                      Enter an α/β value above 0 to calculate the selected-ratio table.
                     </td>
                   </tr>
                 )}
@@ -677,7 +677,7 @@ export default function BEDEQD2Calculator() {
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                     {row.comparisons.map((comparison) => {
-                      const ratio = alphaBetaComparisons.find((item) => item.id === comparison.alphaBetaId)?.label ?? 'a/b';
+                      const ratio = alphaBetaComparisons.find((item) => item.id === comparison.alphaBetaId)?.label ?? 'α/β';
                       return (
                         <div key={`${row.id}-${comparison.alphaBetaId}`} className="rounded-md bg-gray-50 p-2">
                           <div className="font-bold text-gray-700">{ratio}</div>
